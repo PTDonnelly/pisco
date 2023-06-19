@@ -6,8 +6,14 @@ Pisco is a Python package designed to facilitate the extraction, processing and 
 
 - Extracts data from raw binary files using optimised C scripts developed by the IASI team.
 - Processes data into conveniently-formatted spatio-temporal data of IASI products: Level 1C calibrated spectra or Level 2 cloud products.
+- Scans through a year-month-day range, extract cloud products (user-specified), extract and filter out co-incident spectra, and return a single csv for that day. Cloud products are currently Aqueous, Icy, Mixed, and Cloud-free (separated by filename).
 - Supports correlation between Level 1C spectra and Level 2 cloud products.
-- Provides configurable parameters via a config class.
+- Configured by a separate JSON file, which is read and sets class attributes for the Configurer.
+
+## Future
+
+- Day/night separation of filtered spectra
+- HDF5 output format if files tend to be too large
 
 ## Installation
 
