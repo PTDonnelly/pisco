@@ -1,6 +1,6 @@
 # Package for IASI Spectra and Cloud Observations (PISCO)
 
-PISCO is a Python package designed to facilitate the extraction, processing and analysis of Infrared Atmospheric Sounding Interferometer (IASI) spectra and retrieved cloud products.
+Pisco is a Python package designed to facilitate the extraction, processing and analysis of Infrared Atmospheric Sounding Interferometer (IASI) spectra and retrieved cloud products.
 
 ## Features
 
@@ -14,7 +14,7 @@ PISCO is a Python package designed to facilitate the extraction, processing and 
 To install the package, clone this repository to your local machine by using the following command:
 
 ```bash
-git clone https://github.com/PTDonnelly/Pisco.git
+git clone https://github.com/PTDonnelly/pisco.git
 ```
 
 
@@ -39,7 +39,7 @@ config = Configurer("path_to_your_config_file.json")
 
 The configuration file is a JSON file that allows the user to specify parameters such as processing mode, year, month, day, output data path, and many more. The JSON keys correspond to attributes of the `Configurer` class and they are directly assigned on class instantiation. Here is a description of the parameters in the JSON configuration file:
 
-- **mode (str):** The processing mode. Options are 'Process' or 'Correlate'.
+- **correlate: (bool)**, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
 - **L1C (bool):** Specifies whether Level 1C data should be processed.
 - **L2 (bool):** Specifies whether Level 2 data should be processed.
 - **year_list (List[int]):** List of years for extraction.
