@@ -105,7 +105,7 @@ It is crucial that process_l2() occurs before process_l1c(): the code first look
 ## Auxiliary scripts to extract binary data
 
 `./bin/` contains the relevant binary executables of the IASI readers 
-- `obr_v4` for Level 1C data: developed by the IASI team. Instructions can be found here https://www7.obs-mip.fr/wp-content-aeris/uploads/sites/12/2019/01/ETH-IASI-MU-696-CNe1r3.pdf, and in the L1CProcessor method _build_command().
+- `obr_v4` for Level 1C data: developed by the IASI team. Instructions can be found here https://www7.obs-mip.fr/wp-content-aeris/uploads/sites/12/2019/01/ETH-IASI-MU-696-CNe1r3.pdf, and in the L1CProcessor method `_build_command()`.
 - `BUFR_iasi_clp_reader_from20190514` for Level 2 data: expands OBR tool to output reduced data directly to CSV (hence the asymmetry in the Processor classes). The conventions are as follows: 
 
 To use on the SPIRIT cluster:
@@ -115,4 +115,4 @@ To obtain the output file:
 `./BUFR_iasi_clp_reader_from20190514 /bdd/metopc/l2/iasi/2022/03/24/clp/W_XX-EUMETSAT-Darmstadt,SOUNDING+SATELLITE,METOPB+IASI_C_EUMP_20220324000252_49359_eps_o_clp_l2.bin clp_20220324000252.out`
 
 The columns of the output file contain:
-`latitude`, `longitude`, `date.time`, `orbit_number`, `scanline_number`, `pixel_number`, for 3 cloud formations: `cloud cover as percentage of pixel area`, `cloud top temperature`, `cloud top pressure`, `cloud phase`. Information on the latter is in the L1C_L2_Correlator method _get_cloud_phase(), it is the focus of this code for now.
+`latitude`, `longitude`, `date.time`, `orbit_number`, `scanline_number`, `pixel_number`, for 3 cloud formations: `cloud cover as percentage of pixel area`, `cloud top temperature`, `cloud top pressure`, `cloud phase`. Information on the latter is in the L1C_L2_Correlator method `_get_cloud_phase()`, it is the focus of this code for now.
