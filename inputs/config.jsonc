@@ -1,0 +1,37 @@
+{
+    // L1C: bool, Specifies whether Level 1C data should be processed
+    "L1C": false,
+
+    // L2: bool, Specifies whether Level 2 data should be processed
+    "L2": false,
+
+    // correlate: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
+    "correlate": true,
+
+    // year_list: List[int], List of years for extraction
+    "year_list": [2022],
+
+    // month_list: List[int], List of months for extraction
+    "month_list": [3],
+
+    // day_list: List[int] or str, List of specific days or "all" to scan all calendar days in month
+    "day_list": [24],
+
+    // days_in_months: List[int], Number of calendar days in each month
+    "days_in_months": [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+
+    // datapath_out: str, The user-defined data path for the processed output files
+    "datapath_out": "/data/pdonnelly/iasi/metopc/",
+
+    // targets: List[str], List of target IASI L1C products
+    "targets": ["satellite_zenith_angle", "quality_flag_1", "quality_flag_2", "quality_flag_3", "cloud_fraction", "surface_type"],
+
+    // latitude_range: List[int], The spatial range for binning latitudes
+    "latitude_range": [-90, 90],
+
+    // longitude_range: List[int], The spatial range for binning longitudes
+    "longitude_range": [-180, 180],
+
+    // cloud_phase: int, The desired cloud phase from the L2 products
+    "cloud_phase": 2
+}
