@@ -269,14 +269,16 @@ class Preprocessor:
         Returns:
             Set[int]: Set of indices of measurements that fall within the specified range.
         """
+
+        print("Reading values:")
         # Read all the values of the field
         values = np.fromfile(self.f, dtype=dtype, count=self.metadata.number_of_measurements, sep='', offset=byte_offset)
-        
+        print("Values read:")
         if field == 'Latitude':
             valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
         elif field == 'Longitude':
             valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
-
+        print("valid_indices retrieved:")
         return valid_indices
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
@@ -317,6 +319,7 @@ class Preprocessor:
             valid_indices_lon = set()
 
             for field, dtype, dtype_size, cumsize in fields:
+                print(f"Flagging: {field}")
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
                     continue
