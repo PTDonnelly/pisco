@@ -321,37 +321,33 @@ class Preprocessor:
         """
         # Check if the latitude and longitude cover the full globe
         full_globe = self._check_spatial_range()
-
+        
         if full_globe:
             # If the latitude and longitude cover the full globe, return all indices
             return set(range(self.metadata.number_of_measurements))
         else:
             print(f"\nFlagging observations to keep...")
+            valid_indices_lat = set()
+            valid_indices_lon = set()
 
-            # Initialize a dictionary to store the valid indices per field
-            valid_indices_per_field = dict()
-
-            # Iterate over the defined fields
             for field, dtype, dtype_size, cumsize in fields:
-                # Only consider the fields we are interested in
-                if field not in ['Latitude', 'Longitude']:  # Add more field names to this list as necessary
+                if field not in ['Latitude', 'Longitude']:
+                    # Skip all other fields for now
                     continue
 
-                # Set the starting position of the field in the data and calculate the byte offset
+                # Set the starting position of the field and calculate the byte offset
                 self._set_field_start_position(cumsize)
                 byte_offset = self._calculate_byte_offset(dtype_size)
 
-                # Get the valid indices for this field and store them in the dictionary
+                # Read and store the valid indices for the field
                 valid_indices = self._get_indices(field, dtype, byte_offset)
-                valid_indices_per_field[field] = valid_indices
+                if field == 'Latitude':
+                    valid_indices_lat = valid_indices
+                elif field == 'Longitude':
+                    valid_indices_lon = valid_indices
 
-            # After all fields have been processed, compute the intersection of all sets of valid indices.
-            # This means a data point needs to be valid in all fields to be kept.
-            valid_indices = set.intersection(*valid_indices_per_field.values())
-
-            # Return the set of valid indices
-            return valid_indices
-
+            # Return the intersection of valid latitude and longitude indices
+            return valid_indices_lat & valid_indices_lon
             
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
