@@ -270,36 +270,36 @@ class Preprocessor:
             Set[int]: Set of indices of measurements that fall within the specified range.
         """
         t0 = time.time()
-        # Initialize an array to store measurement values
-        values = np.empty(self.metadata.number_of_measurements)
+        # # Initialize an array to store measurement values
+        # values = np.empty(self.metadata.number_of_measurements)
         
-        # Define an empty set to hold valid indices
-        valid_indices = set()
-
-        # Loop through each measurement in the data
-        for measurement in range(self.metadata.number_of_measurements):
-            # Read the value of the field from the file
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            # Store the read value in the corresponding index in the array
-            values[measurement] = value
-
-        # Given the field, filter the indices based on the specified range
-        if field == 'Latitude':
-            valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
-        # If the field is 'Longitude', filter the indices based on the longitude range
-        elif field == 'Longitude':
-            valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
-
+        # # Define an empty set to hold valid indices
         # valid_indices = set()
+
+        # # Loop through each measurement in the data
         # for measurement in range(self.metadata.number_of_measurements):
-        #     # Read the value of the field
+        #     # Read the value of the field from the file
         #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+        #     # Store the read value in the corresponding index in the array
+        #     values[measurement] = value
+
+        # # Given the field, filter the indices based on the specified range
+        # if field == 'Latitude':
+        #     valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
+        # # If the field is 'Longitude', filter the indices based on the longitude range
+        # elif field == 'Longitude':
+        #     valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
+
+        valid_indices = set()
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the value of the field
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             
-        #     # Check if the value falls within the specified range for latitude or longitude
-        #     if field == 'Latitude' and (self.latitude_range[0] <= value <= self.latitude_range[1]):
-        #         valid_indices.add(measurement)
-        #     elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
-        #         valid_indices.add(measurement)
+            # Check if the value falls within the specified range for latitude or longitude
+            if field == 'Latitude' and (self.latitude_range[0] <= value <= self.latitude_range[1]):
+                valid_indices.add(measurement)
+            elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
+                valid_indices.add(measurement)
         
         t1 = time.time()
         print(t1-t0)
