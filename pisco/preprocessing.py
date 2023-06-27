@@ -270,26 +270,37 @@ class Preprocessor:
             Set[int]: Set of indices of measurements that fall within the specified range.
         """
 
-        # Initialize an array to store measurement values
-        values = np.empty(self.metadata.number_of_measurements)
+        # # Initialize an array to store measurement values
+        # values = np.empty(self.metadata.number_of_measurements)
         
-        # Define an empty set to hold valid indices
+        # # Define an empty set to hold valid indices
+        # valid_indices = set()
+
+        # # Loop through each measurement in the data
+        # for measurement in range(self.metadata.number_of_measurements):
+        #     # Read the value of the field from the file
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+        #     # Store the read value in the corresponding index in the array
+        #     values[measurement] = value
+
+        # # Given the field, filter the indices based on the specified range
+        # if field == 'Latitude':
+        #     valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
+        # # If the field is 'Longitude', filter the indices based on the longitude range
+        # elif field == 'Longitude':
+        #     valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
+
         valid_indices = set()
-
-        # Loop through each measurement in the data
         for measurement in range(self.metadata.number_of_measurements):
-            # Read the value of the field from the file
+            # Read the value of the field
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            # Store the read value in the corresponding index in the array
-            values[measurement] = value
-
-        # Given the field, filter the indices based on the specified range
-        if field == 'Latitude':
-            valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
-        # If the field is 'Longitude', filter the indices based on the longitude range
-        elif field == 'Longitude':
-            valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
-
+            
+            # Check if the value falls within the specified range for latitude or longitude
+            if field == 'Latitude' and (self.latitude_range[0] <= value <= self.latitude_range[1]):
+                valid_indices.add(measurement)
+            elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
+                valid_indices.add(measurement)
+                
         # Return the indices that fall within the specified range for the given field
         return valid_indices
 
@@ -327,8 +338,6 @@ class Preprocessor:
             return set(range(self.metadata.number_of_measurements))
         else:
             print(f"\nFlagging observations to keep...")
-            valid_indices_lat = set()
-            valid_indices_lon = set()
 
             for field, dtype, dtype_size, cumsize in fields:
                 if field not in ['Latitude', 'Longitude']:
@@ -571,7 +580,8 @@ class Preprocessor:
             good_flag = check_quality_flags
         
         # Print the fraction of good measurements
-        print(f"{np.round((len(self.data_record_df[good_flag]) / len(self.data_record_df)) * 100, 2)} % good data of {len(self.data_record_df)} spectra")
+        good_ratio = np.round((len(self.data_record_df[good_flag]) / len(self.data_record_df)) * 100, 2)
+        print(f"{good_ratio} % good data of {len(self.data_record_df)} spectra, out of {self.metadata.number_of_measurements} measurements")
         
         # Throw away bad data, keep the good, re-assigning and over-writing the existing class attribute
         self.data_record_df = self.data_record_df[good_flag]
