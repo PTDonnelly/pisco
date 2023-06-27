@@ -273,12 +273,30 @@ class Preprocessor:
         print("Reading values:")
         # Read all the values of the field
         values = np.fromfile(self.f, dtype=dtype, count=self.metadata.number_of_measurements, sep='', offset=byte_offset)
-        print("Values read:")
-        if field == 'Latitude':
-            valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
-        elif field == 'Longitude':
-            valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
-        print("valid_indices retrieved:")
+        print(values[0:19])
+        exit()
+        # print("Values read:")
+        # if field == 'Latitude':
+        #     valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
+        # elif field == 'Longitude':
+        #     valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
+        # print("valid_indices retrieved:")
+        
+        
+        
+        valid_indices = set()
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the value of the field
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+            
+            # Check if the value falls within the specified range for latitude or longitude
+            if field == 'Latitude' and (self.latitude_range[0] <= value <= self.latitude_range[1]):
+                valid_indices.add(measurement)
+            elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
+                valid_indices.add(measurement)
+        
+        
+        
         return valid_indices
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
@@ -314,12 +332,11 @@ class Preprocessor:
             # If the latitude and longitude cover the full globe, return all indices
             return set(range(self.metadata.number_of_measurements))
         else:
-            print(f"\nFinding observations inside latitude-longitude range...")
+            print(f"\nFlagging observations to keep...")
             valid_indices_lat = set()
             valid_indices_lon = set()
 
             for field, dtype, dtype_size, cumsize in fields:
-                print(f"Flagging: {field}")
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
                     continue
