@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 from typing import Any, List, BinaryIO, Tuple, Set
-
+import time
 import numpy as np
 
 class Metadata:
@@ -269,7 +269,7 @@ class Preprocessor:
         Returns:
             Set[int]: Set of indices of measurements that fall within the specified range.
         """
-
+        t0 = time.time()
         # Initialize an array to store measurement values
         values = np.empty(self.metadata.number_of_measurements)
         
@@ -300,7 +300,10 @@ class Preprocessor:
         #         valid_indices.add(measurement)
         #     elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
         #         valid_indices.add(measurement)
-                
+        
+        t1 = time.time()
+        print(t1-t0)
+        exit()
         # Return the indices that fall within the specified range for the given field
         return valid_indices
 
