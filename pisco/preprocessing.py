@@ -270,7 +270,7 @@ class Preprocessor:
         dt = np.dtype(dtype_list)
 
         # Create a memmap array with the correct dtype and size
-        return np.memmap(self.f.fileno(), dtype=dt, mode='w+', shape=(self.metadata.number_of_measurements,))
+        return np.memmap(self.f, dtype=dt, mode='w+', shape=(self.metadata.number_of_measurements,))
 
 
 
