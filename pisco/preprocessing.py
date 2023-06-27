@@ -215,6 +215,8 @@ class Preprocessor:
         Opens the binary file and extracts the metadata.
     close_binary_file()
         Closes the currently open binary file.
+    flag_observations_to_keep(fields: List[tuple])
+        Creates a Set of indices to sub-sample the main data set.
     read_record_fields(fields: List[tuple])
         Reads the specified fields from the binary file and stores them in the DataFrame.
     read_spectral_radiance(fields: List[tuple])
@@ -250,7 +252,6 @@ class Preprocessor:
         self.metadata.get_iasi_common_header()
         return
 
-
     def close_binary_file(self):
         self.f.close()
         return
@@ -278,7 +279,6 @@ class Preprocessor:
 
         return valid_indices
 
-    
     def _calculate_byte_offset(self, dtype_size: int) -> int:
         return self.metadata.record_size + 8 - dtype_size
     
@@ -359,10 +359,10 @@ class Preprocessor:
         valid_index = 0
 
         for measurement in range(self.metadata.number_of_measurements):
-            # Read the value for the current measurement
             if measurement in valid_indices:
                 # Move file pointer to value
                 self.f.seek(byte_offset * measurement, 1)
+                # Read the value for the current measurement
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
@@ -591,7 +591,7 @@ class Preprocessor:
         
         # Limit observations to specified spatial range
         fields = self.metadata._get_iasi_common_record_fields()
-        valid_indices = self.get_valid_indices(fields)
+        valid_indices = self.flag_observations_to_keep(fields)
 
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
