@@ -340,7 +340,7 @@ class Preprocessor:
             print(f"\nFlagging observations to keep...")
             valid_indices_lat = set()
             valid_indices_lon = set()
-            
+
             for field, dtype, dtype_size, cumsize in fields:
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
@@ -383,12 +383,24 @@ class Preprocessor:
         # Counter for the valid indices in data
         valid_index = 0
 
+        # for measurement in range(self.metadata.number_of_measurements):
+        #     if measurement in valid_indices:
+        #         # Move file pointer to value
+        #         self.f.seek(byte_offset * measurement, 1)
+        #         # Read the value for the current measurement
+        #         value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+        #         # Store the value in the data array, handling missing values as NaN
+        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
+        #         # Increment the valid index counter
+        #         valid_index += 1
+        #     else:
+        #         # Skip this measurement
+        #         continue
+        
         for measurement in range(self.metadata.number_of_measurements):
+            # Read the value for the current measurement
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             if measurement in valid_indices:
-                # Move file pointer to value
-                self.f.seek(byte_offset * measurement, 1)
-                # Read the value for the current measurement
-                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
                 # Increment the valid index counter
