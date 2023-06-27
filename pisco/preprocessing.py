@@ -270,7 +270,7 @@ class Preprocessor:
         dt = np.dtype(dtype_list)
 
         # Create a memmap array with the correct dtype and size
-        return np.memmap(self.f, dtype=dt, mode='w+', shape=(self.metadata.number_of_measurements,))
+        return np.memmap(self.f, dtype=dt, mode='r', shape=(self.metadata.number_of_measurements,))
 
 
 
@@ -335,9 +335,6 @@ class Preprocessor:
             return set(range(self.metadata.number_of_measurements))
         else:
             print(f"\nFlagging observations to keep...")
-            valid_indices_lat = set()
-            valid_indices_lon = set()
-
             mmapped_data = self._binary_table_to_memmap(fields)
 
             print(type(mmapped_data))
