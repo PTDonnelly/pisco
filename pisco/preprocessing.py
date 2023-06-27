@@ -269,19 +269,28 @@ class Preprocessor:
         Returns:
             Set[int]: Set of indices of measurements that fall within the specified range.
         """
-        print("Reading values:")
+
+        # Initialize an array to store measurement values
         values = np.empty(self.metadata.number_of_measurements)
+        
+        # Define an empty set to hold valid indices
         valid_indices = set()
+
+        # Loop through each measurement in the data
         for measurement in range(self.metadata.number_of_measurements):
-            # Read the value of the field
+            # Read the value of the field from the file
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+            # Store the read value in the corresponding index in the array
             values[measurement] = value
-        print("Flagging values:")
+
+        # Given the field, filter the indices based on the specified range
         if field == 'Latitude':
             valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
+        # If the field is 'Longitude', filter the indices based on the longitude range
         elif field == 'Longitude':
             valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
-        
+
+        # Return the indices that fall within the specified range for the given field
         return valid_indices
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
@@ -312,33 +321,37 @@ class Preprocessor:
         """
         # Check if the latitude and longitude cover the full globe
         full_globe = self._check_spatial_range()
-        
+
         if full_globe:
             # If the latitude and longitude cover the full globe, return all indices
             return set(range(self.metadata.number_of_measurements))
         else:
             print(f"\nFlagging observations to keep...")
-            valid_indices_lat = set()
-            valid_indices_lon = set()
 
+            # Initialize a dictionary to store the valid indices per field
+            valid_indices_per_field = dict()
+
+            # Iterate over the defined fields
             for field, dtype, dtype_size, cumsize in fields:
-                if field not in ['Latitude', 'Longitude']:
-                    # Skip all other fields for now
+                # Only consider the fields we are interested in
+                if field not in ['Latitude', 'Longitude']:  # Add more field names to this list as necessary
                     continue
 
-                # Set the starting position of the field and calculate the byte offset
+                # Set the starting position of the field in the data and calculate the byte offset
                 self._set_field_start_position(cumsize)
                 byte_offset = self._calculate_byte_offset(dtype_size)
 
-                # Read and store the valid indices for the field
+                # Get the valid indices for this field and store them in the dictionary
                 valid_indices = self._get_indices(field, dtype, byte_offset)
-                if field == 'Latitude':
-                    valid_indices_lat = valid_indices
-                elif field == 'Longitude':
-                    valid_indices_lon = valid_indices
+                valid_indices_per_field[field] = valid_indices
 
-            # Return the intersection of valid latitude and longitude indices
-            return valid_indices_lat & valid_indices_lon
+            # After all fields have been processed, compute the intersection of all sets of valid indices.
+            # This means a data point needs to be valid in all fields to be kept.
+            valid_indices = set.intersection(*valid_indices_per_field.values())
+
+            # Return the set of valid indices
+            return valid_indices
+
             
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
