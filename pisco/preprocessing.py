@@ -256,7 +256,7 @@ class Preprocessor:
         return
     
 
-    def _read_indices(self, field: str, dtype: Any, byte_offset: int) -> Set[int]:
+    def _get_indices(self, field: str, dtype: Any, byte_offset: int) -> Set[int]:
         """
         Read and check the indices of measurements based on the latitude or longitude values.
 
@@ -268,18 +268,16 @@ class Preprocessor:
         Returns:
             Set[int]: Set of indices of measurements that fall within the specified range.
         """
-        valid_indices = set()
-        for measurement in range(self.metadata.number_of_measurements):
-            # Read the value of the field
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            
-            # Check if the value falls within the specified range for latitude or longitude
-            if field == 'Latitude' and (self.latitude_range[0] <= value <= self.latitude_range[1]):
-                valid_indices.add(measurement)
-            elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
-                valid_indices.add(measurement)
+        # Read all the values of the field
+        values = np.fromfile(self.f, dtype=dtype, count=self.metadata.number_of_measurements, sep='', offset=byte_offset)
         
+        if field == 'Latitude':
+            valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
+        elif field == 'Longitude':
+            valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
+
         return valid_indices
+
     
     def _calculate_byte_offset(self, dtype_size: int) -> int:
         return self.metadata.record_size + 8 - dtype_size
@@ -291,7 +289,7 @@ class Preprocessor:
     def _check_spatial_range(self):
         return True if (self.latitude_range == [-90, 90]) & (self.longitude_range == [-180, 180]) else False
     
-    def get_valid_indices(self, fields: List[tuple]) -> Set[int]:
+    def flag_observations_to_keep(self, fields: List[tuple]) -> Set[int]:
         """
         Go through the latitude and longitude fields to find and store indices of measurements 
         where latitude and longitude fall inside the specified range.
@@ -328,7 +326,7 @@ class Preprocessor:
                 byte_offset = self._calculate_byte_offset(dtype_size)
 
                 # Read and store the valid indices for the field
-                valid_indices = self._read_indices(field, dtype, byte_offset)
+                valid_indices = self._get_indices(field, dtype, byte_offset)
                 if field == 'Latitude':
                     valid_indices_lat = valid_indices
                 elif field == 'Longitude':
@@ -362,8 +360,8 @@ class Preprocessor:
 
         for measurement in range(self.metadata.number_of_measurements):
             # Read the value for the current measurement
-            # value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             if measurement in valid_indices:
+                # Move file pointer to value
                 self.f.seek(byte_offset * measurement, 1)
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
                 # Store the value in the data array, handling missing values as NaN
