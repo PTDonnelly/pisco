@@ -257,23 +257,6 @@ class Preprocessor:
         return
     
 
-    def _binary_table_to_memmap(self, fields):
-        # Initialize an empty list to store the dtypes
-        dtype_list = []
-
-        # Iterate over each tuple in the common_fields list
-        for field, dtype, dtype_size, _ in fields:
-            # Append a tuple with the field name and dtype to the dtype list
-            dtype_list.append((field, dtype, dtype_size))
-
-        # Convert the list to a numpy dtype object
-        dt = np.dtype(dtype_list)
-
-        # Create a memmap array with the correct dtype and size
-        return np.memmap(self.f, dtype=dt, mode='r', shape=(self.metadata.number_of_measurements,))
-
-
-
     def _get_indices(self, field: str, dtype: Any, byte_offset: int) -> Set[int]:
         """
         Read and check the indices of measurements based on the latitude or longitude values.
@@ -285,20 +268,20 @@ class Preprocessor:
 
         Returns:
             Set[int]: Set of indices of measurements that fall within the specified range.
-        """        
-        print("Reading values")
-        
+        """
+        print("Reading values:")
+        values = np.empty(self.metadata.number_of_measurements)
         valid_indices = set()
         for measurement in range(self.metadata.number_of_measurements):
             # Read the value of the field
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            
-            # Check if the value falls within the specified range for latitude or longitude
-            if field == 'Latitude' and (self.latitude_range[0] <= value <= self.latitude_range[1]):
-                valid_indices.add(measurement)
-            elif field == 'Longitude' and (self.longitude_range[0] <= value <= self.longitude_range[1]):
-                valid_indices.add(measurement)
-
+            values[measurement] = value
+        print("Flagging values:")
+        if field == 'Latitude':
+            valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
+        elif field == 'Longitude':
+            valid_indices = set(np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0])
+        
         return valid_indices
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
@@ -335,11 +318,8 @@ class Preprocessor:
             return set(range(self.metadata.number_of_measurements))
         else:
             print(f"\nFlagging observations to keep...")
-            mmapped_data = self._binary_table_to_memmap(fields)
-
-            print(type(mmapped_data))
-
-            exit()
+            valid_indices_lat = set()
+            valid_indices_lon = set()
 
             for field, dtype, dtype_size, cumsize in fields:
                 if field not in ['Latitude', 'Longitude']:
