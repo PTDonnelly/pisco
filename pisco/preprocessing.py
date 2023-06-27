@@ -371,6 +371,7 @@ class Preprocessor:
         # Counter for the valid indices in data
         valid_index = 0
 
+        #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
         # for measurement in range(self.metadata.number_of_measurements):
         #     if measurement in valid_indices:
         #         # Move file pointer to value
