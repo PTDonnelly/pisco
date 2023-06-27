@@ -338,7 +338,9 @@ class Preprocessor:
             return set(range(self.metadata.number_of_measurements))
         else:
             print(f"\nFlagging observations to keep...")
-
+            valid_indices_lat = set()
+            valid_indices_lon = set()
+            
             for field, dtype, dtype_size, cumsize in fields:
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
