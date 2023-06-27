@@ -1,21 +1,24 @@
 {
     // L1C: bool, Specifies whether Level 1C data should be processed
-    "L1C": false,
+    "L1C": true,
 
     // L2: bool, Specifies whether Level 2 data should be processed
     "L2": false,
 
-    // correlate: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
-    "correlate": true,
+    // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
+    "process": false,
 
     // year_list: List[int], List of years for extraction
-    "year_list": [2022],
+    "year_list": [2020],
 
-    // month_list: List[int], List of months for extraction
-    "month_list": [3],
+    // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
+    "month_list": [1],
 
-    // day_list: List[int] or str, List of specific days or "all" to scan all calendar days in month
-    "day_list": [24],
+    // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
+    "day_list": "all",
+
+    // months_in_year: List[int], Calendar months in each year
+    "months_in_year": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 
     // days_in_months: List[int], Number of calendar days in each month
     "days_in_months": [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
@@ -23,15 +26,18 @@
     // datapath_out: str, The user-defined data path for the processed output files
     "datapath_out": "/data/pdonnelly/iasi/metopc/",
 
-    // targets: List[str], List of target IASI L1C products
-    "targets": ["satellite_zenith_angle", "quality_flag_1", "quality_flag_2", "quality_flag_3", "cloud_fraction", "surface_type"],
+    // channel_mode: str,  "all" to extract all spectral channels, "range" to specify specific range in configuration.py
+    "channel_mode": "all",
 
-    // latitude_range: List[int], The spatial range for binning latitudes
-    "latitude_range": [-90, 90],
-
-    // longitude_range: List[int], The spatial range for binning longitudes
-    "longitude_range": [-180, 180],
+    // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
+    "products": "clp",
 
     // cloud_phase: int, The desired cloud phase from the L2 products
-    "cloud_phase": 2
+    "cloud_phase": 2,
+
+    // latitude_range: Tuple[int], The spatial range for binning latitudes
+    "latitude_range": [30, 60],
+
+    // longitude_range: Tuple[int], The spatial range for binning longitudes
+    "longitude_range": [-60, 0]
 }

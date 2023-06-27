@@ -2,7 +2,7 @@ import os
 import subprocess
 from typing import Optional, Tuple
 
-from .configurer import Configurer
+from .configuration import Configurer
 
 class Extractor:
     def __init__(self, path_to_config_file: str):
@@ -53,12 +53,9 @@ class Extractor:
             str: Input data path.
         """
         # Check the data level
-        if self.data_level == 'l1c':
+        if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
             return f"/bdd/metopc/{self.data_level}/iasi/"
-        elif self.data_level == 'l2':
-            # Format the input path string with an additional 'clp/' at the end and return it
-            return f"/bdd/metopc/{self.data_level}/iasi/{self.year}/{self.month}/{self.day}/clp/"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -73,7 +70,7 @@ class Extractor:
         self.datapath_out = self._get_datapath_out()
 
 
-    def check_preprocessed_files(self, result: object) -> bool:
+    def check_extracted_files(self, result: object) -> bool:
         # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
         if ("No L1C data files found" in result.stdout) or ("No L2 data files found" in result.stdout):
             print(result.stdout)
@@ -91,11 +88,20 @@ class Extractor:
             str: Parameters for the command.
         """
         # Define the parameters for the command
-        list_of_parameters = [
-            f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",  # first and last day
-            f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
-            f"-of bin"  # output file format
-        ]
+        if (self.data_level == 'l1c'):
+            list_of_parameters = [
+                f"-d {self.datapath_in}",
+                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",  # first and last day
+                f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
+                f"-of bin"  # output file format
+            ]
+        elif (self.data_level == 'l2'):
+            list_of_parameters = [
+                f"-d2 {self.datapath_in}",
+                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",
+                f"-t2 {self.config.products}",
+                f"-of bin"  # output file format
+            ]
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
 
@@ -109,18 +115,13 @@ class Extractor:
         Returns:
             str: Command to run for data extraction.
         """
-        if self.data_level == 'l1c':
+        if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Define the path to the run executable
             runpath = f"./bin/obr_v4"
             # Get the command parameters
             parameters = self._build_parameters()
             # Return the complete command
-            return f"{runpath} -d {self.datapath_in} {parameters} -out {self.datapath_out}{self.datafile_out}"
-        elif self.data_level == 'l2':
-            # Define the path to the run executable
-            runpath = "./bin/BUFR_iasi_clp_reader_from20190514"
-            # Return the complete command
-            return f"{runpath} {self.datapath_in}{self.datafile_in} {self.datapath_out}{self.datafile_out}"
+            return f"{runpath} {parameters} -out {self.datapath_out}{self.datafile_out}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -131,18 +132,45 @@ class Extractor:
         """
         # Build the command string to execute the binary script
         command = self._get_command()
-        print(command)
+        print(f"\n{command}")
+
         try:
-            # Run the command in a bash shell and capture the output
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as e:
-            # The subprocess module will raise a CalledProcessError if the process returns a non-zero exit status
-            # The standard error of the command is available in e.stderr
-            raise RuntimeError(f"{str(e)}, stderr: {e.stderr.decode('utf-8')}")
-        except Exception as e:
-            # Catch any other exceptions
-            raise RuntimeError(f"An unexpected error occurred while running the command '{command}': {str(e)}")
-        return result
+            # Initiate the subprocess with Popen.
+            # shell=True specifies that the command will be run through the shell.
+            # stdout=subprocess.PIPE and stderr=subprocess.PIPE allow us to capture the output.
+            # text=True means the output will be in string format (if not set, the output would be in bytes).
+            subprocess_instance = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            
+            # Initialize an empty list to store the output lines
+            command_output = []
+
+            # Loop until the subprocess finishes.
+            # We're using subprocess_instance.poll() to check if the subprocess has finished (it returns None while the subprocess is still running).
+            while True:
+                # Read one line of output. If there's no output, readline() returns an empty string.
+                current_output_line = subprocess_instance.stdout.readline()
+                if subprocess_instance.poll() is not None:
+                    break
+                if current_output_line:
+                    # Print the line and also save it to command_output list
+                    print(current_output_line.strip())
+                    command_output.append(current_output_line.strip())
+
+            # At this point, the subprocess has finished. Check its return code.
+            return_code = subprocess_instance.poll()
+
+            # If the return code is not 0, it usually indicates an error.
+            if return_code != 0:
+                # If there's an error, read the error message and raise an exception.
+                error_message = subprocess_instance.stderr.read()
+                raise RuntimeError(f"Command '{command}' returned non-zero exit status {return_code}, stderr: {error_message}")
+        except Exception as unexpected_error:
+            # Catch any other exceptions that weren't handled above.
+            raise RuntimeError(f"An unexpected error occurred while running the command '{command}': {str(unexpected_error)}")
+        
+        # Create a CompletedProcess object that contains the result of execution
+        return subprocess.CompletedProcess(args=command, returncode=return_code, stdout='\n'.join(command_output), stderr=None)
+
 
 
     def create_intermediate_filepath(self) -> None:
@@ -156,8 +184,8 @@ class Extractor:
             # Get the output file name from the input file name
             self.datafile_out = "extracted_spectra.bin"
         elif self.data_level == 'l2':
-            # self.datafile_out = "cloud_products.csv"
-            self.datafile_out = self.datafile_in.split(",")[2]
+            self.datafile_out = "cloud_products.bin"
+            # self.datafile_out = self.datafile_in.split(",")[2]
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -167,7 +195,7 @@ class Extractor:
         return f"{self.datapath_out}{self.datafile_out}"
 
 
-    def preprocess(self) -> Tuple[bool, str]:
+    def extract_files(self) -> Tuple[bool, str]:
         """
         Preprocesses the IASI data.
         """
@@ -176,23 +204,4 @@ class Extractor:
         # Run the command to extract the data
         result = self.run_command()
         # Check if files are produced. If not, skip processing.
-        self.intermediate_file_check = self.check_preprocessed_files(result)
-                        
-
-    def _get_suffix(self):
-        old_suffix=".bin"
-        if self.data_level == 'l1c':
-            new_suffix=".bin"
-        elif self.data_level == 'l2':
-            new_suffix=".out"
-        else:
-            raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
-        return old_suffix, new_suffix
-
-    def rename_files(self):
-        old_suffix, new_suffix = self._get_suffix()
-        if os.path.isdir(self.datapath_out):
-            for filename in os.scandir(self.datapath_out):
-                if filename.name.endswith(old_suffix):
-                    new_filename = f"{filename.name[:-len(old_suffix)]}{new_suffix}"
-                    os.rename(filename.path, os.path.join(self.datapath_out, new_filename))
+        self.intermediate_file_check = self.check_extracted_files(result)

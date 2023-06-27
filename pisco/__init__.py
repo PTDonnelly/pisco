@@ -1,5 +1,5 @@
-from .configurer import Configurer
-from .correlator import L1C_L2_Correlator
-from .extractor import Extractor
-from .processor import L1CProcessor, L2Processor
-from .scripts import process_l1c, process_l2, correlate_l1c_l2
+from .configuration import Configurer
+from .extraction import Extractor
+from .preprocessing import Preprocessor
+from .processing import Processor
+from .scripts import preprocess_iasi, process_iasi, plot_spatial_distribution, plot_spectra

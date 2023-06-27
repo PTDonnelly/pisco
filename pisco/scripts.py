@@ -1,64 +1,41 @@
-import os
+from .extraction import Extractor
+from .preprocessing import Preprocessor
+from .processing import Processor
 
-from pisco import Extractor, L1CProcessor, L2Processor, L1C_L2_Correlator
-
-def process_l1c(ex: Extractor):
+def preprocess_iasi(ex: Extractor, data_level: str):
     """
-    Process level 1C IASI data.
+    This function is used to process IASI (Infrared Atmospheric Sounding Interferometer) data 
+    by extracting raw binary files and preprocessing them into pandas DataFrames.
 
-    Extracts and processes IASI spectral data from intermediate binary files,
-    applies quality control and saves the output.
+    It first uses an Extractor object to fetch the raw data files for a specific data level, 
+    and then performs extraction. 
 
-    Args:
-        Instance of the Extractor class 
-    Result:
-        A HDF5 file containing all good spectra from this intermediate file.
+    If the extraction is successful, the function creates a Preprocessor object using the path 
+    to the extracted intermediate file and the data level. This Preprocessor object preprocesses 
+    the files to create a DataFrame for the given date.
+
+    Parameters:
+    ex (Extractor): An Extractor object which contains methods and attributes for data extraction.
+    data_level (str): The data level string, which determines the level of data to be extracted 
+                      and preprocessed.
+
+    Returns:
+    None: The function performs extraction and preprocessing operations but does not return a value.
     """
-    # Preprocess IASI Level 1C data
-    ex.data_level = "l1c"
+    # Use OBR to extract IASI data from raw binary files
+    ex.data_level = data_level
     ex.get_datapaths()
-    ex.preprocess()
-    ex.rename_files()
-    
-    # Process IASI Level 1C data
+    ex.extract_files()
+
+    # If IASI data was successfully extracted
     if ex.intermediate_file_check:
-        # Process extracted IASI data from intermediate binary files and save to CSV
-        with L1CProcessor(ex.intermediate_file, ex.config.targets) as file:
-            file.extract_spectra(ex.datapath_out, ex.datafile_out, ex.year, ex.month, ex.day)
+        # Preprocess the data into pandas DataFrames
+        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
+        p.preprocess_files(ex.year, ex.month, ex.day)
     return
 
-def process_l2(ex: Extractor):
-    """
-    Process level 2 IASI data.
 
-    Extracts and processes IASI cloud products from intermediate CSV files and
-    stores all data points with Cloud Phase == 2 (ice).
-
-    Args:
-        Instance of the Extractor class 
-    
-    Result:
-        A HDF5 file containing all locations of ice cloud from this intermediate file.
-    """
-    # Preprocess IASI Level 2 data
-    ex.data_level = "l2"
-    ex.get_datapaths()
-    for datafile_in in os.scandir(ex.datapath_in):
-        # Check that entry is a file
-        if datafile_in.is_file():
-            # Set the current input file
-            ex.datafile_in = datafile_in.name
-            ex.preprocess()
-            ex.rename_files()
-            
-            # Process IASI Level 2 data
-            if ex.intermediate_file_check:
-                # Process extracted IASI data from intermediate binary files, and save to CSV
-                with L2Processor(ex.intermediate_file, ex.config.latitude_range, ex.config.longitude_range, ex.config.cloud_phase) as file:
-                    file.extract_cloud_products() 
-    return
-
-def correlate_l1c_l2(ex: Extractor):
+def process_iasi(ex: Extractor):
     """
     Correlate level 1C spectra and level 2 cloud products.
 
@@ -71,19 +48,81 @@ def correlate_l1c_l2(ex: Extractor):
     Result:
         A CSV file containing all spectra at those locations and times.
     """  
-    co = L1C_L2_Correlator(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
-
-    # Concatenate all L2 CSV files into a single coud products file
-    co.gather_files()
-    
-    # Load IASI spectra and cloud products
-    co.load_data()      
-    
-    # Correlates measurements, keep matching locations and times of observation
-    co.correlate_measurements()
-    
-    # Saves the merged data, and deletes the original data.
-    co.save_merged_data()
-
-    co.preview_merged_data()
+    p = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
+    p.correlate_spectra_with_cloud_products()
     return
+
+
+def plot_spatial_distribution(datapath: str):
+    import os
+    import pandas as pd
+    import matplotlib.cm as cm
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.basemap import Basemap
+    import numpy as np
+    
+    filepaths = [os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file]
+
+    # Initialize a new figure for the plot
+    plt.figure(figsize=(8, 8))
+
+    # Create a basemap of the world
+    m = Basemap(projection='cyl')
+
+    # Draw coastlines and country borders
+    m.drawcoastlines()
+    # m.drawcountries()
+
+    # Plotting parameters
+    colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
+    
+    # Walk through the directory
+    for file, color in zip(filepaths, colors):
+        print(file)
+
+        # Load the data from the file into a pandas DataFrame
+        data = pd.read_csv(file)
+        # Plot the observations on the map
+        x, y = m(data['Longitude'].values, data['Latitude'].values)
+        m.scatter(x, y, latlon=True, marker=".", s=1, color=color)
+
+    # Show the plot
+    plt.savefig(f"{datapath}/spatial_distribution.png", dpi=300, bbox_inches='tight')
+
+def plot_spectra(datapath: str):
+    import os
+    import pandas as pd
+    import matplotlib.cm as cm
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    filepaths = [os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file]
+
+    # Plotting parameters
+    colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
+    
+    # Initialize a new figure for the plot
+    plt.figure(figsize=(8, 8))
+
+    # Walk through the directory
+    for file, color in zip(filepaths, colors):
+        print(file)
+
+        # Load the data from the file into a pandas DataFrame
+        df = pd.read_csv(file)
+        
+        # Get the spectrum (all columns with "Channel" in the name)
+        spectrum_columns = [col for col in df.columns if "Channel" in col]
+        spectrum = df[spectrum_columns[6:]].mean()
+        
+        channels = np.arange(len(spectrum))
+
+        # Plot the average spectrum
+        plt.plot(channels, spectrum, color=color, lw=0.5)
+    
+    plt.xlabel('Channel')
+    plt.ylabel('Average intensity')
+    # plt.yscale('log') 
+
+    # Show the plot
+    plt.savefig(f"{datapath}/average_spectra.png", dpi=300, bbox_inches='tight')
