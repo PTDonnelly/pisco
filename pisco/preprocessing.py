@@ -388,7 +388,7 @@ class Preprocessor:
             print(measurement, byte_offset, byte_offset * measurement, self.f.tell(), self.f.tell() - byte_offset * measurement, byte_offset_increment)
             
             if measurement in valid_indices:
-                print(measurement, byte_offset, byte_offset * measurement, self.f.tell(), self.f.tell() - byte_offset * measurement, byte_offset_increment)
+                print(measurement, byte_offset_increment, byte_offset_increment * measurement, self.f.tell(), self.f.tell() - byte_offset_increment * measurement)
                 input()
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
