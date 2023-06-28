@@ -381,17 +381,14 @@ class Preprocessor:
         # Counter for the valid indices in data
         valid_index = 0
 
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     # Read the value for the current measurement
-        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         # Store the value in the data array, handling missing values as NaN
-        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
-        #         # Increment the valid index counter
-        #         valid_index += 1
-        #     else:
-        #         # Skip this measurement
-        #         continue
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the value for the current measurement
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+            if measurement in valid_indices:
+                # Store the value in the data array, handling missing values as NaN
+                data[valid_index] = np.nan if len(value) == 0 else value[0]
+                # Increment the valid index counter
+                valid_index += 1
 
         byte_offset_increment = 0
         for measurement in range(self.metadata.number_of_measurements):
@@ -400,18 +397,14 @@ class Preprocessor:
             print((self.metadata.header_size + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
             
             if measurement in valid_indices:
-                print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell() - byte_offset_increment)
+                print((self.metadata.header_size + 12) + (byte_offset), byte_offset_increment, self.f.tell() - byte_offset_increment)
                 input()
                 # Store the value in the data array, handling missing values as NaN
                 if len(value) == 0:
                     data[valid_index] = value[0]
                 # Increment the valid index counter
                 valid_index += 1
-            # else:
-            #     byte_offset_increment += byte_offset + 2
-            #     # Skip this measurement
-            #     continue
-            byte_offset_increment += byte_offset + 2
+            byte_offset_increment += byte_offset
 
         return data
           
@@ -485,9 +478,6 @@ class Preprocessor:
                     data[:, valid_index] = spectrum
                 # Increment the valid index counter
                 valid_index += 1
-            else:
-                # Skip this measurement
-                continue
 
         return data
 
