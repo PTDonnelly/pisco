@@ -395,14 +395,14 @@ class Preprocessor:
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
             if measurement in valid_indices:
-                print((self.metadata.header_size + 12) + (byte_offset), byte_offset_increment, self.f.tell() - byte_offset_increment)
-                print(self.f.tell(), byte_offset_increment + (self.metadata.header_size + 12) + (byte_offset))
+                print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell() - byte_offset_increment)
+                print(self.f.tell(), byte_offset_increment + (self.metadata.header_size + 12) + (byte_offset+ 2))
                 input()
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
                 # Increment the valid index counter
                 valid_index += 1
-            byte_offset_increment += byte_offset
+            byte_offset_increment += byte_offset+ 2
 
         return data
           
@@ -471,9 +471,8 @@ class Preprocessor:
             # Read the spectrum data for the valid measurement
             spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
             if measurement in valid_indices:
-                # Store the spectrum in the data array, handling missing values as NaN
-                if len(spectrum) == 0:
-                    data[:, valid_index] = spectrum
+                # Store the spectrum in the data array if spectrum exists; leave untouched otherwise (as np.nan).
+                data[valid_index] = spectrum if len(spectrum) != 0 else data[valid_index]
                 # Increment the valid index counter
                 valid_index += 1
 
