@@ -424,7 +424,9 @@ class Preprocessor:
 
     
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
+        print(self.metadata.channel_IDs)
         for i, channel_id in enumerate(self.metadata.channel_IDs):
+            print(i, channel_id)
             self.data_record_df[f'Spectrum {channel_id}'] = data[i, :]
         return
     
@@ -442,9 +444,6 @@ class Preprocessor:
         # Initialize an empty numpy array to store the spectral radiance data
         data = np.empty((self.metadata.number_of_channels, len(valid_indices)))
 
-        # Counter for the valid indices in data
-        valid_index = 0
-
        #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
         for i, measurement in enumerate(valid_indices):
             # Move file pointer to value
@@ -455,6 +454,8 @@ class Preprocessor:
             data[:, i] = np.nan if len(spectrum) == 0 else spectrum
         #####
         
+        # # Counter for the valid indices in data
+        # valid_index = 0
 
         # # Iterate over each measurement and extract the spectral radiance data
         # for measurement in range(self.metadata.number_of_measurements):
