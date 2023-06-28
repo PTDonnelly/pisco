@@ -60,7 +60,7 @@ class Metadata:
         # Get the total size of the file
         file_size = self.f.seek(0, 2)
         # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
-        self.number_of_measurements = ((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
+        self.number_of_measurements = 100 #((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
         return
     
     def _read_record_size(self) -> int:
@@ -371,25 +371,12 @@ class Preprocessor:
         valid_index = 0
 
         #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     if measurement in valid_indices:
-        #         # Move file pointer to value
-        #         self.f.seek(byte_offset * measurement, 1)
-        #         # Read the value for the current measurement
-        #         value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        #         # Store the value in the data array, handling missing values as NaN
-        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
-        #         # Increment the valid index counter
-        #         valid_index += 1
-        #     else:
-        #         # Skip this measurement
-        #         continue
-        #####
-        
         for measurement in range(self.metadata.number_of_measurements):
-            # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             if measurement in valid_indices:
+                # Move file pointer to value
+                self.f.seek(byte_offset * measurement, 1)
+                # Read the value for the current measurement
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
                 # Increment the valid index counter
@@ -397,6 +384,19 @@ class Preprocessor:
             else:
                 # Skip this measurement
                 continue
+        #####
+        
+        # for measurement in range(self.metadata.number_of_measurements):
+        #     # Read the value for the current measurement
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+        #     if measurement in valid_indices:
+        #         # Store the value in the data array, handling missing values as NaN
+        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
+        #         # Increment the valid index counter
+        #         valid_index += 1
+        #     else:
+        #         # Skip this measurement
+        #         continue
 
         return data
           
