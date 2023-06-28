@@ -385,7 +385,7 @@ class Preprocessor:
             input()
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            byte_offset_increment += (byte_offset + 2) * measurement
+            byte_offset_increment += (byte_offset + 2) * i
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
