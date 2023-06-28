@@ -397,7 +397,9 @@ class Preprocessor:
             if measurement in valid_indices:
                 # Read the value for the current measurement
                 temp_offset = byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2)
-                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset_increment)
+
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=temp_offset)
+
                 print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
                 input()
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
