@@ -377,7 +377,7 @@ class Preprocessor:
             print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
 
             # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
 
             # print((self.metadata.header_size + 12 + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
