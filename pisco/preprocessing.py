@@ -369,15 +369,16 @@ class Preprocessor:
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
         byte_offset_increment = (byte_offset + 2) * valid_indices[0]
-        print(np.diff(valid_indices, prepend=[0]))
-        for i, (measurement, increment) in enumerate(zip(valid_indices, np.diff(valid_indices, prepend=[0]))):
+        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 0)
+        print(valid_indices_increments)
+        for i, (index, increment) in enumerate(zip(valid_indices, valid_indices_increments)):
 
             # Move file pointer to value
             self.f.seek(byte_offset_increment, 1)
 
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print(i, measurement, byte_offset_increment, self.f.tell())
+            print(i, index, byte_offset_increment, self.f.tell())
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
