@@ -367,64 +367,39 @@ class Preprocessor:
         # Calculate the byte offset to the next measurement
         byte_offset = self._calculate_byte_offset(dtype_size)
         
-        # Calculate byte location to start pointer (skipping invalid indices)
-        byte_start = (byte_offset + dtype_size) * valid_indices[0]
-        # Move file pointer to first valid index
-        self.f.seek(byte_start, 1)
+        # # Calculate byte location to start pointer (skipping invalid indices)
+        # byte_start = (byte_offset + dtype_size) * valid_indices[0]
+        # # Move file pointer to first valid index
+        # self.f.seek(byte_start, 1)
         
-        # calculate the gaps between valid indices
-        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
+        # # calculate the gaps between valid indices
+        # valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
-        # Prepare an empty array to store the data of the current field
-        data = np.empty(len(valid_indices))
+        # # Prepare an empty array to store the data of the current field
+        # data = np.empty(len(valid_indices))
 
-        for i, increment in enumerate(valid_indices_increments):
-            # Read the value for the current measurement
-            step = (byte_offset * increment) + (dtype_size * (increment - 1))
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
-
-            # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-            data[i] = value[0] if len(value) != 0 else data[i]
-        
-        # # Prepare an NaN array to store the data of the current field
-        # data = np.full(len(valid_indices), np.nan)
-        
-        # # Counter for the valid indices in data
-        # valid_index = 0
-
-        # for measurement in range(self.metadata.number_of_measurements):
+        # for i, increment in enumerate(valid_indices_increments):
         #     # Read the value for the current measurement
-        #     print(measurement, self.f.tell())
-        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         print(measurement, self.f.tell())
-        #         input()
-        #         # Store the value in the data array, handling missing values as NaN
-        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
-        #         # Increment the valid index counter
-        #         valid_index += 1
+        #     step = (byte_offset * increment) + (dtype_size * (increment - 1))
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
-        # byte_offset_increment = 0
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     # # Read the value for the current measurement
-        #     # value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
-        #     if measurement in valid_indices:
-        #         # Calculate byte offset
-        #         temp_offset = byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2)
-                
-        #         # Move file pointer to value
-        #         self.f.seek(byte_offset_increment, 1)
-
-        #         # Read the value for the current measurement
-        #         value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
-
-        #         print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
-        #         input()
-        #         # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-        #         data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
-        #         # Increment the valid index counter
-        #         valid_index += 1
-        #     byte_offset_increment += byte_offset + 2
+        #     # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+        #     data[i] = value[0] if len(value) != 0 else data[i]
+        
+        
+        # Prepare an NaN array to store the data of the current field
+        data = np.full(len(valid_indices), np.nan)
+        
+        # Counter for the valid indices in data
+        valid_index = 0
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the value for the current measurement
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+            if measurement in valid_indices:
+                # Store the value in the data array, handling missing values as NaN
+                data[valid_index] = np.nan if len(value) == 0 else value[0]
+                # Increment the valid index counter
+                valid_index += 1
 
         return data
           
