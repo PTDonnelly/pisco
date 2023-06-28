@@ -274,14 +274,13 @@ class Preprocessor:
         
         # Define an empty set to hold valid indices
         valid_indices = set()
-        print("Reading values:")
+
         # Loop through each measurement in the data
         for measurement in range(self.metadata.number_of_measurements):
-            print(f"{measurement} / {self.metadata.number_of_measurements} = {(measurement / self.metadata.number_of_measurements) * 100}")
             # Read and store the value of the field from the file
             values[measurement] = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        # Read and store the value of the field from the file
-        print("Scanning values:")
+            print(f"{measurement} / {self.metadata.number_of_measurements} = {np.round((measurement / self.metadata.number_of_measurements) * 100, 2)}")
+
         # Given the field, filter the indices based on the specified range
         if field == 'Latitude':
             valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
