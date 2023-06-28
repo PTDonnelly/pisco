@@ -450,21 +450,36 @@ class Preprocessor:
         # Counter for the valid indices in data
         valid_index = 0
 
-        # Iterate over each measurement and extract the spectral radiance data
+        #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
         for measurement in range(self.metadata.number_of_measurements):
-            # Read the spectrum data for the valid measurement
-            spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
             if measurement in valid_indices:
-                # Store the spectrum in the data array, handling missing values as NaN
-                data[:, valid_index] = np.nan if len(spectrum) == 0 else spectrum
+                # Move file pointer to value
+                self.f.seek(byte_offset * measurement, 1)
+                # Read the value for the current measurement
+                spectrum = np.fromfile(self.f,  dtype='float32', count=self.metadata.number_of_channels, sep='')
+                # Store the value in the data array, handling missing values as NaN
+                data[valid_index] = np.nan if len(spectrum) == 0 else spectrum
                 # Increment the valid index counter
                 valid_index += 1
             else:
                 # Skip this measurement
                 continue
+        #####
 
-        return data
+        # # Iterate over each measurement and extract the spectral radiance data
+        # for measurement in range(self.metadata.number_of_measurements):
+        #     # Read the spectrum data for the valid measurement
+        #     spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
+        #     if measurement in valid_indices:
+        #         # Store the spectrum in the data array, handling missing values as NaN
+        #         data[:, valid_index] = np.nan if len(spectrum) == 0 else spectrum
+        #         # Increment the valid index counter
+        #         valid_index += 1
+        #     else:
+        #         # Skip this measurement
+        #         continue
 
+        # return data
 
     def _calculate_byte_offset_spectral_radiance(self) -> int:
         return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels)
