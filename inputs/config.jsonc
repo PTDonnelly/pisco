@@ -8,7 +8,7 @@
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": false,
     
-    // channel_mode: str,  "all" to extract all spectral channels, "range" to specify specific range in configuration.py
+    // channel_mode: str,  "all" to extract all IASI L1C spectral channels, "range" to specify specific range in configuration.py
     "channel_mode": "all",
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
@@ -36,8 +36,8 @@
     "days_in_months": [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 
     // latitude_range: Tuple[int], The spatial range for binning latitudes
-    "latitude_range": [30, 60],
+    "latitude_range": [-90, 90],
 
     // longitude_range: Tuple[int], The spatial range for binning longitudes
-    "longitude_range": [-60, 0]
+    "longitude_range": [-180, 180]
 }
