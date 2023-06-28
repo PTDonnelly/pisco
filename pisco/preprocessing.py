@@ -366,32 +366,32 @@ class Preprocessor:
         Returns:
             np.ndarray: Array of field data.
         """
-        # Prepare an empty array to store the data of the current field
-        data = np.empty(len(valid_indices))
-        byte_offset_increment = (byte_offset + 2) * valid_indices[0]
-        for i, measurement in enumerate(valid_indices):
-            print(i, measurement)
+        # # Prepare an empty array to store the data of the current field
+        # data = np.empty(len(valid_indices))
+        # byte_offset_increment = (byte_offset + 2) * valid_indices[0]
+        # for i, measurement in enumerate(valid_indices):
+        #     print(i, measurement)
             
-            temp_offset = (self.metadata.header_size + 12 + 2) + (byte_offset + 2) + byte_offset_increment
+        #     temp_offset = (self.metadata.header_size + 12 + 2) + (byte_offset + 2) + byte_offset_increment
 
-            # Move file pointer to value
-            self.f.seek(byte_offset_increment, 1)
+        #     # Move file pointer to value
+        #     self.f.seek(byte_offset_increment, 1)
             
-            # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
+        #     # Read the value for the current measurement
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
 
 
-            print((self.metadata.header_size + 12 + 2) + (byte_offset + 2), byte_offset_increment, temp_offset, self.f.tell())
-            input()
-            # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-            data[i] = value[0] if len(value) != 0 else data[i]
-            byte_offset_increment += (byte_offset + 2) * i
+        #     print((self.metadata.header_size + 12 + 2) + (byte_offset + 2), byte_offset_increment, temp_offset, self.f.tell())
+        #     input()
+        #     # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+        #     data[i] = value[0] if len(value) != 0 else data[i]
+        #     byte_offset_increment += (byte_offset + 2) * i
         
-        # # Prepare an NaN array to store the data of the current field
-        # data = np.full(len(valid_indices), np.nan)
+        # Prepare an NaN array to store the data of the current field
+        data = np.full(len(valid_indices), np.nan)
         
-        # # Counter for the valid indices in data
-        # valid_index = 0
+        # Counter for the valid indices in data
+        valid_index = 0
 
         # # for measurement in range(self.metadata.number_of_measurements):
         # #     # Read the value for the current measurement
@@ -402,27 +402,27 @@ class Preprocessor:
         # #         # Increment the valid index counter
         # #         valid_index += 1
 
-        # byte_offset_increment = 0
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     # # Read the value for the current measurement
-        #     # value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
-        #     if measurement in valid_indices:
-        #         # Calculate byte offset
-        #         # temp_offset = byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2)
+        byte_offset_increment = 0
+        for measurement in range(self.metadata.number_of_measurements):
+            # # Read the value for the current measurement
+            # value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
+            if measurement in valid_indices:
+                # Calculate byte offset
+                # temp_offset = byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2)
                 
-        #         # Move file pointer to value
-        #         self.f.seek(byte_offset_increment, 1)
+                # Move file pointer to value
+                self.f.seek(byte_offset_increment, 1)
 
-        #         # Read the value for the current measurement
-        #         value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
+                # Read the value for the current measurement
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
 
-        #         # print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
-        #         # input()
-        #         # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-        #         data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
-        #         # Increment the valid index counter
-        #         valid_index += 1
-        #     byte_offset_increment += byte_offset + 2
+                # print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
+                # input()
+                # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+                data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
+                # Increment the valid index counter
+                valid_index += 1
+            byte_offset_increment += byte_offset + 2
 
         return data
           
