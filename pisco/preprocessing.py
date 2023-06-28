@@ -402,7 +402,7 @@ class Preprocessor:
                 data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
                 # Increment the valid index counter
                 valid_index += 1
-                byte_offset_increment += (byte_offset + 2) * measurement
+            byte_offset_increment += byte_offset + 2
 
         return data
           
