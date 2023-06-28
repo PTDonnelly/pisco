@@ -368,7 +368,7 @@ class Preprocessor:
         """
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
-        byte_offset_increment = 0
+        byte_offset_increment = (byte_offset + 2) * valid_indices[0]
         for i, measurement in enumerate(valid_indices):
             print(i, measurement)
             
@@ -385,7 +385,7 @@ class Preprocessor:
             input()
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            byte_offset_increment += (byte_offset + 2) * i
+            byte_offset_increment += (byte_offset + 2) * measurement
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
