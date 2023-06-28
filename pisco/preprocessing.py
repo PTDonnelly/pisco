@@ -274,14 +274,14 @@ class Preprocessor:
         
         # Define an empty set to hold valid indices
         valid_indices = set()
-
+        print("Reading values:")
         # Loop through each measurement in the data
         for measurement in range(self.metadata.number_of_measurements):
             # Read the value of the field from the file
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             # Store the read value in the corresponding index in the array
             values[measurement] = value
-
+        print("Scanning values:")
         # Given the field, filter the indices based on the specified range
         if field == 'Latitude':
             valid_indices = set(np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0])
@@ -451,10 +451,12 @@ class Preprocessor:
 
         # Iterate over each measurement and extract the spectral radiance data
         for measurement in range(self.metadata.number_of_measurements):
+            # Read the spectrum data for the valid measurement
+            spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
             if measurement in valid_indices:
-                # Read the spectrum data for the valid measurement
-                spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
+                # Store the spectrum in the data array, handling missing values as NaN
                 data[:, valid_index] = np.nan if len(spectrum) == 0 else spectrum
+                # Increment the valid index counter
                 valid_index += 1
             else:
                 # Skip this measurement
