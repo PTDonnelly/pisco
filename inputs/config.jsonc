@@ -9,7 +9,7 @@
     "process": false,
     
     // channel_mode: str,  "all" to extract all IASI L1C spectral channels, "range" to specify specific range in configuration.py
-    "channel_mode": "all",
+    "channel_mode": "range",
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",
