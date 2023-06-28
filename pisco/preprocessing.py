@@ -279,9 +279,9 @@ class Preprocessor:
         for measurement in range(self.metadata.number_of_measurements):
             # Read and store the value of the field from the file
             values[measurement] = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            progress = np.round((measurement / self.metadata.number_of_measurements) * 100, 2)
-            if progress % 1 == 0:
-                print(f"{measurement} / {self.metadata.number_of_measurements} = {progress}")
+            # progress = np.round((measurement / self.metadata.number_of_measurements) * 100, 2)
+            # if progress % 1 == 0:
+            #     print(f"{measurement} / {self.metadata.number_of_measurements} = {progress}")
 
         # Given the field, filter the indices based on the specified range
         if field == 'Latitude':
@@ -445,21 +445,16 @@ class Preprocessor:
         # Counter for the valid indices in data
         valid_index = 0
 
-        #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
-        for measurement in range(self.metadata.number_of_measurements):
-            if measurement in valid_indices:
-                # Move file pointer to value
-                self.f.seek(byte_offset * measurement, 1)
-                # Read the value for the current measurement
-                spectrum = np.fromfile(self.f,  dtype='float32', count=self.metadata.number_of_channels, sep='')
-                # Store the value in the data array, handling missing values as NaN
-                data[valid_index] = np.nan if len(spectrum) == 0 else spectrum
-                # Increment the valid index counter
-                valid_index += 1
-            else:
-                # Skip this measurement
-                continue
+       #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
+        for i, measurement in enumerate(valid_indices):
+            # Move file pointer to value
+            self.f.seek(byte_offset * measurement, 1)
+            # Read the value for the current measurement
+            spectrum = np.fromfile(self.f, dtype="float32", count=self.metadata.number_of_channels, sep='')
+            # Store the value in the data array, handling missing values as NaN
+            data[i] = np.nan if len(spectrum) == 0 else spectrum
         #####
+        
 
         # # Iterate over each measurement and extract the spectral radiance data
         # for measurement in range(self.metadata.number_of_measurements):
