@@ -371,15 +371,16 @@ class Preprocessor:
         byte_offset_increment = (byte_offset + 2) * valid_indices[0]
         for i, measurement in enumerate(valid_indices):            
             # temp_offset = (self.metadata.header_size + 12 + 2) + (byte_offset + 2) + byte_offset_increment
-            print(i, measurement, self.f.tell())
+
             # Move file pointer to value
             self.f.seek(byte_offset_increment, 1)
-            print(i, measurement, self.f.tell())
+            print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
+
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
-            print(i, measurement, self.f.tell())
+            print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
 
-            print((self.metadata.header_size + 12 + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
+            # print((self.metadata.header_size + 12 + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
             input()
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
