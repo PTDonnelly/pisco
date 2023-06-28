@@ -367,24 +367,19 @@ class Preprocessor:
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
 
-        # Counter for the valid indices in data
-        valid_index = 0
-
         #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
-        for measurement in range(self.metadata.number_of_measurements):
-            if measurement in valid_indices:
-                # Move file pointer to value
-                self.f.seek(byte_offset * measurement, 1)
-                # Read the value for the current measurement
-                value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
-                # Store the value in the data array, handling missing values as NaN
-                data[valid_index] = np.nan if len(value) == 0 else value[0]
-                # Increment the valid index counter
-                valid_index += 1
-            else:
-                # Skip this measurement
-                continue
+        for i, measurement in enumerate(valid_indices):
+            # Move file pointer to value
+            self.f.seek(byte_offset * measurement, 1)
+            # Read the value for the current measurement
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
+            # Store the value in the data array, handling missing values as NaN
+            data[i] = np.nan if len(value) == 0 else value[0]
         #####
+        
+        
+        # # Counter for the valid indices in data
+        # valid_index = 0
         
         # for measurement in range(self.metadata.number_of_measurements):
         #     # Read the value for the current measurement
