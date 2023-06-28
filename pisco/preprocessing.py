@@ -406,8 +406,8 @@ class Preprocessor:
                 # Read the value for the current measurement
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
 
-                print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
-                input()
+                # print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
+                # input()
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
                 # Increment the valid index counter
