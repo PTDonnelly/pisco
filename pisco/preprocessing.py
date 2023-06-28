@@ -382,8 +382,8 @@ class Preprocessor:
             # self.f.seek(byte_offset_increment, 1)
 
             # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=(byte_offset) * increment)
-            print(i, index, increment, byte_start, (byte_offset) * increment, byte_start + ((byte_offset) * increment), self.f.tell())
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset + (byte_offset * increment))
+            print(i, index, increment, byte_start, byte_offset, byte_offset * increment, byte_offset + (byte_offset * increment), self.f.tell())
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
