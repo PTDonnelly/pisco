@@ -452,7 +452,7 @@ class Preprocessor:
             # Read the value for the current measurement
             spectrum = np.fromfile(self.f, dtype="float32", count=self.metadata.number_of_channels, sep='')
             # Store the value in the data array, handling missing values as NaN
-            data[i] = np.nan if len(spectrum) == 0 else spectrum
+            data[:, i] = np.nan if len(spectrum) == 0 else spectrum
         #####
         
 
