@@ -392,11 +392,13 @@ class Preprocessor:
 
         byte_offset_increment = 0
         for measurement in range(self.metadata.number_of_measurements):
-            # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
+            # # Read the value for the current measurement
+            # value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
             if measurement in valid_indices:
-                print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell() - byte_offset_increment)
-                print(self.f.tell(), byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2))
+                # Read the value for the current measurement
+                temp_offset = byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2)
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset_increment)
+                print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
                 input()
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
