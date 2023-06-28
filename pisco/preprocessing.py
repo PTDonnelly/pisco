@@ -369,22 +369,22 @@ class Preprocessor:
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
         byte_offset_increment = (byte_offset + 2) * valid_indices[0]
-        for i, measurement in enumerate(valid_indices):            
+        for i, measurement, increment in enumerate(zip(valid_indices, np.diff(valid_indices))):            
             # temp_offset = (self.metadata.header_size + 12 + 2) + (byte_offset + 2) + byte_offset_increment
 
             # Move file pointer to value
             self.f.seek(byte_offset_increment, 1)
-            print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
+            print(i, measurement, byte_offset_increment, self.f.tell())
 
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
-            
+            print(i, measurement, byte_offset_increment, self.f.tell())
+
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            print(measurement, valid_indices[0], (measurement - valid_indices[0]))
+            print(measurement[i], valid_indices[i-1], measurement[i] - valid_indices[i-1], increment)
             input()
-            byte_offset_increment += (byte_offset + 2) * (measurement - valid_indices[0])
+            byte_offset_increment += (byte_offset + 2) * (measurement[i] - valid_indices[i-1])
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
