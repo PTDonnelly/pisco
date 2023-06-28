@@ -368,7 +368,7 @@ class Preprocessor:
         byte_offset = self._calculate_byte_offset(dtype_size)
         
         # Calculate byte location to start pointer (skipping invalid indices)
-        byte_start = (byte_offset + 2) * valid_indices[0]
+        byte_start = (byte_offset + dtype_size) * valid_indices[0]
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
         
@@ -380,7 +380,7 @@ class Preprocessor:
 
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
-            step = (byte_offset * increment) + (2 * (increment - 1))
+            step = (byte_offset * increment) + (dtype_size * (increment - 1))
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
