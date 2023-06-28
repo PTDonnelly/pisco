@@ -377,7 +377,7 @@ class Preprocessor:
 
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print(i, index, byte_offset_increment, self.f.tell())
+            print(i, index, increment, byte_offset_increment, self.f.tell())
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
