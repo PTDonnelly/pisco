@@ -294,9 +294,11 @@ class Preprocessor:
         return valid_indices
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
+        print(self.metadata.record_size + 8 - dtype_size)
         return self.metadata.record_size + 8 - dtype_size
     
     def _set_field_start_position(self, cumsize: int) -> None:
+        print(self.metadata.header_size + 12 + cumsize)
         self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
         return
     
@@ -395,10 +397,14 @@ class Preprocessor:
             # # Read the value for the current measurement
             # value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
             if measurement in valid_indices:
-                # Read the value for the current measurement
+                # Calculate byte offset
                 temp_offset = byte_offset_increment + (self.metadata.header_size + 12 + 2) + (byte_offset + 2)
+                
+                # Move file pointer to value
+                self.f.seek(temp_offset, 0)
 
-                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=temp_offset)
+                # Read the value for the current measurement
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
 
                 print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell(), temp_offset)
                 input()
@@ -424,7 +430,7 @@ class Preprocessor:
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
             print(f"Extracting: {field}")
-
+            input()
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
 
