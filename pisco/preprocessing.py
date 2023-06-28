@@ -377,7 +377,7 @@ class Preprocessor:
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
 
             print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell())
-
+            input()
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
             byte_offset_increment += (byte_offset + 2) * i
