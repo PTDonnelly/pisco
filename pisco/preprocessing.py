@@ -345,7 +345,8 @@ class Preprocessor:
                     valid_indices_lon = valid_indices
 
             # Return the intersection of valid latitude and longitude indices
-            return valid_indices_lat & valid_indices_lon
+            valid_indices = valid_indices_lat & valid_indices_lon
+            return valid_indices.sort()
             
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
@@ -400,7 +401,7 @@ class Preprocessor:
             print((self.metadata.header_size + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
             
             if measurement in valid_indices:
-                print((self.metadata.header_size + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
+                print((self.metadata.header_size + 12) + (byte_offset + 2), byte_offset_increment, self.f.tell() - byte_offset_increment)
                 input()
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
