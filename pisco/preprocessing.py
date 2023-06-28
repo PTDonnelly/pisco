@@ -368,21 +368,27 @@ class Preprocessor:
         """
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
-        byte_offset_increment = (byte_offset + 2) * valid_indices[0]
+        
+        byte_start = (byte_offset + 2) * valid_indices[0]
+        
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 0)
+        
+        # Move file pointer to value
+        self.f.seek(byte_start, 1)
+        
         for i, (index, increment) in enumerate(zip(valid_indices, valid_indices_increments)):
 
-            # Move file pointer to value
-            self.f.seek(byte_offset_increment, 1)
+            # # Move file pointer to value
+            # self.f.seek(byte_offset_increment, 1)
 
             # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print(i, index, increment, byte_offset_increment, self.f.tell())
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=(byte_offset + 2) * increment)
+            print(i, index, increment, byte_start, (byte_offset + 2) * increment, byte_start + ((byte_offset + 2) * increment), self.f.tell())
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
             input()
-            byte_offset_increment += (byte_offset + 2) * increment
+            # byte_offset_increment += (byte_offset + 2) * increment
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
