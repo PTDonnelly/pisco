@@ -279,7 +279,9 @@ class Preprocessor:
         for measurement in range(self.metadata.number_of_measurements):
             # Read and store the value of the field from the file
             values[measurement] = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print(f"{measurement} / {self.metadata.number_of_measurements} = {np.round((measurement / self.metadata.number_of_measurements) * 100, 2)}")
+            progress = np.round((measurement / self.metadata.number_of_measurements) * 100, 2)
+            if progress % 1 == 0:
+                print(f"{measurement} / {self.metadata.number_of_measurements} = {progress}")
 
         # Given the field, filter the indices based on the specified range
         if field == 'Latitude':
@@ -327,6 +329,7 @@ class Preprocessor:
             print(f"\nFlagging observations to keep...")
 
             for field, dtype, dtype_size, cumsize in fields:
+                print(field, dtype, dtype_size, cumsize)
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
                     continue
