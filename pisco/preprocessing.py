@@ -379,12 +379,12 @@ class Preprocessor:
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             print(i, measurement, (byte_offset + 2) * measurement, self.f.tell())
-
-            # print((self.metadata.header_size + 12 + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
-            input()
+            
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            byte_offset_increment += (byte_offset + 2) * i
+            print(measurement, valid_indices[0], (measurement - valid_indices[0]))
+            input()
+            byte_offset_increment += (byte_offset + 2) * (measurement - valid_indices[0])
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
