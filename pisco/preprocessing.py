@@ -369,11 +369,11 @@ class Preprocessor:
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
         byte_offset_increment = (byte_offset + 2) * valid_indices[0]
+        print(np.diff(valid_indices, prepend=[0]))
         for i, (measurement, increment) in enumerate(zip(valid_indices, np.diff(valid_indices, prepend=[0]))):
 
             # Move file pointer to value
             self.f.seek(byte_offset_increment, 1)
-            print(i, measurement, byte_offset_increment, self.f.tell())
 
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
