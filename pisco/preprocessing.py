@@ -385,7 +385,7 @@ class Preprocessor:
         for measurement in range(self.metadata.number_of_measurements):
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            byte_offset_increment += byte_offset
+            print(measurement, byte_offset, byte_offset * measurement, self.f.tell(), self.f.tell() - byte_offset * measurement, byte_offset_increment)
             if measurement in valid_indices:
                 print(measurement, byte_offset, byte_offset * measurement, self.f.tell(), self.f.tell() - byte_offset * measurement, byte_offset_increment)
                 input()
@@ -394,6 +394,7 @@ class Preprocessor:
                 # Increment the valid index counter
                 valid_index += 1
             else:
+                byte_offset_increment += byte_offset
                 # Skip this measurement
                 continue
 
