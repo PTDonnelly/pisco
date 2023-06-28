@@ -385,10 +385,10 @@ class Preprocessor:
         for measurement in range(self.metadata.number_of_measurements):
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print(measurement, byte_offset_increment, self.f.tell(), self.f.tell() - byte_offset_increment)
+            print(measurement, byte_offset + 2, byte_offset_increment, self.f.tell(), (self.f.tell() - byte_offset_increment) - ((byte_offset + 2) * valid_indices))
             
             if measurement in valid_indices:
-                print(measurement, byte_offset_increment, self.f.tell(), self.f.tell() - byte_offset_increment, byte_offset_increment*valid_index)
+                print(measurement, byte_offset + 2, byte_offset_increment, self.f.tell(), (self.f.tell() - byte_offset_increment) - ((byte_offset + 2) * valid_indices))
                 input()
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
