@@ -354,7 +354,7 @@ class Preprocessor:
         self.data_record_df[field] = data
         return
 
-    def _read_binary_data(self, valid_indices: Set[int], dtype: Any, dtype_size: int) -> np.ndarray:
+    def _read_binary_data(self, valid_indices: Set[int], dtype: Any, byte_offset: int) -> np.ndarray:
         """
         Reads the data of each measurement based on the valid indices.
 
@@ -366,47 +366,47 @@ class Preprocessor:
         Returns:
             np.ndarray: Array of field data.
         """
-        # Prepare an empty array to store the data of the current field
-        data = np.empty(len(valid_indices))
+        # # Prepare an empty array to store the data of the current field
+        # data = np.empty(len(valid_indices))
         
-        byte_offset = self.metadata.record_size + 8 - dtype_size
-        byte_start = (byte_offset + 2) * valid_indices[0] - dtype_size
+        # byte_start = (byte_offset + 2) * valid_indices[0]
         
-        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
+        # valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
-        # Move file pointer to value
-        self.f.seek(byte_start, 1)
+        # # Move file pointer to value
+        # self.f.seek(byte_start, 1)
         
-        for i, (index, increment) in enumerate(zip(valid_indices, valid_indices_increments)):
+        # for i, (index, increment) in enumerate(zip(valid_indices, valid_indices_increments)):
 
-            # # Move file pointer to value
-            # self.f.seek(byte_offset_increment, 1)
+        #     # # Move file pointer to value
+        #     # self.f.seek(byte_offset_increment, 1)
 
-            # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset * increment)
-            print(i, index, increment, byte_start, byte_offset * increment, self.f.tell())
-
-            # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-            data[i] = value[0] if len(value) != 0 else data[i]
-            input()
-            # byte_offset_increment += (byte_offset + 2) * increment
-        
-        # # Prepare an NaN array to store the data of the current field
-        # data = np.full(len(valid_indices), np.nan)
-        
-        # # Counter for the valid indices in data
-        # valid_index = 0
-
-        # for measurement in range(self.metadata.number_of_measurements):
         #     # Read the value for the current measurement
-        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         print(measurement, self.f.tell())
-        #         input()
-        #         # Store the value in the data array, handling missing values as NaN
-        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
-        #         # Increment the valid index counter
-        #         valid_index += 1
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset * increment)
+        #     print(i, index, increment, byte_start, byte_offset * increment, self.f.tell())
+
+        #     # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+        #     data[i] = value[0] if len(value) != 0 else data[i]
+        #     input()
+        #     # byte_offset_increment += (byte_offset + 2) * increment
+        
+        # Prepare an NaN array to store the data of the current field
+        data = np.full(len(valid_indices), np.nan)
+        
+        # Counter for the valid indices in data
+        valid_index = 0
+
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the value for the current measurement
+            print(measurement, self.f.tell())
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+            if measurement in valid_indices:
+                print(measurement, self.f.tell())
+                input()
+                # Store the value in the data array, handling missing values as NaN
+                data[valid_index] = np.nan if len(value) == 0 else value[0]
+                # Increment the valid index counter
+                valid_index += 1
 
         # byte_offset_increment = 0
         # for measurement in range(self.metadata.number_of_measurements):
@@ -451,10 +451,10 @@ class Preprocessor:
             self._set_field_start_position(cumsize)
 
             # Calculate the byte offset to the next measurement
-            # byte_offset = self._calculate_byte_offset(dtype_size)
+            byte_offset = self._calculate_byte_offset(dtype_size)
 
             # Read the binary data based on the valid indices
-            data = self._read_binary_data(valid_indices, dtype, dtype_size)
+            data = self._read_binary_data(valid_indices, dtype, byte_offset)
 
             # Store the data in the DataFrame
             self._store_data_in_df(field, data)
