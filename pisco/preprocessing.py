@@ -381,9 +381,9 @@ class Preprocessor:
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            print(measurement[i], valid_indices[i-1], measurement[i] - valid_indices[i-1], increment)
+            print(valid_indices[i], valid_indices[i-1], valid_indices[i] - valid_indices[i-1], increment)
             input()
-            byte_offset_increment += (byte_offset + 2) * (measurement[i] - valid_indices[i-1])
+            byte_offset_increment += (byte_offset + 2) * (valid_indices[i] - valid_indices[i-1])
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
