@@ -385,7 +385,7 @@ class Preprocessor:
             # Read the value for the current measurement
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
             if measurement in valid_indices:
-                print(measurement, byte_offset, byte_offset * measurement, self.f.tell())
+                print(measurement, byte_offset, byte_offset * measurement, self.f.tell() - byte_offset * measurement)
                 input()
                 # Store the value in the data array, handling missing values as NaN
                 data[valid_index] = np.nan if len(value) == 0 else value[0]
