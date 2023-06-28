@@ -407,10 +407,11 @@ class Preprocessor:
                     data[valid_index] = value[0]
                 # Increment the valid index counter
                 valid_index += 1
-            else:
-                byte_offset_increment += byte_offset + 2
-                # Skip this measurement
-                continue
+            # else:
+            #     byte_offset_increment += byte_offset + 2
+            #     # Skip this measurement
+            #     continue
+            byte_offset_increment += byte_offset + 2
 
         return data
           
@@ -458,8 +459,8 @@ class Preprocessor:
         Returns:
             np.ndarray: Array of spectral radiance data.
         """
-        # Initialize an empty numpy array to store the spectral radiance data
-        data = np.empty((self.metadata.number_of_channels, len(valid_indices)))
+        # Prepare an NaN array to store the spectral radiance data
+        data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan)
 
     #    #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
     #     for i, measurement in enumerate(valid_indices):
@@ -480,7 +481,8 @@ class Preprocessor:
             spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
             if measurement in valid_indices:
                 # Store the spectrum in the data array, handling missing values as NaN
-                data[:, valid_index] = np.nan if len(spectrum) == 0 else spectrum
+                if len(spectrum) == 0:
+                    data[:, valid_index] = spectrum
                 # Increment the valid index counter
                 valid_index += 1
             else:
