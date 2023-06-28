@@ -294,11 +294,9 @@ class Preprocessor:
         return valid_indices
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
-        print(self.metadata.record_size + 8 - dtype_size)
         return self.metadata.record_size + 8 - dtype_size
     
     def _set_field_start_position(self, cumsize: int) -> None:
-        print(self.metadata.header_size + 12 + cumsize)
         self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
         return
     
@@ -354,7 +352,7 @@ class Preprocessor:
         self.data_record_df[field] = data
         return
 
-    def _read_binary_data(self, valid_indices: Set[int], dtype: Any, byte_offset: int) -> np.ndarray:
+    def _read_binary_data(self, valid_indices: Set[int], dtype: Any, dtype_size: int) -> np.ndarray:
         """
         Reads the data of each measurement based on the valid indices.
 
@@ -366,30 +364,28 @@ class Preprocessor:
         Returns:
             np.ndarray: Array of field data.
         """
-        # Prepare an empty array to store the data of the current field
-        data = np.empty(len(valid_indices))
+        # Calculate the byte offset to the next measurement
+        byte_offset = self._calculate_byte_offset(dtype_size)
         
+        # Calculate byte location to start pointer (skipping invalid indices)
         byte_start = (byte_offset + 2) * valid_indices[0]
-        
-        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
         # Move file pointer to value
         self.f.seek(byte_start, 1)
         
-        for i, (index, increment) in enumerate(zip(valid_indices, valid_indices_increments)):
+        # calculate the gaps between valid indices
+        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
+        
+        # Prepare an empty array to store the data of the current field
+        data = np.empty(len(valid_indices))
 
-            # # Move file pointer to value
-            # self.f.seek(byte_offset_increment, 1)
-
+        for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
-            step = (byte_offset * increment) + (2 * (increment - 1))
+            step = (byte_offset * increment) + (dtype_size * (increment - 1))
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
-            print(i, index, increment, byte_start, step, self.f.tell())
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            input()
-            # byte_offset_increment += (byte_offset + 2) * increment
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
@@ -451,14 +447,13 @@ class Preprocessor:
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
 
-            # Calculate the byte offset to the next measurement
-            byte_offset = self._calculate_byte_offset(dtype_size)
-
             # Read the binary data based on the valid indices
-            data = self._read_binary_data(valid_indices, dtype, byte_offset)
+            data = self._read_binary_data(valid_indices, dtype, dtype_size)
 
             # Store the data in the DataFrame
             self._store_data_in_df(field, data)
+        print(self.data_record_df.head())
+        exit()
 
     
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
