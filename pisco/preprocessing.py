@@ -370,7 +370,6 @@ class Preprocessor:
         data = np.empty(len(valid_indices))
         byte_offset_increment = (byte_offset + 2) * valid_indices[0]
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 0)
-        print(valid_indices_increments)
         for i, (index, increment) in enumerate(zip(valid_indices, valid_indices_increments)):
 
             # Move file pointer to value
@@ -382,9 +381,8 @@ class Preprocessor:
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-            print(valid_indices[i], valid_indices[i-1], valid_indices[i] - valid_indices[i-1], increment)
             input()
-            byte_offset_increment += (byte_offset + 2) * (valid_indices[i] - valid_indices[i-1])
+            byte_offset_increment += (byte_offset + 2) * increment
         
         # # Prepare an NaN array to store the data of the current field
         # data = np.full(len(valid_indices), np.nan)
