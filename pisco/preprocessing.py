@@ -367,31 +367,31 @@ class Preprocessor:
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
 
-        #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
-        for i, measurement in enumerate(valid_indices):
-            # Move file pointer to value
-            self.f.seek(byte_offset * measurement, 1)
-            # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
-            # Store the value in the data array, handling missing values as NaN
-            data[i] = np.nan if len(value) == 0 else value[0]
-        #####
-        
-        
-        # # Counter for the valid indices in data
-        # valid_index = 0
-        
-        # for measurement in range(self.metadata.number_of_measurements):
+        # #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
+        # for i, measurement in enumerate(valid_indices):
+        #     # Move file pointer to value
+        #     self.f.seek(byte_offset * measurement, 1)
         #     # Read the value for the current measurement
-        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         # Store the value in the data array, handling missing values as NaN
-        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
-        #         # Increment the valid index counter
-        #         valid_index += 1
-        #     else:
-        #         # Skip this measurement
-        #         continue
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='')
+        #     # Store the value in the data array, handling missing values as NaN
+        #     data[i] = np.nan if len(value) == 0 else value[0]
+        # #####
+        
+        
+        # Counter for the valid indices in data
+        valid_index = 0
+        
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the value for the current measurement
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+            if measurement in valid_indices:
+                # Store the value in the data array, handling missing values as NaN
+                data[valid_index] = np.nan if len(value) == 0 else value[0]
+                # Increment the valid index counter
+                valid_index += 1
+            else:
+                # Skip this measurement
+                continue
 
         return data
           
@@ -442,31 +442,31 @@ class Preprocessor:
         # Initialize an empty numpy array to store the spectral radiance data
         data = np.empty((self.metadata.number_of_channels, len(valid_indices)))
 
-       #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
-        for i, measurement in enumerate(valid_indices):
-            # Move file pointer to value
-            self.f.seek(byte_offset * measurement, 1)
-            # Read the value for the current measurement
-            spectrum = np.fromfile(self.f, dtype="float32", count=self.metadata.number_of_channels, sep='')
-            # Store the value in the data array, handling missing values as NaN
-            data[:, i] = np.nan if len(spectrum) == 0 else spectrum
-        #####
+    #    #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
+    #     for i, measurement in enumerate(valid_indices):
+    #         # Move file pointer to value
+    #         self.f.seek(byte_offset * measurement, 1)
+    #         # Read the value for the current measurement
+    #         spectrum = np.fromfile(self.f, dtype="float32", count=self.metadata.number_of_channels, sep='')
+    #         # Store the value in the data array, handling missing values as NaN
+    #         data[:, i] = np.nan if len(spectrum) == 0 else spectrum
+    #     #####
         
-        # # Counter for the valid indices in data
-        # valid_index = 0
+        # Counter for the valid indices in data
+        valid_index = 0
 
-        # # Iterate over each measurement and extract the spectral radiance data
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     # Read the spectrum data for the valid measurement
-        #     spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         # Store the spectrum in the data array, handling missing values as NaN
-        #         data[:, valid_index] = np.nan if len(spectrum) == 0 else spectrum
-        #         # Increment the valid index counter
-        #         valid_index += 1
-        #     else:
-        #         # Skip this measurement
-        #         continue
+        # Iterate over each measurement and extract the spectral radiance data
+        for measurement in range(self.metadata.number_of_measurements):
+            # Read the spectrum data for the valid measurement
+            spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
+            if measurement in valid_indices:
+                # Store the spectrum in the data array, handling missing values as NaN
+                data[:, valid_index] = np.nan if len(spectrum) == 0 else spectrum
+                # Increment the valid index counter
+                valid_index += 1
+            else:
+                # Skip this measurement
+                continue
 
         return data
 
