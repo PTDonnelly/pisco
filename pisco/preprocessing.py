@@ -329,7 +329,6 @@ class Preprocessor:
             print(f"\nFlagging observations to keep...")
 
             for field, dtype, dtype_size, cumsize in fields:
-                print(field, dtype, dtype_size, cumsize)
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
                     continue
