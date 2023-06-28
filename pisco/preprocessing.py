@@ -359,10 +359,10 @@ class Preprocessor:
         Args:
             valid_indices (Set[int]): Set of valid measurement indices.
             dtype (Any): Data type of the field.
-            byte_offset (int): Byte offset to the next measurement.
+            dtype_size (int): Data type size in Bytes.
 
         Returns:
-            np.ndarray: Array of field data.
+            np.ndarray: 1-D array of field data.
         """
         # Calculate the byte offset to the next measurement
         byte_offset = self._calculate_byte_offset(dtype_size)
@@ -375,8 +375,8 @@ class Preprocessor:
         # calculate the gaps between valid indices
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
-        # Prepare an empty array to store the data of the current field
-        data = np.empty(len(valid_indices))
+        # Prepare an NaN array to store the data of the current field
+        data = np.full(len(valid_indices), np.nan)
 
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
@@ -385,21 +385,6 @@ class Preprocessor:
 
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[i] = value[0] if len(value) != 0 else data[i]
-        
-
-        # # Prepare an NaN array to store the data of the current field
-        # data = np.full(len(valid_indices), np.nan)
-        
-        # # Counter for the valid indices in data
-        # valid_index = 0
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     # Read the value for the current measurement
-        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         # Store the value in the data array, handling missing values as NaN
-        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
-        #         # Increment the valid index counter
-        #         valid_index += 1
 
         return data
           
@@ -426,8 +411,6 @@ class Preprocessor:
 
             # Store the data in the DataFrame
             self._store_data_in_df(field, data)
-        print(self.data_record_df.head())
-        exit()
 
     
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
@@ -435,47 +418,60 @@ class Preprocessor:
             self.data_record_df[f'Spectrum {channel_id}'] = data[i, :]
         return
     
-    def _read_spectrum(self, valid_indices: Set[int], byte_offset: int) -> np.ndarray:
+    def _read_spectrum(self, valid_indices: Set[int], dtype_size: int) -> np.ndarray:
         """
         Read the spectral radiance data for valid measurements.
 
         Args:
             valid_indices (Set[int]): Set of valid measurement indices.
-            byte_offset (int): Byte offset to the next measurement.
+            dtype_size (int): Data type size in Bytes.
 
         Returns:
-            np.ndarray: Array of spectral radiance data.
+            np.ndarray: 2-D array of spectral radiances.
         """
-        # Prepare an NaN array to store the spectral radiance data
-        data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan)
-
-    #    #### TEST THIS, IT COULD IMPROVE THE SPEED A FAIR BIT
-    #     for i, measurement in enumerate(valid_indices):
-    #         # Move file pointer to value
-    #         self.f.seek(byte_offset * measurement, 1)
-    #         # Read the value for the current measurement
-    #         spectrum = np.fromfile(self.f, dtype="float32", count=self.metadata.number_of_channels, sep='')
-    #         # Store the value in the data array, handling missing values as NaN
-    #         data[:, i] = np.nan if len(spectrum) == 0 else spectrum
-    #     #####
+        # Calculate the byte offset to skip to the next measurement for spectral radiance data
+        byte_offset, dtype_size_all_channels = self._calculate_byte_offset_spectral_radiance()
         
-        # Counter for the valid indices in data
-        valid_index = 0
+        # Calculate byte location to start pointer (skipping invalid indices)
+        byte_start = (byte_offset + dtype_size_all_channels) * valid_indices[0]
+        # Move file pointer to first valid index
+        self.f.seek(byte_start, 1)
+        
+        # calculate the gaps between valid indices
+        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
+        
+        # Prepare an NaN array to store the data of the current field
+        data = np.full(len(valid_indices), np.nan)
 
-        # Iterate over each measurement and extract the spectral radiance data
-        for measurement in range(self.metadata.number_of_measurements):
-            # Read the spectrum data for the valid measurement
-            spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
-            if measurement in valid_indices:
-                # Store the spectrum in the data array if spectrum exists; leave untouched otherwise (as np.nan).
-                data[valid_index] = spectrum if len(spectrum) != 0 else data[valid_index]
-                # Increment the valid index counter
-                valid_index += 1
+        for i, increment in enumerate(valid_indices_increments):
+            # Read the value for the current measurement
+            step = (byte_offset * increment) + (dtype_size_all_channels * (increment - 1))
+            value = np.fromfile(self.f, dtype="float32", count=1, sep='', offset=step)
+            # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+            data[i] = value[0] if len(value) != 0 else data[i]
+
+        return data
+        
+        # # Prepare an NaN array to store the spectral radiance data
+        # data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan)
+        
+        # # Counter for the valid indices in data
+        # valid_index = 0
+
+        # # Iterate over each measurement and extract the spectral radiance data
+        # for measurement in range(self.metadata.number_of_measurements):
+        #     # Read the spectrum data for the valid measurement
+        #     spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
+        #     if measurement in valid_indices:
+        #         # Store the spectrum in the data array if spectrum exists; leave untouched otherwise (as np.nan).
+        #         data[valid_index] = spectrum if len(spectrum) != 0 else data[valid_index]
+        #         # Increment the valid index counter
+        #         valid_index += 1
 
         return data
 
     def _calculate_byte_offset_spectral_radiance(self) -> int:
-        return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels)
+        return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels), (4 * self.metadata.number_of_channels)
     
     def _set_start_read_position(self, last_field_end: int) -> None:
         self.f.seek(self.metadata.header_size + 12 + last_field_end + (4 * self.metadata.number_of_channels), 0)
@@ -500,11 +496,8 @@ class Preprocessor:
         # Set the start read position based on the last field end
         self._set_start_read_position(last_field_end)
 
-        # Calculate the byte offset to skip to the next measurement for spectral radiance data
-        byte_offset = self._calculate_byte_offset_spectral_radiance()
-
         # Read the spectral radiance data for the valid indices
-        data = self._read_spectrum(valid_indices, byte_offset)
+        data = self._read_spectrum(valid_indices)
 
         # Store the spectral channels in the DataFrame
         self._store_spectral_channels_in_df(data)
