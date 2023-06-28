@@ -418,7 +418,7 @@ class Preprocessor:
             self.data_record_df[f'Spectrum {channel_id}'] = data[i, :]
         return
     
-    def _read_spectrum(self, valid_indices: Set[int], dtype_size: int) -> np.ndarray:
+    def _read_spectrum(self, valid_indices: Set[int]) -> np.ndarray:
         """
         Read the spectral radiance data for valid measurements.
 
