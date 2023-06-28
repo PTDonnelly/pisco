@@ -381,21 +381,19 @@ class Preprocessor:
         # Counter for the valid indices in data
         valid_index = 0
 
-        for measurement in range(self.metadata.number_of_measurements):
-            # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            if measurement in valid_indices:
-                # Store the value in the data array, handling missing values as NaN
-                data[valid_index] = np.nan if len(value) == 0 else value[0]
-                # Increment the valid index counter
-                valid_index += 1
+        # for measurement in range(self.metadata.number_of_measurements):
+        #     # Read the value for the current measurement
+        #     value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
+        #     if measurement in valid_indices:
+        #         # Store the value in the data array, handling missing values as NaN
+        #         data[valid_index] = np.nan if len(value) == 0 else value[0]
+        #         # Increment the valid index counter
+        #         valid_index += 1
 
         byte_offset_increment = 0
         for measurement in range(self.metadata.number_of_measurements):
             # Read the value for the current measurement
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-            print((self.metadata.header_size + 2) + (byte_offset + 2), byte_offset_increment, self.f.tell())
-            
+            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
             if measurement in valid_indices:
                 print((self.metadata.header_size + 12) + (byte_offset), byte_offset_increment, self.f.tell() - byte_offset_increment)
                 input()
