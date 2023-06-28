@@ -424,9 +424,7 @@ class Preprocessor:
 
     
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
-        print(self.metadata.channel_IDs)
         for i, channel_id in enumerate(self.metadata.channel_IDs):
-            print(i, channel_id)
             self.data_record_df[f'Spectrum {channel_id}'] = data[i, :]
         return
     
@@ -470,7 +468,7 @@ class Preprocessor:
         #         # Skip this measurement
         #         continue
 
-        # return data
+        return data
 
     def _calculate_byte_offset_spectral_radiance(self) -> int:
         return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels)
