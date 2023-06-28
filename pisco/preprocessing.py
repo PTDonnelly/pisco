@@ -354,7 +354,7 @@ class Preprocessor:
         self.data_record_df[field] = data
         return
 
-    def _read_binary_data(self, valid_indices: Set[int], dtype: Any, byte_offset: int) -> np.ndarray:
+    def _read_binary_data(self, valid_indices: Set[int], dtype: Any, dtype_size: int) -> np.ndarray:
         """
         Reads the data of each measurement based on the valid indices.
 
@@ -369,7 +369,8 @@ class Preprocessor:
         # Prepare an empty array to store the data of the current field
         data = np.empty(len(valid_indices))
         
-        byte_start = byte_offset * valid_indices[0]
+        byte_offset = self.metadata.record_size + 8 - dtype_size
+        byte_start = (byte_offset + 2) * valid_indices[0] - dtype_size
         
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
@@ -450,10 +451,10 @@ class Preprocessor:
             self._set_field_start_position(cumsize)
 
             # Calculate the byte offset to the next measurement
-            byte_offset = self._calculate_byte_offset(dtype_size)
+            # byte_offset = self._calculate_byte_offset(dtype_size)
 
             # Read the binary data based on the valid indices
-            data = self._read_binary_data(valid_indices, dtype, byte_offset)
+            data = self._read_binary_data(valid_indices, dtype, dtype_size)
 
             # Store the data in the DataFrame
             self._store_data_in_df(field, data)
