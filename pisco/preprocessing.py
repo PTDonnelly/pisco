@@ -396,10 +396,10 @@ class Preprocessor:
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)            
             if measurement in valid_indices:
                 print((self.metadata.header_size + 12) + (byte_offset), byte_offset_increment, self.f.tell() - byte_offset_increment)
+                print(self.f.tell(), byte_offset_increment + (self.metadata.header_size + 12) + (byte_offset))
                 input()
-                # Store the value in the data array, handling missing values as NaN
-                if len(value) == 0:
-                    data[valid_index] = value[0]
+                # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+                data[valid_index] = value[0] if len(value) != 0 else data[valid_index]
                 # Increment the valid index counter
                 valid_index += 1
             byte_offset_increment += byte_offset
