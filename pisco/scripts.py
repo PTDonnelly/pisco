@@ -97,7 +97,7 @@ def plot_spectra(datapath: str):
     import numpy as np
 
     filepaths = [os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file]
-
+    spectra = []
     # Plotting parameters
     colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
     
@@ -113,10 +113,12 @@ def plot_spectra(datapath: str):
         
         # Get the spectrum (all columns with "Channel" in the name)
         spectrum_columns = [col for col in df.columns if "Channel" in col]
-        spectrum = df[spectrum_columns[6:]].mean()
-        
-        channels = np.arange(len(spectrum))
-
+        spectra.append(df[spectrum_columns[6:]].mean())
+    
+    spectrum_mean =     
+    spectrm_stddev = 
+    # Walk through the directory
+    for file, color in zip(filepaths, colors):    
         # Plot the average spectrum
         plt.plot(channels, spectrum, color=color, lw=0.5)
     
