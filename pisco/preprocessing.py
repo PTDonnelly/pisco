@@ -449,8 +449,10 @@ class Preprocessor:
             spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
             data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
-
-        return data
+        
+        # Store the spectral channels in the DataFrame
+        self._store_spectral_channels_in_df(data)
+        return
         
         # # Prepare an NaN array to store the spectral radiance data
         # data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan)
@@ -497,10 +499,7 @@ class Preprocessor:
         self._set_start_read_position(last_field_end)
 
         # Read the spectral radiance data for the valid indices
-        data = self._read_spectrum(valid_indices)
-
-        # Store the spectral channels in the DataFrame
-        self._store_spectral_channels_in_df(data)
+        self._read_spectrum(valid_indices)
 
 
     def _calculate_local_time(self) -> None:
