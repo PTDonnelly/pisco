@@ -440,15 +440,15 @@ class Preprocessor:
         # calculate the gaps between valid indices
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
-        # Prepare an NaN array to store the data of the current field
-        data = np.full(len(valid_indices), np.nan)
+        # Prepare an NaN array to store the spectral radiance data
+        data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan)
 
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
             step = (byte_offset * increment) + (dtype_size_all_channels * (increment - 1))
-            value = np.fromfile(self.f, dtype="float32", count=1, sep='', offset=step)
+            spectrum = np.fromfile(self.f, dtype="float32", count=1, sep='', offset=step)
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-            data[i] = value[0] if len(value) != 0 else data[i]
+        data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
 
         return data
         
@@ -468,7 +468,7 @@ class Preprocessor:
         #         # Increment the valid index counter
         #         valid_index += 1
 
-        return data
+        # return data
 
     def _calculate_byte_offset_spectral_radiance(self) -> int:
         return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels), (4 * self.metadata.number_of_channels)
