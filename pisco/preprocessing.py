@@ -446,9 +446,9 @@ class Preprocessor:
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
             step = (byte_offset * increment) + (dtype_size_all_channels * (increment - 1))
-            spectrum = np.fromfile(self.f, dtype="float32", count=1, sep='', offset=step)
+            spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-        data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
+            data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
 
         return data
         
