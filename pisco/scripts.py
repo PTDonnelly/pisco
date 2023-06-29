@@ -60,34 +60,52 @@ def plot_spatial_distribution(datapath: str):
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     import numpy as np
-    
-    filepaths = [os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file]
+    import imageio  # you'll use this later for gif creation
+
+    filepaths = sorted([os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file])
 
     # Initialize a new figure for the plot
     plt.figure(figsize=(8, 8))
 
     # Create a basemap of the world
-    m = Basemap(projection='cyl')
+    m = Basemap(projection='cyl', llcrnrlon=-61, llcrnrlat=29, urcrnrlon=1, urcrnrlat=61)
 
     # Draw coastlines and country borders
     m.drawcoastlines()
-    # m.drawcountries()
 
     # Plotting parameters
     colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
-    
+
+    png_files = []
+
     # Walk through the directory
-    for file, color in zip(filepaths, colors):
+    for i, (file, color) in enumerate(zip(filepaths, colors)):
         print(file)
 
         # Load the data from the file into a pandas DataFrame
         data = pd.read_csv(file)
+        
         # Plot the observations on the map
         x, y = m(data['Longitude'].values, data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=1, color=color)
+        m.scatter(x, y, latlon=True, marker=".", s=0.2, color="red", alpha=0.15)
+        
+        # save figure
+        png_file = f"{datapath}/spatial_distribution_{i}.png"
+        plt.savefig(png_file, dpi=300, bbox_inches='tight')
 
-    # Show the plot
-    plt.savefig(f"{datapath}/spatial_distribution.png", dpi=300, bbox_inches='tight')
+        # Append filename to list of png files
+        png_files.append(png_file)
+
+    # Once all figures are saved, use imageio to create a gif from all the png files
+    with imageio.get_writer(f"{datapath}/spatial_distribution.gif", mode='I', fps=1) as writer:
+        for png_file in png_files:
+            image = imageio.imread(png_file)
+            writer.append_data(image)
+            
+    # Optionally delete all png files after gif creation
+    for png_file in png_files:
+        os.remove(png_file)
+
 
 def plot_spectra(datapath: str):
     import os
@@ -96,13 +114,16 @@ def plot_spectra(datapath: str):
     import matplotlib.pyplot as plt
     import numpy as np
 
+    spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
+    wavenumber_grid = spectral_grid[:, 1]
+
     filepaths = [os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file]
     spectra = []
     # Plotting parameters
     colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
     
     # Initialize a new figure for the plot
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(8, 4))
 
     # Walk through the directory
     for file, color in zip(filepaths, colors):
@@ -115,15 +136,15 @@ def plot_spectra(datapath: str):
         spectrum_columns = [col for col in df.columns if "Channel" in col]
         spectra.append(df[spectrum_columns[6:]].mean())
     
-    # spectrum_mean =    
-    # spectrm_stddev = 
-    # Walk through the directory
-    for file, color in zip(filepaths, colors):    
-        # Plot the average spectrum
-        plt.plot(channels, spectrum, color=color, lw=0.5)
-    
-    plt.xlabel('Channel')
-    plt.ylabel('Average intensity')
+    spectrum_mean = np.mean(np.array(spectra), axis=0)
+    spectrum_stddev = np.std(np.array(spectra), axis=0)
+        
+    # Plot the average spectrum
+    plt.plot(wavenumber_grid, spectrum_mean, color='k', lw=1)
+    # plt.plot(wavenumber_grid, spectrum_mean+spectrum_stddev, color='k', lw=0.5)
+    # plt.plot(wavenumber_grid, spectrum_mean-spectrum_stddev, color='k', lw=0.5)
+    plt.xlabel(r'Wavenumber (cm$^{-1}$)')
+    plt.ylabel(r'Radiance ($Wm^{-2}srm^{-1}m$)')
     # plt.yscale('log') 
 
     # Show the plot
