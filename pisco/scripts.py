@@ -115,8 +115,8 @@ def plot_spectra(datapath: str):
         spectrum_columns = [col for col in df.columns if "Channel" in col]
         spectra.append(df[spectrum_columns[6:]].mean())
     
-    spectrum_mean =     
-    spectrm_stddev = 
+    # spectrum_mean =    
+    # spectrm_stddev = 
     # Walk through the directory
     for file, color in zip(filepaths, colors):    
         # Plot the average spectrum
