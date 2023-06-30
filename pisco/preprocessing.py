@@ -104,8 +104,6 @@ class Metadata:
         if self.number_of_L2_sections:
             self.table_of_L2_sections = np.fromfile(self.f, dtype='uint32', count=self.number_of_L2_sections)
 
-        print(self.number_of_L2_sections, self.table_of_L2_sections)
-        input()
         # Read header size at the end of the header, check for a match
         self._verify_header()       
         return
@@ -174,7 +172,7 @@ class Metadata:
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 82)]
         return l2_fields
     
-    def _get_l2_product_record_fields(self, product_ID: int):
+    def _get_l2_product_record_fields(self, product_ID: int) -> List[tuple]:
         # Use product ID to extract relevant L2 product
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
@@ -562,8 +560,7 @@ class Preprocessor:
     
     def read_l2_product_fields(self, valid_indices):
         # Retrieve the individual L2 products from the configuration file
-        product_IDs = [self.metadata.table_of_L2_sections]
-        for product_ID in product_IDs:
+        for product_ID in self.metadata.table_of_L2_sections:
             self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
         
         print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
