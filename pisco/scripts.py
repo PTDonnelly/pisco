@@ -1,5 +1,3 @@
-from typing import S
-
 from .extraction import Extractor
 from .preprocessing import Preprocessor
 from .processing import Processor
