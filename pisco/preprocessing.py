@@ -104,6 +104,8 @@ class Metadata:
         if self.number_of_L2_sections:
             self.table_of_L2_sections = np.fromfile(self.f, dtype='uint32', count=self.number_of_L2_sections)[0]
 
+        print(self.number_of_L2_sections, self.table_of_L2_sections)
+        input()
         # Read header size at the end of the header, check for a match
         self._verify_header()       
         return
