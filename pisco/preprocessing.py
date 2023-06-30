@@ -417,7 +417,6 @@ class Preprocessor:
         data = np.full(len(valid_indices), np.nan)
 
         for i, increment in enumerate(valid_indices_increments):
-            print(i, increment)
             # Read the value for the current measurement
             step = (byte_offset * increment) + (dtype_size * (increment - 1))
             value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)

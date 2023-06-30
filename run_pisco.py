@@ -1,3 +1,6 @@
+import cProfile
+import logging
+
 from pisco import Extractor, flag_data, preprocess_iasi, process_iasi
 
 def main():
@@ -25,6 +28,9 @@ def main():
             for day in day_range:
                 ex.day = f"{day:02d}"
                 
+                # Setup logging
+                logging.basicConfig(filename=f"{ex.config.datapath_out}{ex.year}/{ex.month}/{ex.day}/pisco.log", level=logging.DEBUG)
+
                 if (ex.config.L1C) or (ex.config.L2):
                     valid_indices = flag_data(ex, data_level="l1c")
                 if ex.config.L1C:
@@ -35,4 +41,4 @@ def main():
                     process_iasi(ex)
 
 if __name__ == "__main__":
-    main()
+    cProfile.run('main()')
