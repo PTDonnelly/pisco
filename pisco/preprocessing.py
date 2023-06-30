@@ -37,8 +37,8 @@ class Metadata:
         self.number_of_channels: int = None
         self.channel_IDs: np.array = None
         self.AVHRR_brilliance: bool = None
-        self.number_of_L2_sections: int = None
-        self.table_of_L2_sections: int = None
+        self.number_of_l2_products: int = None
+        self.l2_product_IDs: int = None
         self.record_size: int = None
         self.number_of_measurements: int = None
     
@@ -100,10 +100,12 @@ class Metadata:
         self.number_of_channels = np.fromfile(self.f, dtype='uint32', count=1)[0]
         self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
         self.AVHRR_brilliance = np.fromfile(self.f, dtype='bool', count=1)[0]
-        self.number_of_L2_sections = np.fromfile(self.f, dtype='uint16', count=1)[0]
-        if self.number_of_L2_sections:
-            self.table_of_L2_sections = np.fromfile(self.f, dtype='uint32', count=self.number_of_L2_sections)
+        self.number_of_l2_products = np.fromfile(self.f, dtype='uint16', count=1)[0]
+        if self.number_of_l2_products:
+            self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_l2_products)
 
+        print(self.number_of_channels, self.number_of_l2_products)
+        exit()
         # Read header size at the end of the header, check for a match
         self._verify_header()       
         return
@@ -176,7 +178,6 @@ class Metadata:
         # Use product ID to extract relevant L2 product
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
-        print(product_ID, product, self.table_of_L2_sections)
         
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "ozo":
@@ -560,11 +561,9 @@ class Preprocessor:
     
     def read_l2_product_fields(self, valid_indices):
         # Retrieve the individual L2 products from the configuration file
-        for product_ID in self.metadata.table_of_L2_sections:
+        for product_ID in self.metadata.l2_product_IDs:
             self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
-        
-        print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
-        input()
+
 
     def _calculate_local_time(self) -> None:
         """
@@ -683,7 +682,8 @@ class Preprocessor:
             
             # Read L2 retrieved products
             self.read_l2_product_fields(valid_indices)
-            
+            print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
+
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
