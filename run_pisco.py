@@ -30,11 +30,8 @@ def main():
                 ex.day = f"{day:02d}"
                 
                 # Setup output logging to save console output to file
-                logfile = f"{ex.config.datapath_out}pisco.log"
-                
-                # Backup stdout and replace stdout with Logger class
-                original_stdout = sys.stdout
-                sys.stdout = Logger(logfile)
+                original_stdout = sys.stdout # Backup stdout
+                sys.stdout = Logger(f"{ex.config.datapath_out}pisco.log") # Replace stdout with Logger class
 
                 if (ex.config.L1C) or (ex.config.L2):
                     valid_indices = flag_data(ex, data_level="l1c")
@@ -46,7 +43,7 @@ def main():
                     process_iasi(ex)
                 
                 # Move logfile to output directory
-                os.replace(logfile, ex.datapath_out)
+                os.replace(f"{ex.config.datapath_out}pisco.log", f"{ex.datapath_out}pisco.log")
 
                 # Restore stdout
                 sys.stdout = original_stdout
