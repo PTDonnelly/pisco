@@ -3,7 +3,7 @@
     "L1C": true,
 
     // L2: bool, Specifies whether Level 2 data should be processed
-    "L2": false,
+    "L2": true,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": false,
