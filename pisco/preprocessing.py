@@ -434,14 +434,14 @@ class Preprocessor:
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
             print(f"Extracting: {field}")
-            print(self.f.tell())
+            
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
             
             # Read the binary data based on the valid indices
             self._read_binary_data(valid_indices, field, dtype, dtype_size)
-        print(self.data_record_df[["Latitude", "Longitude"]].head())
-        exit()
+
+
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
         for i, channel_ID in enumerate(self.metadata.channel_IDs):
             self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
