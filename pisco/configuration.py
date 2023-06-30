@@ -1,5 +1,6 @@
 from typing import List
 import commentjson
+import os
 
 class Configurer:
     def __init__(self, path_to_config_file: str):
@@ -14,6 +15,7 @@ class Configurer:
         self.latitude_range, self.longitude_range = tuple(self.latitude_range), tuple(self.longitude_range)
         self.channels: List[int] = None
         self.datapath_out = f"{self.datapath_out}{self.satellite_identifier}/"
+        os.makedirs(self.datapath_out, exist_ok=True)
     
     @staticmethod
     def set_channels(mode):
