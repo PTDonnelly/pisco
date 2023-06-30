@@ -28,8 +28,8 @@ def main():
             for day in day_range:
                 ex.day = f"{day:02d}"
                 
-                # Setup logging
-                logging.basicConfig(filename=f"{ex.config.datapath_out}{ex.year}_{ex.month}_{ex.day}_pisco.log", level=logging.DEBUG)
+                # # Setup logging
+                # logging.basicConfig(filename=f"{ex.config.datapath_out}{ex.year}_{ex.month}_{ex.day}_pisco.log", level=logging.DEBUG)
 
                 if (ex.config.L1C) or (ex.config.L2):
                     valid_indices = flag_data(ex, data_level="l1c")
@@ -41,4 +41,32 @@ def main():
                     process_iasi(ex)
 
 if __name__ == "__main__":
-    cProfile.run('main()')
+    import time
+    import cProfile
+    import io
+    import pstats
+    # Create profiler
+    pr = cProfile.Profile()
+    # Start profiler
+    pr.enable()
+
+    # Start clock
+    start = time.time()
+
+    main()
+
+    # Stop clock
+    end = time.time()
+    # Print elapsed time
+    print(f"Elapsed time: {end-start} s")
+    
+    # Stop profiler
+    pr.disable()
+    # Print profiler output to file
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
+    ps.strip_dirs()
+    ps.print_stats()
+
+    with open('../cProfiler_output.txt', 'w+') as f:
+        f.write(s.getvalue())

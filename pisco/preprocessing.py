@@ -410,12 +410,10 @@ class Preprocessor:
         
         # calculate the gaps between valid indices
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
-        
-        print("Byte stuff done.")
 
         # Prepare an NaN array to store the data of the current field
-        data = np.full(len(valid_indices), np.nan)
-
+        data = np.full(len(valid_indices_increments), np.nan, dtype="float32")
+        
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
             step = (byte_offset * increment) + (dtype_size * (increment - 1))
@@ -445,7 +443,7 @@ class Preprocessor:
 
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
-            print("Field start set.")
+            
             # Read the binary data based on the valid indices
             self._read_binary_data(valid_indices, field, dtype, dtype_size)
 
@@ -478,7 +476,7 @@ class Preprocessor:
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
         # Prepare an NaN array to store the spectral radiance data
-        data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan, dtype="float32")
+        data = np.full((self.metadata.number_of_channels, len(valid_indices_increments)), np.nan, dtype="float32")
 
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
