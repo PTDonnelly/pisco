@@ -173,18 +173,57 @@ class Metadata:
         return l2_fields
     
     def _get_ozo_record_fields(self):
-        pass
+        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        ozo_fields = [
+                        ('Selection Background State', 'uint32', 4, 4),
+                        ('Pressure 11', 'float32', 4, 8),
+                        ('Pressure 12', 'float32', 4, 16),
+                        ('Integrated O3 Density 1', 'float32', 4, 20),
+                        ('Pressure 21', 'float32', 4, 24),
+                        ('Pressure 22', 'float32', 4, 28),
+                        ('Integrated O3 Density 2', 'float32', 4, 32),
+                        ('Pressure 31', 'float32', 4, 36),
+                        ('Pressure 32', 'float32', 4, 40),
+                        ('Integrated O3 Density 3', 'float32', 4, 44),
+                        ('Pressure 41', 'float32', 4, 48),
+                        ('Pressure 42', 'float32', 4, 52),
+                        ('Integrated O3 Density 4', 'float32', 4, 56)]
+        return ozo_fields
 
     def _get_trg_record_fields(self):
-        pass
+        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        trg_fields = [
+                        ('Selection Background State', 'uint32', 4, 4),
+                        ('Integrated N20 Density', 'float32', 4, 8),
+                        ('Integrated CO Density', 'float32', 4, 16),
+                        ('Integrated CH4 Density', 'float32', 4, 20),
+                        ('Integrated CO2 Density', 'float32', 4, 24)]
+        return trg_fields
     
     def _get_clp_record_fields(self):
-        pass
+        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        clp_fields = [
+                        ('Vertical Significance', 'uint32', 4, 4),
+                        ('Pressure 1', 'float32', 4, 8),
+                        ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16),
+                        ('Cloud Amount in Segment 1', 'float32', 4, 20),
+                        ('Cloud Phase 1', 'uint32', 4, 24),
+                        ('Pressure 2', 'float32', 4, 28),
+                        ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32),
+                        ('Cloud Amount in Segment 2', 'float32', 4, 36),
+                        ('Cloud Phase 2', 'uint32', 4, 40),
+                        ('Pressure 3', 'float32', 4, 44),
+                        ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48),
+                        ('Cloud Amount in Segment 3', 'float32', 4, 52),
+                        ('Cloud Phase 3', 'uint32', 4, 56)]
+        return clp_fields
 
     def _get_twt_record_fields(self):
+        # Not implemented yet
         pass
 
     def _get_ems_record_fields(self):
+        # Not implemented yet
         pass
 
 
@@ -525,15 +564,14 @@ class Preprocessor:
             # Throw away bad data, keep the good, re-assigning and over-writing the existing class attribute
             self.data_record_df = self.data_record_df[good_flag]
             return
-    
-    # def read_l2_products(fields):
-        
-    #     return
+
+
+    def _get_products(self):
+        return self.products.split(",")
     
     def get_l2_product_fields(self, valid_indices):
-        
-        products_split = self.products.split(",")
-        print(products_split)
+        # Retrieve the individual L2 products from the configuration file
+        products_split = self._get_products()
         
         if "ozo" in products_split:
             self.read_record_fields(self.metadata._get_ozo_record_fields(), valid_indices)
