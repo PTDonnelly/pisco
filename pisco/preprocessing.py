@@ -102,11 +102,8 @@ class Metadata:
         self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
         self.AVHRR_brilliance = np.fromfile(self.f, dtype='bool', count=1)[0]
         self.number_of_L2_sections = np.fromfile(self.f, dtype='uint16', count=1)[0]
-        print(self.number_of_L2_sections)
         if self.number_of_L2_sections:
-            print(self.number_of_L2_sections)
             self.table_of_L2_sections = np.fromfile(self.f, dtype='uint32', count=self.number_of_L2_sections)[0]
-        input()
 
         # Read header size at the end of the header, check for a match
         self._verify_header()       
@@ -176,59 +173,55 @@ class Metadata:
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 82)]
         return l2_fields
     
-    def _get_ozo_record_fields(self):
+    def _get_l2_product_record_fields(self, product_ID: int):
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        ozo_fields = [
-                        ('Selection Background State', 'uint32', 4, 4),
-                        ('Pressure 11', 'float32', 4, 8),
-                        ('Pressure 12', 'float32', 4, 16),
-                        ('Integrated O3 Density 1', 'float32', 4, 20),
-                        ('Pressure 21', 'float32', 4, 24),
-                        ('Pressure 22', 'float32', 4, 28),
-                        ('Integrated O3 Density 2', 'float32', 4, 32),
-                        ('Pressure 31', 'float32', 4, 36),
-                        ('Pressure 32', 'float32', 4, 40),
-                        ('Integrated O3 Density 3', 'float32', 4, 44),
-                        ('Pressure 41', 'float32', 4, 48),
-                        ('Pressure 42', 'float32', 4, 52),
-                        ('Integrated O3 Density 4', 'float32', 4, 56)]
-        return ozo_fields
-
-    def _get_trg_record_fields(self):
-        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        trg_fields = [
-                        ('Selection Background State', 'uint32', 4, 4),
-                        ('Integrated N20 Density', 'float32', 4, 8),
-                        ('Integrated CO Density', 'float32', 4, 16),
-                        ('Integrated CH4 Density', 'float32', 4, 20),
-                        ('Integrated CO2 Density', 'float32', 4, 24)]
-        return trg_fields
-    
-    def _get_clp_record_fields(self):
-        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        clp_fields = [
-                        ('Vertical Significance', 'uint32', 4, 4),
-                        ('Pressure 1', 'float32', 4, 8),
-                        ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16),
-                        ('Cloud Amount in Segment 1', 'float32', 4, 20),
-                        ('Cloud Phase 1', 'uint32', 4, 24),
-                        ('Pressure 2', 'float32', 4, 28),
-                        ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32),
-                        ('Cloud Amount in Segment 2', 'float32', 4, 36),
-                        ('Cloud Phase 2', 'uint32', 4, 40),
-                        ('Pressure 3', 'float32', 4, 44),
-                        ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48),
-                        ('Cloud Amount in Segment 3', 'float32', 4, 52),
-                        ('Cloud Phase 3', 'uint32', 4, 56)]
-        return clp_fields
-
-    def _get_twt_record_fields(self):
-        # Not implemented yet
-        pass
-
-    def _get_ems_record_fields(self):
-        # Not implemented yet
-        pass
+        # cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
+        # cloud_phase = cloud_phase_dictionary.get(self.cloud_phase)
+        l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
+        product = l2_product_dictionary.get(product_ID)
+        print(product_ID, product, self.table_of_L2_sections)
+        if product == "ozo":
+            fields = [
+                    ('Selection Background State', 'uint32', 4, 4),
+                    ('Pressure 11', 'float32', 4, 8),
+                    ('Pressure 12', 'float32', 4, 16),
+                    ('Integrated O3 Density 1', 'float32', 4, 20),
+                    ('Pressure 21', 'float32', 4, 24),
+                    ('Pressure 22', 'float32', 4, 28),
+                    ('Integrated O3 Density 2', 'float32', 4, 32),
+                    ('Pressure 31', 'float32', 4, 36),
+                    ('Pressure 32', 'float32', 4, 40),
+                    ('Integrated O3 Density 3', 'float32', 4, 44),
+                    ('Pressure 41', 'float32', 4, 48),
+                    ('Pressure 42', 'float32', 4, 52),
+                    ('Integrated O3 Density 4', 'float32', 4, 56)]
+        if product == "trg":
+            fields = [
+                    ('Selection Background State', 'uint32', 4, 4),
+                    ('Integrated N20 Density', 'float32', 4, 8),
+                    ('Integrated CO Density', 'float32', 4, 16),
+                    ('Integrated CH4 Density', 'float32', 4, 20),
+                    ('Integrated CO2 Density', 'float32', 4, 24)]
+        if product == "clp":
+            fields = [
+                    ('Vertical Significance', 'uint32', 4, 4),
+                    ('Pressure 1', 'float32', 4, 8),
+                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16),
+                    ('Cloud Amount in Segment 1', 'float32', 4, 20),
+                    ('Cloud Phase 1', 'uint32', 4, 24),
+                    ('Pressure 2', 'float32', 4, 28),
+                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32),
+                    ('Cloud Amount in Segment 2', 'float32', 4, 36),
+                    ('Cloud Phase 2', 'uint32', 4, 40),
+                    ('Pressure 3', 'float32', 4, 44),
+                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48),
+                    ('Cloud Amount in Segment 3', 'float32', 4, 52),
+                    ('Cloud Phase 3', 'uint32', 4, 56)]
+        if product == "twt":
+            fields = []
+        if product == "ems":
+                fields = []
+        return fields
 
 
 class Preprocessor:
@@ -453,8 +446,8 @@ class Preprocessor:
 
     
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
-        for i, channel_id in enumerate(self.metadata.channel_IDs):
-            self.data_record_df[f'Spectrum {channel_id}'] = data[i, :]
+        for i, channel_ID in enumerate(self.metadata.channel_IDs):
+            self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
         return
     
     def _read_spectrum(self, valid_indices: np.array) -> np.ndarray:
@@ -567,23 +560,13 @@ class Preprocessor:
     def _get_products(self):
         return self.products.split(",")
     
-    def get_l2_product_fields(self, valid_indices):
+    def read_l2_product_fields(self, valid_indices):
         # Retrieve the individual L2 products from the configuration file
-        products_split = self._get_products()
+        for product_ID in self.table_of_L2_sections:
+            self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
         
-        if "ozo" in products_split:
-            self.read_record_fields(self.metadata._get_ozo_record_fields(), valid_indices)
-        if "trg" in products_split:
-            self.read_record_fields(self.metadata._get_trg_record_fields(), valid_indices)
-        if "clp" in products_split:
-            self.read_record_fields(self.metadata._get_clp_record_fields(), valid_indices)
-        if "twt" in products_split:
-            self.read_record_fields(self.metadata._get_twt_record_fields(), valid_indices)
-        if "ems" in products_split:
-            self.read_record_fields(self.metadata._get_ems_record_fields(), valid_indices)
-
         print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
-
+        exit()
 
     def _calculate_local_time(self) -> None:
         """
@@ -701,7 +684,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
             
             # Read L2 retrieved products
-            self.get_l2_product_fields(valid_indices)
+            self.read_l2_product_fields(valid_indices)
             
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
