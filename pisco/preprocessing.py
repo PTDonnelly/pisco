@@ -674,7 +674,7 @@ class Preprocessor:
         return
     
 
-    def preprocess_files(self, year: str, month: str, day: str) -> None:
+    def preprocess_files(self, year: str, month: str, day: str, valid_indices: Set[int]) -> None:
         # Open binary file and extract metadata
         self.open_binary_file()
 
@@ -686,10 +686,10 @@ class Preprocessor:
             print("\nL1C Record Fields:")
             
             # Read L1C-specific record fields and add to DataFrame
-            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields())
+            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
 
             # Read L1C radiance spectrum and add to DataFrame            
-            self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields())
+            self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
@@ -698,10 +698,10 @@ class Preprocessor:
             print("\nL2 Record Fields:")
             
             # Read L2-specific record fields and add to DataFrame
-            self.read_record_fields(self.metadata._get_iasi_l2_record_fields())
+            self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
             
             # Read L2 retrieved products
-            self.get_l2_product_fields()
+            self.get_l2_product_fields(valid_indices)
 
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())

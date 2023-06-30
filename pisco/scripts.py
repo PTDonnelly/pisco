@@ -1,3 +1,5 @@
+from typing import Set
+
 from .extraction import Extractor
 from .preprocessing import Preprocessor
 from .processing import Processor
@@ -32,7 +34,7 @@ def flag_data(ex: Extractor, data_level: str):
         return valid_indices
     return
 
-def preprocess_iasi(ex: Extractor, data_level: str):
+def preprocess_iasi(ex: Extractor, data_level: str, valid_indices: Set[int]):
     """
     This function is used to process IASI (Infrared Atmospheric Sounding Interferometer) data 
     by extracting raw binary files and preprocessing them into pandas DataFrames.
@@ -63,7 +65,7 @@ def preprocess_iasi(ex: Extractor, data_level: str):
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
         p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range, ex.config.products)
-        p.preprocess_files(ex.year, ex.month, ex.day)
+        p.preprocess_files(ex.year, ex.month, ex.day, valid_indices)
     return
 
 
