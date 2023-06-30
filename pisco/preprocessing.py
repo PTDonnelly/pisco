@@ -680,7 +680,7 @@ class Preprocessor:
             
             # Read L2 retrieved products
             self.read_l2_product_fields(valid_indices)
-            print(self.data_record_df[["Latitude", "Longitude", "Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
+            print(self.data_record_df[["Latitude", "Longitude", "Year", "Month", "Day", "Hour", "Minute", "Millisecond"]].head())
 
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
