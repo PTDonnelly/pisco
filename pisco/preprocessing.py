@@ -280,7 +280,6 @@ class Preprocessor:
         self.f: BinaryIO = None
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
-        self.valid_indices: Set[int] = None
 
 
     def open_binary_file(self) -> None:
@@ -340,7 +339,7 @@ class Preprocessor:
 
             # Return the intersection of valid latitude and longitude indices
             valid_indices = sorted(valid_indices_lat & valid_indices_lon)
-        print(f"Full Globe == {full_globe}, {len(self.valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
+        print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
         return
 
 
