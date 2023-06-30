@@ -53,9 +53,11 @@ class Extractor:
             str: Input data path.
         """
         # Check the data level
-        if (self.data_level == 'l1c') or (self.data_level == 'l2'):
+        if (self.data_level == 'l1c'):
             # Format the input path string and return it
             return f"/bdd/metopc/{self.data_level}/iasi/"
+        elif  (self.data_level == 'l2'):
+            return f"/bdd/IASI/L2/"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
