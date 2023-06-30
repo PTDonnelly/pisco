@@ -32,7 +32,8 @@ def flag_data(ex: Extractor, data_level: str):
         # Closed binary file and extract metadata
         p.close_binary_file()
 
-    return valid_indices
+        return valid_indices
+    return
 
 def preprocess_iasi(ex: Extractor, data_level: str):
     """
