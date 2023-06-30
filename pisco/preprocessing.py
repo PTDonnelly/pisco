@@ -60,7 +60,7 @@ class Metadata:
         # Get the total size of the file
         file_size = self.f.seek(0, 2)
         # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
-        self.number_of_measurements = 100000#((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
+        self.number_of_measurements = ((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
         return
     
     def _read_record_size(self) -> int:
@@ -129,7 +129,7 @@ class Metadata:
                         ('Longitude', 'float32', 4, 18),
                         ('Satellite Zenith Angle', 'float32', 4, 22),
                         ('Bearing', 'float32', 4, 26),
-                        ('Solar Zentih Angle', 'float32', 4, 30),
+                        ('Solar Zenith Angle', 'float32', 4, 30),
                         ('Solar Azimuth', 'float32', 4, 34),
                         ('Field of View Number', 'uint32', 4, 38),
                         ('Orbit Number', 'uint32', 4, 42),
@@ -280,6 +280,7 @@ class Preprocessor:
         self.f: BinaryIO = None
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
+        self.valid_indices: Set[int] = None
 
 
     def open_binary_file(self) -> None:
@@ -296,6 +297,53 @@ class Preprocessor:
         self.f.close()
         return
     
+    @classmethod
+    def flag_observations_to_keep(cls, fields: List[tuple]) -> Set[int]:
+        """
+        Go through the latitude and longitude fields to find and store indices of measurements 
+        where latitude and longitude fall inside the specified range.
+
+        If the latitude and longitude cover the full globe, return a set of all indices.
+
+        If the latitude and longitude do not cover the full globe, find the valid indices 
+        based on the specified range and return the intersection of valid latitude and longitude indices.
+
+        Args:
+            fields (List[tuple]): List of field tuples containing field information.
+
+        Returns:
+            Set[int]: Set of indices of measurements to be processed in the main loop.
+        """
+        # Check if the latitude and longitude cover the full globe
+        full_globe = cls._check_spatial_range()
+
+        if full_globe:
+            # If the latitude and longitude cover the full globe, return all indices
+            valid_indices = sorted(set(range(cls.metadata.number_of_measurements)))
+        else:
+            print(f"\nFlagging observations to keep:")
+
+            for field, dtype, dtype_size, cumsize in fields:
+                if field not in ['Latitude', 'Longitude']:
+                    # Skip all other fields for now
+                    continue
+
+                # Set the starting position of the field and calculate the byte offset
+                cls._set_field_start_position(cumsize)
+                byte_offset = cls._calculate_byte_offset(dtype_size)
+
+                # Read and store the valid indices for the field
+                valid_indices = cls._get_indices(field, dtype, byte_offset)
+                if field == 'Latitude':
+                    valid_indices_lat = valid_indices
+                elif field == 'Longitude':
+                    valid_indices_lon = valid_indices
+
+            # Return the intersection of valid latitude and longitude indices
+            valid_indices = sorted(valid_indices_lat & valid_indices_lon)
+        print(f"Full Globe == {full_globe}, {len(cls.valid_indices)} measurements flagged out of {cls.metadata.number_of_measurements}.")
+        return
+
 
     def _get_indices(self, field: str, dtype: Any, byte_offset: int) -> Set[int]:
         """
@@ -342,53 +390,7 @@ class Preprocessor:
     
     def _check_spatial_range(self):
         return True if (self.latitude_range == [-90, 90]) & (self.longitude_range == [-180, 180]) else False
-    
-    def flag_observations_to_keep(self, fields: List[tuple]) -> Set[int]:
-        """
-        Go through the latitude and longitude fields to find and store indices of measurements 
-        where latitude and longitude fall inside the specified range.
-
-        If the latitude and longitude cover the full globe, return a set of all indices.
-
-        If the latitude and longitude do not cover the full globe, find the valid indices 
-        based on the specified range and return the intersection of valid latitude and longitude indices.
-
-        Args:
-            fields (List[tuple]): List of field tuples containing field information.
-
-        Returns:
-            Set[int]: Set of indices of measurements to be processed in the main loop.
-        """
-        # Check if the latitude and longitude cover the full globe
-        full_globe = self._check_spatial_range()
-
-        if full_globe:
-            # If the latitude and longitude cover the full globe, return all indices
-            valid_indices = sorted(set(range(self.metadata.number_of_measurements)))
-        else:
-            print(f"\nFlagging observations to keep:")
-
-            for field, dtype, dtype_size, cumsize in fields:
-                if field not in ['Latitude', 'Longitude']:
-                    # Skip all other fields for now
-                    continue
-
-                # Set the starting position of the field and calculate the byte offset
-                self._set_field_start_position(cumsize)
-                byte_offset = self._calculate_byte_offset(dtype_size)
-
-                # Read and store the valid indices for the field
-                valid_indices = self._get_indices(field, dtype, byte_offset)
-                if field == 'Latitude':
-                    valid_indices_lat = valid_indices
-                elif field == 'Longitude':
-                    valid_indices_lon = valid_indices
-
-            # Return the intersection of valid latitude and longitude indices
-            valid_indices = sorted(valid_indices_lat & valid_indices_lon)
-        print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
-        return valid_indices
-            
+               
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
         self.data_record_df[field] = data
@@ -676,22 +678,19 @@ class Preprocessor:
     def preprocess_files(self, year: str, month: str, day: str) -> None:
         # Open binary file and extract metadata
         self.open_binary_file()
-        
-        # Limit observations to specified spatial range
-        valid_indices = self.flag_observations_to_keep(self.metadata._get_iasi_common_record_fields())
 
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
-        self.read_record_fields(self.metadata._get_iasi_common_record_fields(), valid_indices)
+        self.read_record_fields(self.metadata._get_iasi_common_record_fields())
         
         if self.data_level == "l1c":
             print("\nL1C Record Fields:")
             
             # Read L1C-specific record fields and add to DataFrame
-            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
+            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields())
 
             # Read L1C radiance spectrum and add to DataFrame            
-            self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
+            self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields())
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
@@ -700,10 +699,10 @@ class Preprocessor:
             print("\nL2 Record Fields:")
             
             # Read L2-specific record fields and add to DataFrame
-            self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
+            self.read_record_fields(self.metadata._get_iasi_l2_record_fields())
             
             # Read L2 retrieved products
-            self.get_l2_product_fields(valid_indices)
+            self.get_l2_product_fields()
 
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())

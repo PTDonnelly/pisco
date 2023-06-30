@@ -3,13 +3,10 @@
     "L1C": false,
 
     // L2: bool, Specifies whether Level 2 data should be processed
-    "L2": true,
+    "L2": false,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": false,
-    
-    // channel_mode: str,  "all" to extract all IASI L1C spectral channels, "range" to specify specific range in configuration.py
-    "channel_mode": "all",
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",

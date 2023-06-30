@@ -1,6 +1,40 @@
+from typing import S
+
 from .extraction import Extractor
 from .preprocessing import Preprocessor
 from .processing import Processor
+
+def flag_data(ex: Extractor, data_level: str):
+    """This function is a truncated form of the main preprocess_iasi function, but bypasses most
+    of the functionality. It creates a much smaller dataset with OBR, scans it and returns the indices 
+    of observations within the specified latitude-longitude range.
+    """
+    
+    # Use OBR to extract IASI data from raw binary files
+    if data_level == "l1c":
+        ex.config.channels = ex.config.set_channels("flag")
+    ex.data_level = data_level
+    ex.get_datapaths()
+    ex.extract_files()
+
+    # If IASI data was successfully extracted
+    if ex.intermediate_file_check:
+        # Preprocess the data into pandas DataFrames
+        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range, ex.config.products)
+        
+        # Open binary file and extract metadata
+        p.open_binary_file()
+
+        # Read common IASI record fields and store to pandas DataFrame
+        p.read_record_fields(p.metadata._get_iasi_common_record_fields())
+
+        # Limit observations to specified spatial range
+        valid_indices = p.flag_observations_to_keep(p.metadata._get_iasi_common_record_fields())
+
+        # Closed binary file and extract metadata
+        p.close_binary_file()
+
+    return valid_indices
 
 def preprocess_iasi(ex: Extractor, data_level: str):
     """
@@ -23,6 +57,8 @@ def preprocess_iasi(ex: Extractor, data_level: str):
     None: The function performs extraction and preprocessing operations but does not return a value.
     """
     # Use OBR to extract IASI data from raw binary files
+    if data_level == "l1c":
+        ex.config.channels = ex.config.set_channels("all")
     ex.data_level = data_level
     ex.get_datapaths()
     ex.extract_files()

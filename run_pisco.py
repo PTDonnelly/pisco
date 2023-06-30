@@ -1,4 +1,4 @@
-from pisco import Extractor, preprocess_iasi, process_iasi
+from pisco import Extractor, flag_data, preprocess_iasi, process_iasi
 
 def main():
     """PISCO: Package for IASI Spectra and Cloud Observations
@@ -25,12 +25,15 @@ def main():
             for day in day_range:
                 ex.day = f"{day:02d}"
                 
-                if ex.config.L1C:
-                    preprocess_iasi(ex, data_level="l1c")
-                if ex.config.L2:
-                    preprocess_iasi(ex, data_level="l2")
-                if ex.config.process:
-                    process_iasi(ex)
+                if (ex.config.L1C) or (ex.config.L2):
+                    valid_indices = flag_data(ex, data_level="l1c")
+                    print(valid_indices)
+                # if ex.config.L1C:
+                #     preprocess_iasi(ex, data_level="l1c")
+                # if ex.config.L2:
+                #     preprocess_iasi(ex, data_level="l2")
+                # if ex.config.process:
+                #     process_iasi(ex)
 
 if __name__ == "__main__":
     main()
