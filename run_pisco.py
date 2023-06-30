@@ -1,4 +1,4 @@
-import shutil
+import os
 import sys
 import cProfile
 
@@ -29,7 +29,7 @@ def main():
             for day in day_range:
                 ex.day = f"{day:02d}"
                 
-                # Setup output logging to save Standard I/O to file
+                # Setup output logging to save console output to file
                 logfile = f"{ex.config.datapath_out}pisco.log"
                 
                 # Backup stdout and replace stdout with Logger class
@@ -46,7 +46,7 @@ def main():
                     process_iasi(ex)
                 
                 # Move logfile to output directory
-                shutil.move(logfile, ex.datapath_out)
+                os.replace(logfile, ex.datapath_out)
 
                 # Restore stdout
                 sys.stdout = original_stdout
