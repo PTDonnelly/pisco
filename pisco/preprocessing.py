@@ -244,7 +244,7 @@ class Preprocessor:
 
     def open_binary_file(self) -> None:
         # Open binary file
-        print("\nLoading intermediate binary file...")
+        print("\nLoading intermediate binary file:")
         self.f = open(self.intermediate_file, 'rb')
         
         # Get structure of file header and data record
@@ -324,9 +324,9 @@ class Preprocessor:
 
         if full_globe:
             # If the latitude and longitude cover the full globe, return all indices
-            return sorted(set(range(self.metadata.number_of_measurements)))
+            valid_indices = sorted(set(range(self.metadata.number_of_measurements)))
         else:
-            print(f"\nFlagging observations to keep...")
+            print(f"\nFlagging observations to keep:")
 
             for field, dtype, dtype_size, cumsize in fields:
                 if field not in ['Latitude', 'Longitude']:
@@ -345,7 +345,9 @@ class Preprocessor:
                     valid_indices_lon = valid_indices
 
             # Return the intersection of valid latitude and longitude indices
-            return sorted(valid_indices_lat & valid_indices_lon)
+            valid_indices = sorted(valid_indices_lat & valid_indices_lon)
+        print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements} measurements.")
+        return valid_indices
             
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
@@ -505,7 +507,7 @@ class Preprocessor:
             """
             Filters bad spectra based on IASI L1C data quality flags and date. Overwrites existing DataFrame.
             """
-            print("\nFiltering spectra...")
+            print("\nFiltering spectra:")
             if date <= datetime(2012, 2, 8):
                 # Treat data differently if before February 8 2012 (due to a change in IASI data reduction)
                 check_quality_flag = self.data_record_df['Quality Flag'] == 0
@@ -565,7 +567,7 @@ class Preprocessor:
         """
         Stores the local time Boolean indicating whether the current time is day or night.
         """
-        print("\nBuilding Local Time...")
+        print("\nBuilding Local Time:")
         # Calculate the local time
         local_time = self._calculate_local_time()
 
@@ -578,7 +580,7 @@ class Preprocessor:
         """
         Stores the datetime components to a single column and drops the elements.
         """
-        print("\nBuilding Datetime...")
+        print("\nBuilding Datetime:")
         # Create 'Datetime' column
         self.data_record_df['Datetime'] = self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') + \
                                     self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') + \
@@ -591,12 +593,6 @@ class Preprocessor:
         self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Millisecond'])
         return  
     
-
-    
-
-
-
-
 
 
     def _delete_intermediate_binary_file(self) -> None:
