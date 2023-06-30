@@ -453,7 +453,7 @@ class Preprocessor:
             
             # Read the binary data based on the valid indices
             self._read_binary_data(valid_indices, field, dtype, dtype_size)
-
+        print(self.data_record_df[["Latitude", "Longitude"]].head())
         exit()
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
         for i, channel_ID in enumerate(self.metadata.channel_IDs):
