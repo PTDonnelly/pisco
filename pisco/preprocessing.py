@@ -321,7 +321,7 @@ class Preprocessor:
         """
         # Check if the latitude and longitude cover the full globe
         full_globe = self._check_spatial_range()
-        
+
         if full_globe:
             # If the latitude and longitude cover the full globe, return all indices
             return sorted(set(range(self.metadata.number_of_measurements)))
@@ -329,6 +329,7 @@ class Preprocessor:
             print(f"\nFlagging observations to keep...")
 
             for field, dtype, dtype_size, cumsize in fields:
+                print(field, dtype, dtype_size, cumsize)
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
                     continue
@@ -628,7 +629,7 @@ class Preprocessor:
         fields = self.metadata._get_iasi_common_record_fields()
         valid_indices = self.flag_observations_to_keep(fields)
         print(valid_indices)
-        
+
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
         self.read_record_fields(fields, valid_indices)
