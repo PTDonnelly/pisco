@@ -90,16 +90,16 @@ class Extractor:
         # Define the parameters for the command
         if (self.data_level == 'l1c'):
             list_of_parameters = [
-                f"-d {self.datapath_in}",
+                f"-d {self.datapath_in}", # l1c data directory
                 f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",  # first and last day
                 f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
                 f"-of bin"  # output file format
             ]
         elif (self.data_level == 'l2'):
             list_of_parameters = [
-                f"-d2 {self.datapath_in}",
-                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",
-                f"-t2 {self.config.products}",
+                f"-d2 {self.datapath_in}", # l2 data directory
+                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}", # first and last day
+                f"-t2 {self.config.products}", # l2 products
                 f"-of bin"  # output file format
             ]
         # Join the parameters into a single string and return
