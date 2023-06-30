@@ -64,9 +64,9 @@ if __name__ == "__main__":
     pr.disable()
     # Print profiler output to file
     s = io.StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
+    ps = pstats.Stats(pr, stream=s).sort_stats('cumtime')
     ps.strip_dirs()
     ps.print_stats()
 
-    with open('../cProfiler_output.txt', 'w+') as f:
+    with open('./outputs/cProfiler_output.txt', 'w+') as f:
         f.write(s.getvalue())
