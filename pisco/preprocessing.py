@@ -45,7 +45,6 @@ class Metadata:
     def _print_metadata(self) -> None:
         print(f"Header  : {self.header_size} bytes")
         print(f"Record  : {self.record_size} bytes")
-        print(f"Spectrum: {self.number_of_channels} channels")
         print(f"Data    : {self.number_of_measurements} measurements")
         return
 
@@ -104,6 +103,7 @@ class Metadata:
         self.number_of_L2_sections = np.fromfile(self.f, dtype='uint16', count=1)[0]
         if self.number_of_L2_sections:
             self.table_of_L2_sections = np.fromfile(self.f, dtype='uint32', count=self.number_of_L2_sections)[0]
+            print(self.table_of_L2_sections)
 
         # Read header size at the end of the header, check for a match
         self._verify_header()       
@@ -178,6 +178,7 @@ class Metadata:
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
         print(product_ID, product, self.table_of_L2_sections)
+        
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "ozo":
             fields = [
