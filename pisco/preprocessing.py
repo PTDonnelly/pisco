@@ -560,6 +560,7 @@ class Preprocessor:
     
     def read_l2_product_fields(self, valid_indices):
         # Retrieve the individual L2 products from the configuration file
+        print(self.metadata.table_of_L2_sections)
         for product_ID in self.metadata.table_of_L2_sections:
             self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
         
