@@ -627,26 +627,30 @@ class Preprocessor:
         # Limit observations to specified spatial range
         fields = self.metadata._get_iasi_common_record_fields()
         valid_indices = self.flag_observations_to_keep(fields)
-        print(valid_indices)
 
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
         self.read_record_fields(fields, valid_indices)
         
         if self.data_level == "l1c":
-            # Read L1C-specific record fields and add to DataFrame
             print("\nL1C Record Fields:")
             fields = self.metadata._get_iasi_l1c_record_fields()
+            
+            # Read L1C-specific record fields and add to DataFrame
             self.read_record_fields(fields, valid_indices)
+
+            # Read L1C radiance spectrum and add to DataFrame            
             self.read_spectral_radiance(fields, valid_indices)
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
-            # Read L2-specific record fields and add to DataFrame
             print("\nL2 Record Fields:")
-            # self.read_record_fields(self.metadata._get_iasi_l2_record_fields())
+            fields = self.metadata._get_iasi_l2_record_fields()
+            
+            # Read L2-specific record fields and add to DataFrame
+            self.read_record_fields(fields)
             
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase()
