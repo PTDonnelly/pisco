@@ -27,10 +27,10 @@ def main():
                 
                 if (ex.config.L1C) or (ex.config.L2):
                     valid_indices = flag_data(ex, data_level="l1c")
-                if ex.config.L1C:
-                    preprocess_iasi(ex, data_level="l1c", valid_indices)
-                if ex.config.L2:
-                    preprocess_iasi(ex, data_level="l2", valid_indices)
+                    if ex.config.L1C:
+                        preprocess_iasi(ex, valid_indices, data_level="l1c")
+                    if ex.config.L2:
+                        preprocess_iasi(ex, valid_indices, data_level="l2")
                 if ex.config.process:
                     process_iasi(ex)
 
