@@ -20,7 +20,7 @@ def flag_data(ex: Extractor, data_level: str = "l2"):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
-        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range, ex.config.products)
+        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
         
         # Open binary file and extract metadata
         p.open_binary_file()
