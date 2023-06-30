@@ -232,11 +232,12 @@ class Preprocessor:
     preprocess_files(year: str, month: str, day: str)
         Runs the entire preprocessing pipeline on the binary file.
     """
-    def __init__(self, intermediate_file: str, data_level: str, latitude_range: Tuple[float], longitude_range: Tuple[float]):
+    def __init__(self, intermediate_file: str, data_level: str, latitude_range: Tuple[float], longitude_range: Tuple[float], products: str):
         self.intermediate_file = intermediate_file
         self.data_level = data_level
         self.latitude_range = latitude_range
         self.longitude_range = longitude_range
+        self.products = products
         self.f: BinaryIO = None
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
@@ -346,7 +347,7 @@ class Preprocessor:
 
             # Return the intersection of valid latitude and longitude indices
             valid_indices = sorted(valid_indices_lat & valid_indices_lon)
-        print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements} measurements.")
+        print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
         return valid_indices
             
 
@@ -519,12 +520,31 @@ class Preprocessor:
             
             # Print the fraction of good measurements
             good_ratio = np.round((len(self.data_record_df[good_flag]) / len(self.data_record_df)) * 100, 2)
-            print(f"{good_ratio} % good data of {len(self.data_record_df)} spectra, out of {self.metadata.number_of_measurements} measurements")
+            print(f"{good_ratio} % good data of {len(self.data_record_df)} spectra")
             
             # Throw away bad data, keep the good, re-assigning and over-writing the existing class attribute
             self.data_record_df = self.data_record_df[good_flag]
             return
     
+    # def read_l2_products(fields):
+        
+    #     return
+    
+    def get_l2_product_fields(self, valid_indices):
+        
+        products_split = self.products.split(",")
+        print(products_split)
+        
+        if "ozo" in products_split:
+            self.read_record_fields(self.metadata._get_ozo_record_fields(self), valid_indices)
+        if "trg" in products_split:
+            self.read_record_fields(self.metadata._get_trg_record_fields(self), valid_indices)
+        if "clp" in products_split:
+            self.read_record_fields(self.metadata._get_clp_record_fields(self), valid_indices)
+        if "twt" in products_split:
+            self.read_record_fields(self.metadata._get_twt_record_fields(self), valid_indices)
+        if "ems" in products_split:
+            self.read_record_fields(self.metadata._get_ems_record_fields(self), valid_indices)
 
     def _calculate_local_time(self) -> None:
         """
@@ -594,7 +614,6 @@ class Preprocessor:
         return  
     
 
-
     def _delete_intermediate_binary_file(self) -> None:
         os.remove(self.intermediate_file)
         return
@@ -621,35 +640,35 @@ class Preprocessor:
         self.open_binary_file()
         
         # Limit observations to specified spatial range
-        fields = self.metadata._get_iasi_common_record_fields()
-        valid_indices = self.flag_observations_to_keep(fields)
+        valid_indices = self.flag_observations_to_keep(self.metadata._get_iasi_common_record_fields())
 
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
-        self.read_record_fields(fields, valid_indices)
+        self.read_record_fields(self.metadata._get_iasi_common_record_fields(), valid_indices)
         
         if self.data_level == "l1c":
             print("\nL1C Record Fields:")
-            fields = self.metadata._get_iasi_l1c_record_fields()
             
             # Read L1C-specific record fields and add to DataFrame
-            self.read_record_fields(fields, valid_indices)
+            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
 
             # Read L1C radiance spectrum and add to DataFrame            
-            self.read_spectral_radiance(fields, valid_indices)
+            self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
             print("\nL2 Record Fields:")
-            fields = self.metadata._get_iasi_l2_record_fields()
             
             # Read L2-specific record fields and add to DataFrame
-            self.read_record_fields(fields, valid_indices)
+            self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
+            
+            # Read L2 retrieved products
+            self.get_l2_product_fields(valid_indices)
             
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
-            # self.filter_specified_cloud_phase()
+            # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
 
         # Construct Local Time column
