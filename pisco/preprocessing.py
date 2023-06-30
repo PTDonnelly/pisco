@@ -536,15 +536,15 @@ class Preprocessor:
         print(products_split)
         
         if "ozo" in products_split:
-            self.read_record_fields(self.metadata._get_ozo_record_fields(self), valid_indices)
+            self.read_record_fields(self.metadata._get_ozo_record_fields(), valid_indices)
         if "trg" in products_split:
-            self.read_record_fields(self.metadata._get_trg_record_fields(self), valid_indices)
+            self.read_record_fields(self.metadata._get_trg_record_fields(), valid_indices)
         if "clp" in products_split:
-            self.read_record_fields(self.metadata._get_clp_record_fields(self), valid_indices)
+            self.read_record_fields(self.metadata._get_clp_record_fields(), valid_indices)
         if "twt" in products_split:
-            self.read_record_fields(self.metadata._get_twt_record_fields(self), valid_indices)
+            self.read_record_fields(self.metadata._get_twt_record_fields(), valid_indices)
         if "ems" in products_split:
-            self.read_record_fields(self.metadata._get_ems_record_fields(self), valid_indices)
+            self.read_record_fields(self.metadata._get_ems_record_fields(), valid_indices)
 
     def _calculate_local_time(self) -> None:
         """
@@ -666,7 +666,7 @@ class Preprocessor:
             
             # Read L2 retrieved products
             self.get_l2_product_fields(valid_indices)
-            
+
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
