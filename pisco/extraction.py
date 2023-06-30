@@ -53,11 +53,11 @@ class Extractor:
             str: Input data path.
         """
         # Check the data level
-        if (self.data_level == 'l1c'):
+        if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
-            return f"/bdd/metopc/{self.data_level}/iasi/"
-        elif  (self.data_level == 'l2'):
-            return f"/bdd/IASI/L2/"
+            return f"/bdd/{self.config.satellite_identifier}/{self.data_level}/iasi/"
+        # elif  (self.data_level == 'l2'):
+        #     return f"/bdd/IASI/L2/"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -172,7 +172,6 @@ class Extractor:
         
         # Create a CompletedProcess object that contains the result of execution
         return subprocess.CompletedProcess(args=command, returncode=return_code, stdout='\n'.join(command_output), stderr=None)
-
 
 
     def create_intermediate_filepath(self) -> None:

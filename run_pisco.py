@@ -29,7 +29,7 @@ def main():
             for day in day_range:
                 ex.day = f"{day:02d}"
                 
-                # Setup output logging to save console output to file
+                # Setup output logging to save console output to file                
                 original_stdout = sys.stdout # Backup stdout
                 sys.stdout = Logger(f"{ex.config.datapath_out}pisco.log") # Replace stdout with Logger class
 

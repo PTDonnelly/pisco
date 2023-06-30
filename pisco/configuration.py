@@ -13,6 +13,7 @@ class Configurer:
         # Perform any necessary post-processing before executing
         self.latitude_range, self.longitude_range = tuple(self.latitude_range), tuple(self.longitude_range)
         self.channels: List[int] = None
+        self.datapath_out = f"{self.datapath_out}{self.config.satellite_identifier}/"
     
     @staticmethod
     def set_channels(mode):
