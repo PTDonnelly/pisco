@@ -174,12 +174,11 @@ class Metadata:
         return l2_fields
     
     def _get_l2_product_record_fields(self, product_ID: int):
-        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        # cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
-        # cloud_phase = cloud_phase_dictionary.get(self.cloud_phase)
+        # Use product ID to extract relevant L2 product
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
         print(product_ID, product, self.table_of_L2_sections)
+        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "ozo":
             fields = [
                     ('Selection Background State', 'uint32', 4, 4),
@@ -268,12 +267,11 @@ class Preprocessor:
     preprocess_files(year: str, month: str, day: str)
         Runs the entire preprocessing pipeline on the binary file.
     """
-    def __init__(self, intermediate_file: str, data_level: str, latitude_range: Tuple[float], longitude_range: Tuple[float], products: str):
+    def __init__(self, intermediate_file: str, data_level: str, latitude_range: Tuple[float], longitude_range: Tuple[float]):
         self.intermediate_file = intermediate_file
         self.data_level = data_level
         self.latitude_range = latitude_range
         self.longitude_range = longitude_range
-        self.products = products
         self.f: BinaryIO = None
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
