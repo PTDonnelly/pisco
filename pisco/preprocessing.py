@@ -116,7 +116,7 @@ class Metadata:
             print(self.f.tell())
         print(self.f.tell())
         print(self.number_of_channels, self.number_of_l2_products, self.l2_product_IDs)
-        exit()
+        
         # Read header size at the end of the header, check for a match
         self._verify_header()       
         return
@@ -447,14 +447,14 @@ class Preprocessor:
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
             print(f"Extracting: {field}")
-
+            print(self.f.tell())
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
             
             # Read the binary data based on the valid indices
             self._read_binary_data(valid_indices, field, dtype, dtype_size)
 
-    
+        exit()
     def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
         for i, channel_ID in enumerate(self.metadata.channel_IDs):
             self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
