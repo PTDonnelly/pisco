@@ -31,26 +31,40 @@ def main():
                 
                 # Setup output logging to save Standard I/O to file
                 logfile = f"{ex.config.datapath_out}pisco.log"
-                with open(logfile, 'w') as f:
-                    # Save the current stdout
-                    original_stdout = sys.stdout
-                    # Redirect stdout to the file
-                    sys.stdout = f
+                
+                # Backup stdout and replace stdout with Logger class
+                original_stdout = sys.stdout
+                sys.stdout = Logger(logfile)
 
-                    if (ex.config.L1C) or (ex.config.L2):
-                        valid_indices = flag_data(ex, data_level="l1c")
-                    if ex.config.L1C:
-                        preprocess_iasi(ex, valid_indices, data_level="l1c")
-                    if ex.config.L2:
-                        preprocess_iasi(ex, valid_indices, data_level="l2")
-                    if ex.config.process:
-                        process_iasi(ex)
+                if (ex.config.L1C) or (ex.config.L2):
+                    valid_indices = flag_data(ex, data_level="l1c")
+                if ex.config.L1C:
+                    preprocess_iasi(ex, valid_indices, data_level="l1c")
+                if ex.config.L2:
+                    preprocess_iasi(ex, valid_indices, data_level="l2")
+                if ex.config.process:
+                    process_iasi(ex)
                 
                 # Move logfile to output directory
                 shutil.move(logfile, ex.datapath_out)
 
                 # Restore stdout
                 sys.stdout = original_stdout
+
+class Logger(object):
+    def __init__(self, file_name):
+        self.terminal = sys.stdout
+        self.log = open(file_name, "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # This flush method is needed for python 3 compatibility.
+        # This handles the flush command by doing nothing.
+        # It is possible to specify some extra behavior here.
+        pass
 
 if __name__ == "__main__":
     import time
