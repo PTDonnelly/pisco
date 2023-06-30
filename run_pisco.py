@@ -68,5 +68,5 @@ if __name__ == "__main__":
     ps.strip_dirs()
     ps.print_stats()
 
-    with open('./outputs/cProfiler_output.txt', 'w+') as f:
+    with open('/data/pdonnelly/iasi/metopc/cProfiler_output.txt', 'w+') as f:
         f.write(s.getvalue())
