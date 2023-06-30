@@ -297,8 +297,7 @@ class Preprocessor:
         self.f.close()
         return
     
-    @classmethod
-    def flag_observations_to_keep(cls, fields: List[tuple]) -> Set[int]:
+    def flag_observations_to_keep(self, fields: List[tuple]) -> Set[int]:
         """
         Go through the latitude and longitude fields to find and store indices of measurements 
         where latitude and longitude fall inside the specified range.
@@ -315,11 +314,11 @@ class Preprocessor:
             Set[int]: Set of indices of measurements to be processed in the main loop.
         """
         # Check if the latitude and longitude cover the full globe
-        full_globe = cls._check_spatial_range()
+        full_globe = self._check_spatial_range()
 
         if full_globe:
             # If the latitude and longitude cover the full globe, return all indices
-            valid_indices = sorted(set(range(cls.metadata.number_of_measurements)))
+            valid_indices = sorted(set(range(self.metadata.number_of_measurements)))
         else:
             print(f"\nFlagging observations to keep:")
 
@@ -329,11 +328,11 @@ class Preprocessor:
                     continue
 
                 # Set the starting position of the field and calculate the byte offset
-                cls._set_field_start_position(cumsize)
-                byte_offset = cls._calculate_byte_offset(dtype_size)
+                self._set_field_start_position(cumsize)
+                byte_offset = self._calculate_byte_offset(dtype_size)
 
                 # Read and store the valid indices for the field
-                valid_indices = cls._get_indices(field, dtype, byte_offset)
+                valid_indices = self._get_indices(field, dtype, byte_offset)
                 if field == 'Latitude':
                     valid_indices_lat = valid_indices
                 elif field == 'Longitude':
@@ -341,7 +340,7 @@ class Preprocessor:
 
             # Return the intersection of valid latitude and longitude indices
             valid_indices = sorted(valid_indices_lat & valid_indices_lon)
-        print(f"Full Globe == {full_globe}, {len(cls.valid_indices)} measurements flagged out of {cls.metadata.number_of_measurements}.")
+        print(f"Full Globe == {full_globe}, {len(self.valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
         return
 
 
@@ -585,6 +584,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_twt_record_fields(), valid_indices)
         if "ems" in products_split:
             self.read_record_fields(self.metadata._get_ems_record_fields(), valid_indices)
+
 
     def _calculate_local_time(self) -> None:
         """
