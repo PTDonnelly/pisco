@@ -663,7 +663,7 @@ class Preprocessor:
         if self.data_level == "l1c":
             print("\nL1C Record Fields:")
             
-            # Read L1C-specific record fields and add to DataFrame
+            # Read general L1C-specific record fields and add to DataFrame
             self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
 
             # Read L1C radiance spectrum and add to DataFrame            
@@ -675,12 +675,12 @@ class Preprocessor:
         if self.data_level == "l2":
             print("\nL2 Record Fields:")
             
-            # Read L2-specific record fields and add to DataFrame
+            # Read general L2-specific record fields and add to DataFrame
             self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
             
             # Read L2 retrieved products
             self.read_l2_product_fields(valid_indices)
-            print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
+            print(self.data_record_df[["Latitude", "Longitude", "Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
 
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
