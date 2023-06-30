@@ -4,7 +4,7 @@ from .extraction import Extractor
 from .preprocessing import Preprocessor
 from .processing import Processor
 
-def flag_data(ex: Extractor, data_level: str = "l2"):
+def flag_data(ex: Extractor, data_level: str = "l1c"):
     """This function is a truncated form of the main preprocess_iasi function, but bypasses most
     of the functionality. It creates a much smaller dataset with OBR, scans it and returns the indices 
     of observations within the specified latitude-longitude range.
