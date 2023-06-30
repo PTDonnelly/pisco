@@ -33,7 +33,7 @@ def main():
                 logfile = f"{ex.config.datapath_out}pisco.log"
                 with open(logfile, 'w') as f:
                     # Save the current stdout
-                    _ = sys.stdout
+                    original_stdout = sys.stdout
                     # Redirect stdout to the file
                     sys.stdout = f
 
@@ -48,6 +48,9 @@ def main():
                 
                 # Move logfile to output directory
                 shutil.move(logfile, ex.datapath_out)
+
+                # Restore stdout
+                sys.stdout = original_stdout
 
 if __name__ == "__main__":
     import time
