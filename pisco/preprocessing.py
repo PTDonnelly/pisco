@@ -92,30 +92,17 @@ class Metadata:
         """
         # Read header entries
         self.header_size = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        print(self.f.tell())
         self.byte_order = np.fromfile(self.f, dtype='uint8', count=1)[0]
-        print(self.f.tell())
         self.format_version = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        print(self.f.tell())
         self.satellite_identifier = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        print(self.f.tell())
         self.record_header_size = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        print(self.f.tell())
         self.brightness_temperature_brilliance = np.fromfile(self.f, dtype='bool', count=1)[0]
-        print(self.f.tell())
         self.number_of_channels = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        print(self.f.tell())
         self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
-        print(self.f.tell())
         self.AVHRR_brilliance = np.fromfile(self.f, dtype='bool', count=1)[0]
-        print(self.f.tell())
         self.number_of_l2_products = np.fromfile(self.f, dtype='uint16', count=1)[0]
-        print(self.f.tell())
         if self.number_of_l2_products:
             self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_l2_products)
-            print(self.f.tell())
-        print(self.f.tell())
-        print(self.number_of_channels, self.number_of_l2_products, self.l2_product_IDs)
         
         # Read header size at the end of the header, check for a match
         self._verify_header()       
