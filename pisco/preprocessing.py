@@ -244,7 +244,7 @@ class Preprocessor:
 
     def open_binary_file(self) -> None:
         # Open binary file
-        print("\nLoading intermediate L1C file...")
+        print("\nLoading intermediate binary file...")
         self.f = open(self.intermediate_file, 'rb')
         
         # Get structure of file header and data record
@@ -324,7 +324,7 @@ class Preprocessor:
         
         if full_globe:
             # If the latitude and longitude cover the full globe, return all indices
-            return set(range(self.metadata.number_of_measurements))
+            return sorted(set(range(self.metadata.number_of_measurements)))
         else:
             print(f"\nFlagging observations to keep...")
 
@@ -501,6 +501,28 @@ class Preprocessor:
         # Read the spectral radiance data for the valid indices
         self._read_spectrum(valid_indices)
 
+    def filter_good_spectra(self, date: object) -> None:
+            """
+            Filters bad spectra based on IASI L1C data quality flags and date. Overwrites existing DataFrame.
+            """
+            print("\nFiltering spectra...")
+            if date <= datetime(2012, 2, 8):
+                # Treat data differently if before February 8 2012 (due to a change in IASI data reduction)
+                check_quality_flag = self.data_record_df['Quality Flag'] == 0
+                check_data = self.data_record_df.drop(['Quality Flag', 'Date Column'], axis=1).sum(axis=1) > 0
+                good_flag = check_quality_flag & check_data
+            else:
+                check_quality_flags = (self.data_record_df['Quality Flag 1'] == 0) & (self.data_record_df['Quality Flag 2'] == 0) & (self.data_record_df['Quality Flag 3'] == 0)
+                good_flag = check_quality_flags
+            
+            # Print the fraction of good measurements
+            good_ratio = np.round((len(self.data_record_df[good_flag]) / len(self.data_record_df)) * 100, 2)
+            print(f"{good_ratio} % good data of {len(self.data_record_df)} spectra, out of {self.metadata.number_of_measurements} measurements")
+            
+            # Throw away bad data, keep the good, re-assigning and over-writing the existing class attribute
+            self.data_record_df = self.data_record_df[good_flag]
+            return
+    
 
     def _calculate_local_time(self) -> None:
         """
@@ -570,27 +592,11 @@ class Preprocessor:
         return  
     
 
-    def filter_good_spectra(self, date: object) -> None:
-        """
-        Filters bad spectra based on IASI L1C data quality flags and date. Overwrites existing DataFrame.
-        """
-        print("\nFiltering spectra...")
-        if date <= datetime(2012, 2, 8):
-            # Treat data differently if before February 8 2012 (due to a change in IASI data reduction)
-            check_quality_flag = self.data_record_df['Quality Flag'] == 0
-            check_data = self.data_record_df.drop(['Quality Flag', 'Date Column'], axis=1).sum(axis=1) > 0
-            good_flag = check_quality_flag & check_data
-        else:
-            check_quality_flags = (self.data_record_df['Quality Flag 1'] == 0) & (self.data_record_df['Quality Flag 2'] == 0) & (self.data_record_df['Quality Flag 3'] == 0)
-            good_flag = check_quality_flags
-        
-        # Print the fraction of good measurements
-        good_ratio = np.round((len(self.data_record_df[good_flag]) / len(self.data_record_df)) * 100, 2)
-        print(f"{good_ratio} % good data of {len(self.data_record_df)} spectra, out of {self.metadata.number_of_measurements} measurements")
-        
-        # Throw away bad data, keep the good, re-assigning and over-writing the existing class attribute
-        self.data_record_df = self.data_record_df[good_flag]
-        return
+    
+
+
+
+
 
 
     def _delete_intermediate_binary_file(self) -> None:
@@ -621,7 +627,8 @@ class Preprocessor:
         # Limit observations to specified spatial range
         fields = self.metadata._get_iasi_common_record_fields()
         valid_indices = self.flag_observations_to_keep(fields)
-
+        print(valid_indices)
+        
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
         self.read_record_fields(fields, valid_indices)
