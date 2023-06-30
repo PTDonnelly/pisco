@@ -680,7 +680,7 @@ class Preprocessor:
 
         # Read common IASI record fields and store to pandas DataFrame
         print("\nCommon Record Fields:")
-        self.read_record_fields(self.metadata._get_iasi_common_record_fields())
+        self.read_record_fields(self.metadata._get_iasi_common_record_fields(), valid_indices)
         
         if self.data_level == "l1c":
             print("\nL1C Record Fields:")
