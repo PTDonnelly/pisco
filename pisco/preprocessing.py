@@ -578,6 +578,8 @@ class Preprocessor:
         if "ems" in products_split:
             self.read_record_fields(self.metadata._get_ems_record_fields(), valid_indices)
 
+        print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
+
 
     def _calculate_local_time(self) -> None:
         """
@@ -696,7 +698,7 @@ class Preprocessor:
             
             # Read L2 retrieved products
             self.get_l2_product_fields(valid_indices)
-
+            
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
