@@ -340,7 +340,7 @@ class Preprocessor:
             # Return the intersection of valid latitude and longitude indices
             valid_indices = sorted(valid_indices_lat & valid_indices_lon)
         print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
-        return
+        return valid_indices
 
 
     def _get_indices(self, field: str, dtype: Any, byte_offset: int) -> Set[int]:
