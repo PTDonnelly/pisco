@@ -329,10 +329,10 @@ class Preprocessor:
             print(f"\nFlagging observations to keep...")
 
             for field, dtype, dtype_size, cumsize in fields:
-                print(field, dtype, dtype_size, cumsize)
                 if field not in ['Latitude', 'Longitude']:
                     # Skip all other fields for now
                     continue
+                print(field, dtype, dtype_size, cumsize)
 
                 # Set the starting position of the field and calculate the byte offset
                 self._set_field_start_position(cumsize)
