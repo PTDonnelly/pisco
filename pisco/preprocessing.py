@@ -565,7 +565,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
         
         print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
-        exit()
+        input()
 
     def _calculate_local_time(self) -> None:
         """
