@@ -23,9 +23,6 @@ def flag_data(ex: Extractor, data_level: str):
         # Open binary file and extract metadata
         p.open_binary_file()
 
-        # Read common IASI record fields and store to pandas DataFrame
-        p.read_record_fields(p.metadata._get_iasi_common_record_fields())
-
         # Limit observations to specified spatial range
         valid_indices = p.flag_observations_to_keep(p.metadata._get_iasi_common_record_fields())
 
