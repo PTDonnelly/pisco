@@ -9,7 +9,7 @@
     "process": false,
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
-    "products": "clp,ozo,twt,trg",
+    "products": "clp,twt",
 
     // cloud_phase: int, The desired cloud phase from the L2 products
     "cloud_phase": 2,

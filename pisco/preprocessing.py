@@ -560,7 +560,8 @@ class Preprocessor:
     
     def read_l2_product_fields(self, valid_indices):
         # Retrieve the individual L2 products from the configuration file
-        for product_ID in list(self.metadata.table_of_L2_sections):
+        product_IDs = [self.metadata.table_of_L2_sections]
+        for product_ID in product_IDs:
             self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
         
         print(self.data_record_df[["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"]].head())
