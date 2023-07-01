@@ -658,7 +658,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
 
             # Read L1C radiance spectrum and add to DataFrame            
-            self.read_spectral_radiance(self.metadata_get_l1c_product_record_fields(), valid_indices)
+            self.read_spectral_radiance(self.metadata._get_l1c_product_record_fields(), valid_indices)
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
