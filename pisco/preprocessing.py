@@ -157,7 +157,7 @@ class Metadata:
     
     def _get_l1c_product_record_fields(self) -> List[tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end =  self._get_iasi_l1c_record_fields()[-1][-1]  # End of the surface_type field
+        last_field_end =  self._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
         # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + last_field_end)]
         return fields
@@ -177,11 +177,24 @@ class Metadata:
                     ('Quality Completeness of Retrieval', 'uint32', 4, 74),
                     ('Retrieval Choice Indicator', 'uint32', 4, 78),
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 82)]
+                    
+                    # ('Superadiabatic Indicator', 'uint8', 1, 51),
+                    # ('Land Sea Qualifier', 'uint8', 1, 52),
+                    # ('Day Night Qualifier', 'uint8', 1, 53),
+                    # ('Processing Technique', 'uint32', 4, 57),
+                    # ('Sun Glint Indicator', 'uint8', 1, 58),
+                    # ('Cloud Formation and Height Assignment', 'uint32', 4, 62),
+                    # ('Instrument Detecting Clouds', 'uint32', 4, 66),
+                    # ('Validation Flag for IASI L1 Product', 'uint32', 4, 70),
+                    # ('Quality Completeness of Retrieval', 'uint32', 4, 74),
+                    # ('Retrieval Choice Indicator', 'uint32', 4, 78),
+                    # ('Satellite Manoeuvre Indicator', 'uint32', 4, 82)]
         return l2_fields
     
     def _get_l2_product_record_fields(self, product_index: int, product_ID: int) -> List[tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end =  self._get_iasi_l2_record_fields()[-1][-1]  # End of the surface_type field
+        last_field_end =  self._get_iasi_l2_record_fields()[-1][-1]  # End of the Satellite Manoeuvre Indicator field
+        # Shift cumsizes by offset equal to number of other L2 products already read
         cumsize = last_field_end * (product_index + 1)
         
         # Use product ID to extract relevant L2 product
@@ -467,55 +480,55 @@ class Preprocessor:
             self._read_binary_data(valid_indices, field, dtype, dtype_size)
 
 
-    # def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
-    #     for i, channel_ID in enumerate(self.metadata.channel_IDs):
-    #         self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
-    #     return
+    def _store_spectral_channels_in_df(self, data: np.ndarray) -> None:
+        for i, channel_ID in enumerate(self.metadata.channel_IDs):
+            self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
+        return
     
-    # def _read_spectrum(self, valid_indices: np.array) -> np.ndarray:
-    #     """
-    #     Read the spectral radiance data for valid measurements.
+    def _read_spectrum(self, valid_indices: np.array) -> np.ndarray:
+        """
+        Read the spectral radiance data for valid measurements.
 
-    #     Args:
-    #         valid_indices (np.array): List of valid measurement indices.
-    #         dtype_size (int): Data type size in Bytes.
+        Args:
+            valid_indices (np.array): List of valid measurement indices.
+            dtype_size (int): Data type size in Bytes.
 
-    #     Returns:
-    #         np.ndarray: 2-D array of spectral radiances.
-    #     """
-    #     # Calculate the byte offset to skip to the next measurement for spectral radiance data
-    #     byte_offset, dtype_size_all_channels = self._calculate_byte_offset_spectral_radiance()
+        Returns:
+            np.ndarray: 2-D array of spectral radiances.
+        """
+        # Calculate the byte offset to skip to the next measurement for spectral radiance data
+        byte_offset, dtype_size_all_channels = self._calculate_byte_offset_spectral_radiance()
         
-    #     # Calculate byte location to start pointer (skipping invalid indices)
-    #     byte_start = (byte_offset + dtype_size_all_channels) * valid_indices[0]
-    #     # Move file pointer to first valid index
-    #     self.f.seek(byte_start, 1)
+        # Calculate byte location to start pointer (skipping invalid indices)
+        byte_start = (byte_offset + dtype_size_all_channels) * valid_indices[0]
+        # Move file pointer to first valid index
+        self.f.seek(byte_start, 1)
         
-    #     # calculate the gaps between valid indices
-    #     valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
+        # calculate the gaps between valid indices
+        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
         
-    #     # Prepare an NaN array to store the spectral radiance data
-    #     data = np.full((self.metadata.number_of_channels, len(valid_indices_increments)), np.nan, dtype="float32")
+        # Prepare an NaN array to store the spectral radiance data
+        data = np.full((self.metadata.number_of_channels, len(valid_indices_increments)), np.nan, dtype="float32")
 
-    #     for i, increment in enumerate(valid_indices_increments):
-    #         # Read the value for the current measurement
-    #         step = (byte_offset * increment) + (dtype_size_all_channels * (increment - 1))
-    #         spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
-    #         # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-    #         data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
+        for i, increment in enumerate(valid_indices_increments):
+            # Read the value for the current measurement
+            step = (byte_offset * increment) + (dtype_size_all_channels * (increment - 1))
+            spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
+            # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+            data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
         
-    #     # Store the spectral channels in the DataFrame
-    #     self._store_spectral_channels_in_df(data)
-    #     return
+        # Store the spectral channels in the DataFrame
+        self._store_spectral_channels_in_df(data)
+        return
     
-    # def _calculate_byte_offset_spectral_radiance(self) -> int:
-    #     return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels), (4 * self.metadata.number_of_channels)
+    def _calculate_byte_offset_spectral_radiance(self) -> int:
+        return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels), (4 * self.metadata.number_of_channels)
     
-    # def _set_start_read_position(self, last_field_end: int) -> None:
-    #     self.f.seek(self.metadata.header_size + 12 + last_field_end + (4 * self.metadata.number_of_channels), 0)
-    #     return
+    def _set_start_read_position(self, last_field_end: int) -> None:
+        self.f.seek(self.metadata.header_size + 12 + last_field_end + (4 * self.metadata.number_of_channels), 0)
+        return
     
-    # def read_spectral_radiance(self, fields: List[tuple], valid_indices: np.array) -> None:
+    def read_spectral_radiance(self, fields: List[tuple], valid_indices: np.array) -> None:
         """
         Extracts and stores the spectral radiance measurements from the binary file.
 
