@@ -515,11 +515,11 @@ class Preprocessor:
         """
         print("Extracting: radiance")
 
-        # # Determine the position of the anchor point for spectral radiance data in the binary file
-        # last_field_end = fields[-1][-1]  # End of the surface_type field
+        # Determine the position of the anchor point for spectral radiance data in the binary file
+        last_field_end = fields[-1][-1]  # End of the surface_type field
 
-        # # Set the start read position based on the last field end
-        # self._set_start_read_position(last_field_end)
+        # Set the start read position based on the last field end
+        self._set_start_read_position(last_field_end)
 
         # Read the spectral radiance data for the valid indices
         self._read_spectrum(valid_indices)
@@ -661,7 +661,8 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
 
             # Read L1C radiance spectrum and add to DataFrame            
-            self.read_spectral_radiance(self.metadata._get_l1c_product_record_fields(), valid_indices)
+            # self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
+            self.read_record_fields(self.metadata._get_l1c_product_record_fields(), valid_indices)
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
