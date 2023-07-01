@@ -198,8 +198,6 @@ class Metadata:
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
         
-        print(product_ID, product, last_field_end, (product_index + 1), last_field_end * (product_index + 1))
-
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "clp":
             fields = [
@@ -472,7 +470,7 @@ class Preprocessor:
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
             print(f"Extracting: {field}")
-            print(field, dtype, dtype_size, cumsize)
+            
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
             
@@ -626,10 +624,7 @@ class Preprocessor:
             # Read L2 retrieved products
             self.read_l2_product_fields(valid_indices)
             print(self.data_record_df[self.data_record_df.isna().any(axis=1)])
-
-            print(self.data_record_df[['Superadiabatic Indicator', 'Land Sea Qualifier', 'Day Night Qualifier', 'Processing Technique', 'Sun Glint Indicator', 'Cloud Formation and Height Assignment', 'Instrument Detecting Clouds', 'Validation Flag for IASI L1 Product', 'Quality Completeness of Retrieval', 'Retrieval Choice Indicator', 'Satellite Manoeuvre Indicator']])
-            
-            print(self.data_record_df[['Cloud Phase 1', 'Pressure 2', 'Temperature or Dry Bulb Temperature 2', 'Cloud Amount in Segment 2', 'Cloud Phase 2', 'Pressure 3', 'Temperature or Dry Bulb Temperature 3', 'Cloud Amount in Segment 3', 'Cloud Phase 3']])
+            print(self.data_record_df[['Cloud Phase 1', 'Cloud Phase 2', 'Cloud Phase 3']])
             
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
