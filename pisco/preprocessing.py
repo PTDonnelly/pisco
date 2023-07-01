@@ -182,9 +182,9 @@ class Metadata:
                     ('Sun Glint Indicator', 'uint8', 1, 8 + last_field_end),
                     ('Cloud Formation and Height Assignment', 'uint32', 4, 12 + last_field_end),
                     ('Instrument Detecting Clouds', 'uint32', 4, 16 + last_field_end),
-                    ('Validation Flag for IASI L1 Product', 'uint32', 4, 18 + last_field_end),
-                    ('Quality Completeness of Retrieval', 'uint32', 4, 22 + last_field_end),
-                    ('Retrieval Choice Indicator', 'uint32', 4, 26 + last_field_end),
+                    ('Validation Flag for IASI L1 Product', 'uint32', 4, 20 + last_field_end),
+                    ('Quality Completeness of Retrieval', 'uint32', 4, 24 + last_field_end),
+                    ('Retrieval Choice Indicator', 'uint32', 4, 28 + last_field_end),
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 32 + last_field_end)]
         return l2_fields
     
@@ -215,7 +215,8 @@ class Metadata:
                     ('Pressure 3', 'float32', 4, 42 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 46 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 3', 'float32', 4, 50 + last_field_end_with_offset),
-                    ('Cloud Phase 3', 'uint32', 4, 54 + last_field_end_with_offset)]
+                    ('Cloud Phase 3', 'uint32', 4, 54 + last_field_end_with_offset)
+                    ]
         if product == "twt":
             fields = []
         if product == "ozo":
