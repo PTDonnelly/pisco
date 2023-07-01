@@ -223,17 +223,17 @@ class Metadata:
             fields = [
                     ('Selection Background State', 'uint32', 4, 4 + last_field_end_with_offset),
                     ('Pressure 11', 'float32', 4, 8 + last_field_end_with_offset),
-                    ('Pressure 12', 'float32', 4, 16 + last_field_end_with_offset),
-                    ('Integrated O3 Density 1', 'float32', 4, 20 + last_field_end_with_offset),
-                    ('Pressure 21', 'float32', 4, 24 + last_field_end_with_offset),
-                    ('Pressure 22', 'float32', 4, 28 + last_field_end_with_offset),
-                    ('Integrated O3 Density 2', 'float32', 4, 32 + last_field_end_with_offset),
-                    ('Pressure 31', 'float32', 4, 36 + last_field_end_with_offset),
-                    ('Pressure 32', 'float32', 4, 40 + last_field_end_with_offset),
-                    ('Integrated O3 Density 3', 'float32', 4, 44 + last_field_end_with_offset),
-                    ('Pressure 41', 'float32', 4, 48 + last_field_end_with_offset),
-                    ('Pressure 42', 'float32', 4, 52 + last_field_end_with_offset),
-                    ('Integrated O3 Density 4', 'float32', 4, 56 + last_field_end_with_offset)]
+                    ('Pressure 12', 'float32', 4, 12 + last_field_end_with_offset),
+                    ('Integrated O3 Density 1', 'float32', 4, 16 + last_field_end_with_offset),
+                    ('Pressure 21', 'float32', 4, 20 + last_field_end_with_offset),
+                    ('Pressure 22', 'float32', 4, 24 + last_field_end_with_offset),
+                    ('Integrated O3 Density 2', 'float32', 4, 28 + last_field_end_with_offset),
+                    ('Pressure 31', 'float32', 4, 32 + last_field_end_with_offset),
+                    ('Pressure 32', 'float32', 4, 36 + last_field_end_with_offset),
+                    ('Integrated O3 Density 3', 'float32', 4, 40 + last_field_end_with_offset),
+                    ('Pressure 41', 'float32', 4, 44 + last_field_end_with_offset),
+                    ('Pressure 42', 'float32', 4, 48 + last_field_end_with_offset),
+                    ('Integrated O3 Density 4', 'float32', 4, 52 + last_field_end_with_offset)]
         if product == "trg":
             fields = [
                     ('Selection Background State', 'uint32', 4, 4 + last_field_end_with_offset),
@@ -629,7 +629,7 @@ class Preprocessor:
 
             print(self.data_record_df[['Superadiabatic Indicator', 'Land Sea Qualifier', 'Day Night Qualifier', 'Processing Technique', 'Sun Glint Indicator', 'Cloud Formation and Height Assignment', 'Instrument Detecting Clouds', 'Validation Flag for IASI L1 Product', 'Quality Completeness of Retrieval', 'Retrieval Choice Indicator', 'Satellite Manoeuvre Indicator']])
             
-            print(self.data_record_df[['Vertical Significance', 'Pressure 1', 'Temperature or Dry Bulb Temperature 1', 'Cloud Amount in Segment 1', 'Cloud Phase 1', 'Pressure 2', 'Temperature or Dry Bulb Temperature 2', 'Cloud Amount in Segment 2', 'Cloud Phase 2', 'Pressure 3', 'Temperature or Dry Bulb Temperature 3', 'Cloud Amount in Segment 3', 'Cloud Phase 3']])
+            print(self.data_record_df[['Cloud Phase 1', 'Pressure 2', 'Temperature or Dry Bulb Temperature 2', 'Cloud Amount in Segment 2', 'Cloud Phase 2', 'Pressure 3', 'Temperature or Dry Bulb Temperature 3', 'Cloud Amount in Segment 3', 'Cloud Phase 3']])
             
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
