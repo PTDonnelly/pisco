@@ -201,19 +201,19 @@ class Metadata:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "clp":
             fields = [
-                    ('Vertical Significance', 'uint32', 4, 4 + last_field_end_with_offset),
+                    ('Vertical Significance', '<u4', 4, 4 + last_field_end_with_offset),
                     ('Pressure 1', 'float32', 4, 8 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 12 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 1', 'float32', 4, 16 + last_field_end_with_offset),
-                    ('Cloud Phase 1', 'uint32', 4, 20 + last_field_end_with_offset),
+                    ('Cloud Phase 1', '<u4', 4, 20 + last_field_end_with_offset),
                     ('Pressure 2', 'float32', 4, 24 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 28 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 2', 'float32', 4, 32 + last_field_end_with_offset),
-                    ('Cloud Phase 2', 'uint32', 4, 36 + last_field_end_with_offset),
+                    ('Cloud Phase 2', '<u4', 4, 36 + last_field_end_with_offset),
                     ('Pressure 3', 'float32', 4, 40 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 44 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 3', 'float32', 4, 48 + last_field_end_with_offset),
-                    ('Cloud Phase 3', 'uint32', 4, 52 + last_field_end_with_offset)
+                    ('Cloud Phase 3', '<u4', 4, 52 + last_field_end_with_offset)
                     ]
         if product == "twt":
             fields = []
