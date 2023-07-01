@@ -201,19 +201,19 @@ class Metadata:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "clp":
             fields = [
-                    ('Vertical Significance', '<u4', 4, 4 + last_field_end_with_offset),
+                    ('Vertical Significance', '>u4', 4, 4 + last_field_end_with_offset),
                     ('Pressure 1', 'float32', 4, 8 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 12 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 1', 'float32', 4, 16 + last_field_end_with_offset),
-                    ('Cloud Phase 1', '<u4', 4, 20 + last_field_end_with_offset),
+                    ('Cloud Phase 1', '>u4', 4, 20 + last_field_end_with_offset),
                     ('Pressure 2', 'float32', 4, 24 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 28 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 2', 'float32', 4, 32 + last_field_end_with_offset),
-                    ('Cloud Phase 2', '<u4', 4, 36 + last_field_end_with_offset),
+                    ('Cloud Phase 2', '>u4', 4, 36 + last_field_end_with_offset),
                     ('Pressure 3', 'float32', 4, 40 + last_field_end_with_offset),
                     ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 44 + last_field_end_with_offset),
                     ('Cloud Amount in Segment 3', 'float32', 4, 48 + last_field_end_with_offset),
-                    ('Cloud Phase 3', '<u4', 4, 52 + last_field_end_with_offset)
+                    ('Cloud Phase 3', '>u4', 4, 52 + last_field_end_with_offset)
                     ]
         if product == "twt":
             fields = []
@@ -600,11 +600,11 @@ class Preprocessor:
         self.open_binary_file()
 
         # Read common IASI record fields and store to pandas DataFrame
-        print("\nCommon Record Fields:")
+        print(f"\nCommon Record Fields: {len(valid_indices)} flagged measurements")
         self.read_record_fields(self.metadata._get_iasi_common_record_fields(), valid_indices)
         
         if self.data_level == "l1c":
-            print(f"\nL1C Record Fields: {len(valid_indices)} flagged measurements")
+            print("\nL1C Record Fields:")
             
             # Read general L1C-specific record fields and add to DataFrame
             self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
@@ -616,7 +616,7 @@ class Preprocessor:
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
-            print(f"\nL2 Record Fields: {len(valid_indices)} flagged measurements")
+            print("\nL2 Record Fields:")
             
             # Read general L2-specific record fields and add to DataFrame
             self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
