@@ -138,7 +138,7 @@ class Metadata:
         return common_fields
     
     def _get_iasi_l1c_record_fields(self) -> List[tuple]:
-        # Format of L1C-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
+        # Format of general L1C-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
         # cumulative total continues from the fourth digit of the last tuple in common_fields.
         l1c_fields = [
                     ('Day version', 'uint16', 2, 52),
@@ -155,8 +155,15 @@ class Metadata:
                     ('Surface Type', 'uint8', 1, 93)]
         return l1c_fields
     
+    def _get_l1c_product_record_fields(self) -> List[tuple]:
+        # Determine the position of the anchor point for spectral radiance data in the binary file
+        last_field_end =  self._get_iasi_l1c_record_fields()[-1][-1]  # End of the surface_type field
+        # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        fields = [('Spectrum', 'float32', 4 * self.metadata.number_of_channels, last_field_end + 4 * self.metadata.number_of_channels)]
+        return fields
+    
     def _get_iasi_l2_record_fields(self) -> List[tuple]:
-        # Format of L2-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
+        # Format of general L2-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
         # cumulative total continues from the fourth digit of the last tuple in common_fields.
         l2_fields = [
                     ('Superadiabatic Indicator', 'uint8', 1, 51),
@@ -178,6 +185,24 @@ class Metadata:
         product = l2_product_dictionary.get(product_ID)
         
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        
+        if product == "clp":
+            fields = [
+                    ('Vertical Significance', 'uint32', 4, 86),
+                    ('Pressure 1', 'float32', 4, 90),
+                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16),
+                    ('Cloud Amount in Segment 1', 'float32', 4, 20),
+                    ('Cloud Phase 1', 'uint32', 4, 24),
+                    ('Pressure 2', 'float32', 4, 28),
+                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32),
+                    ('Cloud Amount in Segment 2', 'float32', 4, 36),
+                    ('Cloud Phase 2', 'uint32', 4, 40),
+                    ('Pressure 3', 'float32', 4, 44),
+                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48),
+                    ('Cloud Amount in Segment 3', 'float32', 4, 52),
+                    ('Cloud Phase 3', 'uint32', 4, 56)]
+        if product == "twt":
+            fields = []
         if product == "ozo":
             fields = [
                     ('Selection Background State', 'uint32', 4, 4),
@@ -200,25 +225,8 @@ class Metadata:
                     ('Integrated CO Density', 'float32', 4, 16),
                     ('Integrated CH4 Density', 'float32', 4, 20),
                     ('Integrated CO2 Density', 'float32', 4, 24)]
-        if product == "clp":
-            fields = [
-                    ('Vertical Significance', 'uint32', 4, 4),
-                    ('Pressure 1', 'float32', 4, 8),
-                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16),
-                    ('Cloud Amount in Segment 1', 'float32', 4, 20),
-                    ('Cloud Phase 1', 'uint32', 4, 24),
-                    ('Pressure 2', 'float32', 4, 28),
-                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32),
-                    ('Cloud Amount in Segment 2', 'float32', 4, 36),
-                    ('Cloud Phase 2', 'uint32', 4, 40),
-                    ('Pressure 3', 'float32', 4, 44),
-                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48),
-                    ('Cloud Amount in Segment 3', 'float32', 4, 52),
-                    ('Cloud Phase 3', 'uint32', 4, 56)]
-        if product == "twt":
-            fields = []
         if product == "ems":
-                fields = []
+            fields = []
         return fields
 
 
@@ -482,24 +490,7 @@ class Preprocessor:
         # Store the spectral channels in the DataFrame
         self._store_spectral_channels_in_df(data)
         return
-        
-        # # Prepare an NaN array to store the spectral radiance data
-        # data = np.full((self.metadata.number_of_channels, len(valid_indices)), np.nan)
-        
-        # # Counter for the valid indices in data
-        # valid_index = 0
-
-        # # Iterate over each measurement and extract the spectral radiance data
-        # for measurement in range(self.metadata.number_of_measurements):
-        #     # Read the spectrum data for the valid measurement
-        #     spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=byte_offset)
-        #     if measurement in valid_indices:
-        #         # Store the spectrum in the data array if spectrum exists; leave untouched otherwise (as np.nan).
-        #         data[valid_index] = spectrum if len(spectrum) != 0 else data[valid_index]
-        #         # Increment the valid index counter
-        #         valid_index += 1
-
-        # return data
+    
 
     def _calculate_byte_offset_spectral_radiance(self) -> int:
         return self.metadata.record_size + 8 - (4 * self.metadata.number_of_channels), (4 * self.metadata.number_of_channels)
@@ -521,11 +512,11 @@ class Preprocessor:
         """
         print("Extracting: radiance")
 
-        # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end = fields[-1][-1]  # End of the surface_type field
+        # # Determine the position of the anchor point for spectral radiance data in the binary file
+        # last_field_end = fields[-1][-1]  # End of the surface_type field
 
-        # Set the start read position based on the last field end
-        self._set_start_read_position(last_field_end)
+        # # Set the start read position based on the last field end
+        # self._set_start_read_position(last_field_end)
 
         # Read the spectral radiance data for the valid indices
         self._read_spectrum(valid_indices)
@@ -667,7 +658,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
 
             # Read L1C radiance spectrum and add to DataFrame            
-            self.read_spectral_radiance(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
+            self.read_spectral_radiance(self.metadata_get_l1c_product_record_fields(), valid_indices)
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
