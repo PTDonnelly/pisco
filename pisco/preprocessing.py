@@ -603,7 +603,7 @@ class Preprocessor:
         self.read_record_fields(self.metadata._get_iasi_common_record_fields(), valid_indices)
         
         if self.data_level == "l1c":
-            print("\nL1C Record Fields:")
+            print(f"\nL1C Record Fields: {len(valid_indices)} flagged measurements")
             
             # Read general L1C-specific record fields and add to DataFrame
             self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
@@ -615,7 +615,7 @@ class Preprocessor:
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
-            print("\nL2 Record Fields:")
+            print(f"\nL2 Record Fields: {len(valid_indices)} flagged measurements")
             
             # Read general L2-specific record fields and add to DataFrame
             self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
@@ -624,10 +624,11 @@ class Preprocessor:
             self.read_l2_product_fields(valid_indices)
             print(self.data_record_df[self.data_record_df.isna().any(axis=1)])
 
+            print(self.data_record_df[['Superadiabatic Indicator', 'Land Sea Qualifier', 'Day Night Qualifier', 'Processing Technique', 'Sun Glint Indicator', 'Cloud Formation and Height Assignment', 'Instrument Detecting Clouds', 'Validation Flag for IASI L1 Product', 'Quality Completeness of Retrieval', 'Retrieval Choice Indicator', 'Satellite Manoeuvre Indicator']])
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
-
+        exit()
         # Construct Local Time column
         self.build_local_time()
         # Construct Datetime column and remove individual time elements
