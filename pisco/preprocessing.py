@@ -625,6 +625,9 @@ class Preprocessor:
             print(self.data_record_df[self.data_record_df.isna().any(axis=1)])
 
             print(self.data_record_df[['Superadiabatic Indicator', 'Land Sea Qualifier', 'Day Night Qualifier', 'Processing Technique', 'Sun Glint Indicator', 'Cloud Formation and Height Assignment', 'Instrument Detecting Clouds', 'Validation Flag for IASI L1 Product', 'Quality Completeness of Retrieval', 'Retrieval Choice Indicator', 'Satellite Manoeuvre Indicator']])
+            
+            print(self.data_record_df[['Vertical Significance', 'Pressure 1', 'Temperature or Dry Bulb Temperature 1', 'Cloud Amount in Segment 1', 'Cloud Phase 1', 'Pressure 2', 'Temperature or Dry Bulb Temperature 2', 'Cloud Amount in Segment 2', 'Cloud Phase 2', 'Pressure 3', 'Temperature or Dry Bulb Temperature 3', 'Cloud Amount in Segment 3', 'Cloud Phase 3']])
+            
             # # Remove observations (DataFrame rows) based on IASI cloud_phase
             # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
