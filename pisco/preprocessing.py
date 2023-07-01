@@ -198,6 +198,8 @@ class Metadata:
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
         
+        print(product_ID, product, last_field_end, (product_index + 1), last_field_end * (product_index + 1))
+
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "clp":
             fields = [
