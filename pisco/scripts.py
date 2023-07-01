@@ -57,7 +57,7 @@ def preprocess_iasi(ex: Extractor, valid_indices: np.array, data_level: str):
     """
     # Use OBR to extract IASI data from raw binary files
     if data_level == "l1c":
-        ex.config.channels = ex.config.set_channels("range")
+        ex.config.channels = ex.config.set_channels("flag")
     ex.data_level = data_level
     ex.get_datapaths()
     ex.extract_files()
