@@ -159,7 +159,7 @@ class Metadata:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         last_field_end =  self._get_iasi_l1c_record_fields()[-1][-1]  # End of the surface_type field
         # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        fields = [('Spectrum', 'float32', 4 * self.metadata.number_of_channels, last_field_end + 4 * self.metadata.number_of_channels)]
+        fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + last_field_end)]
         return fields
     
     def _get_iasi_l2_record_fields(self) -> List[tuple]:
@@ -179,52 +179,55 @@ class Metadata:
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 82)]
         return l2_fields
     
-    def _get_l2_product_record_fields(self, product_ID: int) -> List[tuple]:
+    def _get_l2_product_record_fields(self, product_index: int, product_ID: int) -> List[tuple]:
+        # Determine the position of the anchor point for spectral radiance data in the binary file
+        last_field_end =  self._get_iasi_l2_record_fields()[-1][-1]  # End of the surface_type field
+        cumsize = last_field_end * (product_index + 1)
+        
         # Use product ID to extract relevant L2 product
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
         
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        
         if product == "clp":
             fields = [
-                    ('Vertical Significance', 'uint32', 4, 86),
-                    ('Pressure 1', 'float32', 4, 90),
-                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16),
-                    ('Cloud Amount in Segment 1', 'float32', 4, 20),
-                    ('Cloud Phase 1', 'uint32', 4, 24),
-                    ('Pressure 2', 'float32', 4, 28),
-                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32),
-                    ('Cloud Amount in Segment 2', 'float32', 4, 36),
-                    ('Cloud Phase 2', 'uint32', 4, 40),
-                    ('Pressure 3', 'float32', 4, 44),
-                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48),
-                    ('Cloud Amount in Segment 3', 'float32', 4, 52),
-                    ('Cloud Phase 3', 'uint32', 4, 56)]
+                    ('Vertical Significance', 'uint32', 4, 4 + cumsize),
+                    ('Pressure 1', 'float32', 4, 8 + cumsize),
+                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 16 + cumsize),
+                    ('Cloud Amount in Segment 1', 'float32', 4, 20 + cumsize),
+                    ('Cloud Phase 1', 'uint32', 4, 24 + cumsize),
+                    ('Pressure 2', 'float32', 4, 28 + cumsize),
+                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 32 + cumsize),
+                    ('Cloud Amount in Segment 2', 'float32', 4, 36 + cumsize),
+                    ('Cloud Phase 2', 'uint32', 4, 40 + cumsize),
+                    ('Pressure 3', 'float32', 4, 44 + cumsize),
+                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 48 + cumsize),
+                    ('Cloud Amount in Segment 3', 'float32', 4, 52 + cumsize),
+                    ('Cloud Phase 3', 'uint32', 4, 56 + cumsize)]
         if product == "twt":
             fields = []
         if product == "ozo":
             fields = [
-                    ('Selection Background State', 'uint32', 4, 4),
-                    ('Pressure 11', 'float32', 4, 8),
-                    ('Pressure 12', 'float32', 4, 16),
-                    ('Integrated O3 Density 1', 'float32', 4, 20),
-                    ('Pressure 21', 'float32', 4, 24),
-                    ('Pressure 22', 'float32', 4, 28),
-                    ('Integrated O3 Density 2', 'float32', 4, 32),
-                    ('Pressure 31', 'float32', 4, 36),
-                    ('Pressure 32', 'float32', 4, 40),
-                    ('Integrated O3 Density 3', 'float32', 4, 44),
-                    ('Pressure 41', 'float32', 4, 48),
-                    ('Pressure 42', 'float32', 4, 52),
-                    ('Integrated O3 Density 4', 'float32', 4, 56)]
+                    ('Selection Background State', 'uint32', 4, 4 + cumsize),
+                    ('Pressure 11', 'float32', 4, 8 + cumsize),
+                    ('Pressure 12', 'float32', 4, 16 + cumsize),
+                    ('Integrated O3 Density 1', 'float32', 4, 20 + cumsize),
+                    ('Pressure 21', 'float32', 4, 24 + cumsize),
+                    ('Pressure 22', 'float32', 4, 28 + cumsize),
+                    ('Integrated O3 Density 2', 'float32', 4, 32 + cumsize),
+                    ('Pressure 31', 'float32', 4, 36 + cumsize),
+                    ('Pressure 32', 'float32', 4, 40 + cumsize),
+                    ('Integrated O3 Density 3', 'float32', 4, 44 + cumsize),
+                    ('Pressure 41', 'float32', 4, 48 + cumsize),
+                    ('Pressure 42', 'float32', 4, 52 + cumsize),
+                    ('Integrated O3 Density 4', 'float32', 4, 56 + cumsize)]
         if product == "trg":
             fields = [
-                    ('Selection Background State', 'uint32', 4, 4),
-                    ('Integrated N20 Density', 'float32', 4, 8),
-                    ('Integrated CO Density', 'float32', 4, 16),
-                    ('Integrated CH4 Density', 'float32', 4, 20),
-                    ('Integrated CO2 Density', 'float32', 4, 24)]
+                    ('Selection Background State', 'uint32', 4, 4 + cumsize),
+                    ('Integrated N20 Density', 'float32', 4, 8 + cumsize),
+                    ('Integrated CO Density', 'float32', 4, 16 + cumsize),
+                    ('Integrated CH4 Density', 'float32', 4, 20 + cumsize),
+                    ('Integrated CO2 Density', 'float32', 4, 24 + cumsize)]
         if product == "ems":
             fields = []
         return fields
@@ -550,8 +553,8 @@ class Preprocessor:
     
     def read_l2_product_fields(self, valid_indices):
         # Retrieve the individual L2 products from the configuration file
-        for product_ID in self.metadata.l2_product_IDs:
-            self.read_record_fields(self.metadata._get_l2_product_record_fields(product_ID), valid_indices)
+        for i, product_ID in enumerate(self.metadata.l2_product_IDs):
+            self.read_record_fields(self.metadata._get_l2_product_record_fields(i, product_ID), valid_indices)
 
 
     def _calculate_local_time(self) -> None:
