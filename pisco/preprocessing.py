@@ -390,7 +390,11 @@ class Preprocessor:
 
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
-        self.data_record_df[field] = data
+        if not field == "Spectrum":
+            self.data_record_df[field] = data
+        else:
+            for i, channel_ID in enumerate(self.metadata.channel_IDs):
+                self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
         return
 
     def _read_binary_data(self, valid_indices: np.array, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
@@ -417,15 +421,21 @@ class Preprocessor:
         valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
 
         # Prepare an NaN array to store the data of the current field
-        data = np.full(len(valid_indices_increments), np.nan, dtype="float32")
-        
+        if not field == "Spectrum":
+            data = np.full(len(valid_indices_increments), np.nan, dtype="float32")
+        else:
+            data = np.full((self.metadata.number_of_channels, len(valid_indices_increments)), np.nan, dtype="float32")
+
         for i, increment in enumerate(valid_indices_increments):
             # Read the value for the current measurement
             step = (byte_offset * increment) + (dtype_size * (increment - 1))
-            value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
-
             # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
-            data[i] = value[0] if len(value) != 0 else data[i]
+            if not field == "Spectrum":
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
+                data[i] = value[0] if len(value) != 0 else data[i]
+            else:
+                spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
+                data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
         
         # Store the data in the DataFrame
         self._store_data_in_df(field, data)

@@ -25,7 +25,7 @@ class Configurer:
             return [(i + 1) for i in range(8461)]
         elif mode == "range":
             # Specify a subset of channels
-            n = 500
+            n = [1, 2, 3]
             return [(i + 1) for i in range(n)]
         elif mode == "flag":
             # Select single channel for fast processing
