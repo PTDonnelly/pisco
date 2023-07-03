@@ -3,6 +3,7 @@ import numpy as np
 from .extraction import Extractor
 from .preprocessing import Preprocessor
 from .processing import Processor
+from .plotting import Plotter
 
 def flag_data(ex: Extractor, data_level: str = "l2"):
     """This function is a truncated form of the main preprocess_iasi function, but bypasses most
@@ -95,12 +96,25 @@ def plot_spatial_distribution(datapath: str):
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     import numpy as np
-    import imageio  # you'll use this later for gif creation
+    import imageio
 
-    filepaths = sorted([os.path.join(root, file) for root, dirs, files in os.walk(datapath) for file in files if ".csv" in file])
+    # Instantiate the Plotter and organise files
+    plotter = Plotter(datapath)
+    plotter.organize_files_by_date()
 
+    # Define temporal range to plot
+    target_year = '2019'
+    target_month = '01'
+    target_days = [str(day).zfill(2) for day in range(1, 7)]
+
+    # Select files in time range
+    all_files = plotter.select_files(target_year, target_month, target_days)
+    day_icy_files = plotter.select_files(target_year, target_month, target_days, "day_icy")
+    
+    
+    
     # Initialize a new figure for the plot
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(8, 8), dpi=300)
 
     # Create a basemap of the world
     m = Basemap(projection='cyl', llcrnrlon=-61, llcrnrlat=29, urcrnrlon=1, urcrnrlat=61)
@@ -108,22 +122,28 @@ def plot_spatial_distribution(datapath: str):
     # Draw coastlines and country borders
     m.drawcoastlines()
 
-    # Plotting parameters
-    colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
+    # # Plotting parameters
+    # colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
 
     png_files = []
 
     # Walk through the directory
-    for i, (file, color) in enumerate(zip(filepaths, colors)):
-        print(file)
+    for i, (all_file, day_icy_file) in enumerate(zip(all_files, day_icy_files)):
 
         # Load the data from the file into a pandas DataFrame
-        data = pd.read_csv(file)
+        all_data = pd.read_csv(all_file)
         
         # Plot the observations on the map
-        x, y = m(data['Longitude'].values, data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=0.2, color="red", alpha=0.15)
+        x, y = m(all_data['Longitude'].values, all_data['Latitude'].values)
+        m.scatter(x, y, latlon=True, marker=".", s=0.75, color="lightgrey")
         
+        # Load the data from the file into a pandas DataFrame
+        day_icy_data = pd.read_csv(day_icy_file)
+        
+        # Plot the observations on the map
+        x, y = m(day_icy_data['Longitude'].values, day_icy_data['Latitude'].values)
+        m.scatter(x, y, latlon=True, marker=".", s=1.25, color="dodgerblue")
+
         # save figure
         png_file = f"{datapath}/spatial_distribution_{i}.png"
         plt.savefig(png_file, dpi=300, bbox_inches='tight')
