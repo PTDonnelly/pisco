@@ -65,7 +65,7 @@ def preprocess_iasi(ex: Extractor, valid_indices: np.array, data_level: str):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
-        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
+        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range, ex.cloud_phase)
         p.preprocess_files(ex.year, ex.month, ex.day, valid_indices)
     return
 
