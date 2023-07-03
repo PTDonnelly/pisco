@@ -129,7 +129,7 @@ class Processor:
         merged_df['Local Time'] = merged_df['Local Time'].astype(bool)
 
         # Separate into separate datasets for day/night
-        merged_df_day, merged_df_night = self._split_measurements_by_local_time(merged_df)
+        self._split_measurements_by_local_time(merged_df)
         return
     
     def correlate_spectra_with_cloud_products(self):
