@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from typing import List, Dict, Tuple, Optional
+import imageio
 
 class Plotter:
     """
@@ -69,3 +70,25 @@ class Plotter:
                         selected_files.append(file)
 
         return selected_files
+    
+    @staticmethod
+    def png_to_gif(gifname: str, png_files: List[str], fps: int = 1, delete_png_files: bool = True) -> None:
+        """
+        Converts a list of png images into a gif animation.
+
+        Args:
+            gifname (str): The filepath and filename of the output gif.
+            png_files (List[str]): List of paths to the png files to be included in the gif.
+            delete_png_files (bool): If True, deletes the png files after creating the gif. Defaults to True.
+        """
+
+        # Once all figures are saved, use imageio to create a gif from all the png files
+        with imageio.get_writer(gifname, mode='I', fps=fps) as writer:
+            for png_file in png_files:
+                image = imageio.imread(png_file)
+                writer.append_data(image)
+        
+        # Optionally delete all png files after gif creation
+        if delete_png_files:
+            for png_file in png_files:
+                os.remove(png_file)

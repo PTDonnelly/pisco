@@ -58,7 +58,7 @@ def preprocess_iasi(ex: Extractor, valid_indices: np.array, data_level: str):
     """
     # Use OBR to extract IASI data from raw binary files
     if data_level == "l1c":
-        ex.config.channels = ex.config.set_channels("flag")
+        ex.config.channels = ex.config.set_channels("all")
     ex.data_level = data_level
     ex.get_datapaths()
     ex.extract_files()
@@ -90,13 +90,9 @@ def process_iasi(ex: Extractor):
 
 
 def plot_spatial_distribution(datapath: str):
-    import os
     import pandas as pd
-    import matplotlib.cm as cm
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
-    import numpy as np
-    import imageio
 
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath)
@@ -105,61 +101,63 @@ def plot_spatial_distribution(datapath: str):
     # Define temporal range to plot
     target_year = '2019'
     target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 7)]
+    target_days = [str(day).zfill(2) for day in range(1, 32)]
+
+    # Define spatial range to plot
+    lat_range = (30, 60)
+    lon_range = (-60, 0)
 
     # Select files in time range
     all_files = plotter.select_files(target_year, target_month, target_days)
     day_icy_files = plotter.select_files(target_year, target_month, target_days, "day_icy")
-    
-    
-    
-    # Initialize a new figure for the plot
-    plt.figure(figsize=(8, 8), dpi=300)
 
-    # Create a basemap of the world
-    m = Basemap(projection='cyl', llcrnrlon=-61, llcrnrlat=29, urcrnrlon=1, urcrnrlat=61)
-
-    # Draw coastlines and country borders
-    m.drawcoastlines()
-
-    # # Plotting parameters
-    # colors = cm.turbo(np.linspace(0, 1, len(filepaths)))
+    # Define plotting parameters
+    fontsize = 7
 
     png_files = []
-
     # Walk through the directory
     for i, (all_file, day_icy_file) in enumerate(zip(all_files, day_icy_files)):
-
         # Load the data from the file into a pandas DataFrame
-        all_data = pd.read_csv(all_file)
-        
+        all_data = pd.read_csv(all_file, usecols=['Longitude', 'Latitude'])
+        day_icy_data = pd.read_csv(day_icy_file, usecols=['Longitude', 'Latitude'])
+
+        # Initialize a new figure for the plot
+        plt.figure(figsize=(7, 7), dpi=540)
+        # Create a basemap of the world
+        m = Basemap(projection='cyl', resolution="l", llcrnrlon=lon_range[0], llcrnrlat=lat_range[0], urcrnrlon=lon_range[1]+0.1, urcrnrlat=lat_range[1])
+        # Draw coastlines and country borders
+        m.drawcoastlines()
+        # Add spatial grid
+        meridians = np.arange(lon_range[0], lon_range[1]+1, 10)
+        parallels = np.arange(lat_range[0], lat_range[1]+1, 10)
+        m.drawmeridians(meridians, labels=[0,0,0,1], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
+        m.drawparallels(parallels, labels=[1,0,0,0], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
+
         # Plot the observations on the map
         x, y = m(all_data['Longitude'].values, all_data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=0.75, color="lightgrey")
-        
-        # Load the data from the file into a pandas DataFrame
-        day_icy_data = pd.read_csv(day_icy_file)
-        
+        m.scatter(x, y, latlon=True, marker=".", s=1, color="silver")
         # Plot the observations on the map
         x, y = m(day_icy_data['Longitude'].values, day_icy_data['Latitude'].values)
         m.scatter(x, y, latlon=True, marker=".", s=1.25, color="dodgerblue")
 
-        # save figure
+        # Add a title to the plot
+        plt.title(f"Icy Spectra in the North Atlantic: {target_year}-{target_month}-{target_days[i]}", fontsize=fontsize+1)
+        # Add labels to the axes
+        plt.xlabel('Longitude (deg)', fontsize=fontsize+1, labelpad=20)
+        plt.ylabel('Latitude (deg)', fontsize=fontsize+1, labelpad=20)
+        plt.xticks()
+        plt.yticks()
+
+        # Save figure
         png_file = f"{datapath}/spatial_distribution_{i}.png"
-        plt.savefig(png_file, dpi=300, bbox_inches='tight')
+        plt.savefig(png_file, dpi=540, bbox_inches='tight')
+        plt.close()
 
         # Append filename to list of png files
         png_files.append(png_file)
 
-    # Once all figures are saved, use imageio to create a gif from all the png files
-    with imageio.get_writer(f"{datapath}/spatial_distribution.gif", mode='I', fps=1) as writer:
-        for png_file in png_files:
-            image = imageio.imread(png_file)
-            writer.append_data(image)
-            
-    # Optionally delete all png files after gif creation
-    for png_file in png_files:
-        os.remove(png_file)
+    # Convert all individual pngs to animated gif
+    plotter.png_to_gif(f"{datapath}/spatial_distribution.gif", png_files)
 
 
 def plot_spectra(datapath: str):
@@ -203,4 +201,4 @@ def plot_spectra(datapath: str):
     # plt.yscale('log') 
 
     # Show the plot
-    plt.savefig(f"{datapath}/average_spectra.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"{datapath}/average_spectra.png", dpi=540, bbox_inches='tight')
