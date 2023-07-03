@@ -143,5 +143,5 @@ class Processor:
         # Correlates measurements, keep matching locations and times of observation
         self.correlate_measurements()
         
-        # Saves the merged data, and deletes the original data.
-        self.save_merged_data()
+        # # Saves the merged data, and deletes the original data.
+        # self.save_merged_data()
