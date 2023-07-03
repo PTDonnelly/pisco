@@ -43,8 +43,7 @@ def main():
 
                 # After the data processing tasks are done, move the log file to the desired location
                 os.replace(f"{ex.config.datapath_out}pisco.log", f"{ex.datapath_out}pisco.log")
-                print(f"{ex.datapath_out}pisco.log")
-                
+
 
 if __name__ == "__main__":
     # profiler = Profiler()
@@ -53,4 +52,4 @@ if __name__ == "__main__":
     main()
 
     # profiler.stop()
-    # profiler.dump_stats('/data/pdonnelly/iasi/metopc/cProfiler_output.txt')
+    # profiler.dump_stats('/data/pdonnelly/iasi/cProfiler_output.txt')
