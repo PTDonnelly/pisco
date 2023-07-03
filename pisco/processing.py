@@ -40,18 +40,52 @@ class Processor:
         return
     
 
-    def _split_measurements_by_cloud_phase(self, merged_df_day: pd.DataFrame, merged_df_night: pd.DataFrame):
-        cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
+    def _delete_intermediate_analysis_data(self) -> None:
+        """
+        Delete the intermediate analysis data files used for correlating spectra and clouds.
+        """
+        os.remove(self.datafile_l1c)
+        os.remove(self.datafile_l2)
 
-        for cloud_phase_flag, cloud_phase in cloud_phase_dictionary.items():        
-            # Isolate cloud phase
-            merged_df_day_phase = merged_df_day[merged_df_day['Cloud Phase 1'] == cloud_phase_flag]
-            merged_df_night_phase = merged_df_night[merged_df_night['Cloud Phase 1'] == cloud_phase_flag]
-            
-            # Save the DataFrame to a file in csv format
-            print(f"Saving {cloud_phase} spectra to {self.datapath_l1c}")
-            merged_df_day_phase.to_csv(f"{self.datapath_l1c}extracted_spectra_day_{cloud_phase}.csv", index=False, mode='w')
-            merged_df_night_phase.to_csv(f"{self.datapath_l1c}extracted_spectra_night_{cloud_phase}.csv", index=False, mode='w')
+    def _save_merged_data(self, df_day, df_night, cloud_phase) -> None:
+        """
+        Save the merged DataFrame to a CSV file in the output directory.
+        Delete the intermediate l1c and l2 products.
+        """
+        print(f"Saving {cloud_phase} spectra to {self.datapath_l1c}")
+        df_day.to_csv(f"{self.datapath_l1c}extracted_spectra_day_{cloud_phase}.csv", index=False, mode='w')
+        df_night.to_csv(f"{self.datapath_l1c}extracted_spectra_night_{cloud_phase}.csv", index=False, mode='w')        
+
+        # # Delete original csv files
+        # self._delete_intermediate_analysis_data()
+        return
+    
+    def _get_cloud_phase(self) -> Optional[str]:
+        """
+        Returns the cloud phase as a string based on the cloud phase value.
+        If the retrieved cloud phase is unknown or uncertain, returns None.
+        """
+        cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
+        cloud_phase = cloud_phase_dictionary.get(self.cloud_phase)
+        return None if cloud_phase is None else cloud_phase
+    
+    def _split_measurements_by_cloud_phase(self, df_day: pd.DataFrame, df_night: pd.DataFrame):
+        if not self.cloud_phase == "all":
+            cloud_phase = self._get_cloud_phase()
+            if cloud_phase is None:
+                print("Cloud_phase is unknown or uncertain, skipping data.")
+            else:
+                # Save observations
+                self._save_merged_data(df_day,df_night, cloud_phase)
+        else:
+            cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
+            for cloud_phase_flag, cloud_phase in cloud_phase_dictionary.items():        
+                # Isolate cloud phase
+                df_day_phase = df_day[df_day['Cloud Phase 1'] == cloud_phase_flag]
+                df_night_phase = df_night[df_night['Cloud Phase 1'] == cloud_phase_flag]
+
+                # Save observations
+                self._save_merged_data(df_day_phase, df_night_phase, cloud_phase)
         return
     
     def _split_measurements_by_local_time(self, merged_df: pd.DataFrame) -> None:
@@ -98,50 +132,9 @@ class Processor:
         merged_df_day, merged_df_night = self._split_measurements_by_local_time(merged_df)
         return
     
-
-    def _delete_intermediate_analysis_data(self) -> None:
-        """
-        Delete the intermediate analysis data files used for correlating spectra and clouds.
-        """
-        # os.remove(self.datafile_l1c)
-        # os.remove(self.datafile_l2)
-
-    def _get_cloud_phase(self) -> Optional[str]:
-        """
-        Returns the cloud phase as a string based on the cloud phase value.
-        If the retrieved cloud phase is unknown or uncertain, returns None.
-        """
-        cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
-        cloud_phase = cloud_phase_dictionary.get(self.cloud_phase)
-        return None if cloud_phase is None else cloud_phase
-
-    def save_merged_data(self) -> None:
-        """
-        Save the merged DataFrame to a CSV file in the output directory.
-        If the output directory is unknown (because the cloud phase is unknown), print a message and return.
-        Delete the intermediate l1c and l2 products.
-        """
-        cloud_phase = self._get_cloud_phase()
-        if cloud_phase is None:
-            print("Cloud_phase is unknown or uncertain, skipping data.")
-        else:
-            print(f"Saving {cloud_phase} spectra to {self.datapath_l1c}")            
-            # Save the DataFrame to a file in csv format, split by local time
-            # df.to_hdf(f"{datapath_out}{datafile_out}.h5", key='df', mode='w')
-            self.merged_df_day.to_csv(f"{self.datapath_l1c}extracted_spectra_{cloud_phase}_day.csv", index=False, mode='w')
-            self.merged_df_night.to_csv(f"{self.datapath_l1c}extracted_spectra_{cloud_phase}_night.csv", index=False, mode='w')
-        
-        # # Delete original csv files
-        # self._delete_intermediate_analysis_data()
-        return
-
-
     def correlate_spectra_with_cloud_products(self):
         # Load IASI spectra and cloud products
         self.load_data()      
         
         # Correlates measurements, keep matching locations and times of observation
         self.correlate_measurements()
-        
-        # # Saves the merged data, and deletes the original data.
-        # self.save_merged_data()
