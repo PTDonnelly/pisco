@@ -101,7 +101,7 @@ def plot_spatial_distribution(datapath: str):
     # Define temporal range to plot
     target_year = '2019'
     target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 2)]
+    target_days = [str(day).zfill(2) for day in range(1, 32)]
 
     # Define spatial range to plot
     lat_range = (30, 60)
@@ -113,6 +113,7 @@ def plot_spatial_distribution(datapath: str):
 
     # Define plotting parameters
     fontsize = 7
+    dpi = 540
 
     png_files = []
     # Walk through the directory
@@ -122,7 +123,7 @@ def plot_spatial_distribution(datapath: str):
         day_icy_data = pd.read_csv(day_icy_file, usecols=['Longitude', 'Latitude'])
 
         # Initialize a new figure for the plot
-        plt.figure(figsize=(7, 7), dpi=540)
+        plt.figure(figsize=(7, 7), dpi=dpi)
         # Create a basemap of the world
         m = Basemap(projection='cyl', resolution="l", llcrnrlon=lon_range[0], llcrnrlat=lat_range[0], urcrnrlon=lon_range[1]+0.1, urcrnrlat=lat_range[1])
         # Draw coastlines and country borders
@@ -150,7 +151,7 @@ def plot_spatial_distribution(datapath: str):
 
         # Save figure
         png_file = f"{datapath}/spatial_distribution_{i}.png"
-        plt.savefig(png_file, dpi=540, bbox_inches='tight')
+        plt.savefig(png_file, dpi=dpi, bbox_inches='tight')
         plt.close()
 
         # Append filename to list of png files
