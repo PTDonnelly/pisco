@@ -101,7 +101,7 @@ def plot_spatial_distribution(datapath: str):
     # Define temporal range to plot
     target_year = '2019'
     target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 32)]
+    target_days = [str(day).zfill(2) for day in range(1, 2)]
 
     # Define spatial range to plot
     lat_range = (30, 60)
@@ -135,7 +135,7 @@ def plot_spatial_distribution(datapath: str):
 
         # Plot the observations on the map
         x, y = m(all_data['Longitude'].values, all_data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=1, color="silver")
+        m.scatter(x, y, latlon=True, marker=".", s=1, color="silver", alpha=0.8)
         # Plot the observations on the map
         x, y = m(day_icy_data['Longitude'].values, day_icy_data['Latitude'].values)
         m.scatter(x, y, latlon=True, marker=".", s=1.25, color="dodgerblue")

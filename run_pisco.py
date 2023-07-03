@@ -31,8 +31,6 @@ def main():
                 
                 # Use Logger as a context manager to capture stdout output to a log file
                 with Logger(f"{ex.config.datapath_out}pisco.log") as log:
-                    print(f"{ex.config.datapath_out}pisco.log")
-                    input()
                     # Depending on the configuration, perform different data processing tasks
                     if ex.config.L1C:
                         valid_indices = flag_data(ex, data_level="l1c")
@@ -46,7 +44,7 @@ def main():
                 # After the data processing tasks are done, move the log file to the desired location
                 os.replace(f"{ex.config.datapath_out}pisco.log", f"{ex.datapath_out}pisco.log")
                 print(f"{ex.datapath_out}pisco.log")
-                input()
+                
 
 if __name__ == "__main__":
     # profiler = Profiler()
