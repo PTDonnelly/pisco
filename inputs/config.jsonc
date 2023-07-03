@@ -6,7 +6,7 @@
     "L2": true,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
-    "process": false,
+    "process": true,
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",
