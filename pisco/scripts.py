@@ -83,7 +83,7 @@ def process_iasi(ex: Extractor):
     Result:
         A CSV file containing all spectra at those locations and times.
     """  
-    p = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
+    p = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day)
     p.correlate_spectra_with_cloud_products()
     return
 

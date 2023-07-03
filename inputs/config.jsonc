@@ -1,6 +1,6 @@
 {
     // L1C: bool, Specifies whether Level 1C data should be processed
-    "L1C": false,
+    "L1C": true,
 
     // L2: bool, Specifies whether Level 2 data should be processed
     "L2": true,
@@ -10,9 +10,6 @@
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",
-
-    // cloud_phase: int, The desired cloud phase from the L2 products
-    "cloud_phase": 2,
 
     // satellite_identifier: str, The IASI satellite to be analysed (A, B, or C) = "metopa" | "metopb" | "metopc"
     "satellite_identifier": "metopb",

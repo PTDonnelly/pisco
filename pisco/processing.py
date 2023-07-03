@@ -1,7 +1,9 @@
 import glob
 import os
 import pandas as pd
-from typing import Optional
+from typing import List, Optional
+
+import numpy as np
 
 class Processor:
     def __init__(self, datapath_out: str, year: str, month: str, day: str, cloud_phase: int):
@@ -10,8 +12,6 @@ class Processor:
         self.datapath_l2 = f"{datapath_out}l2/{year}/{month}/{day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
-        self.merged_df_day: object = None
-        self.merged_df_night: object = None
 
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
@@ -40,6 +40,33 @@ class Processor:
         return
     
 
+    def _split_measurements_by_cloud_phase(self, merged_df_day: pd.DataFrame, merged_df_night: pd.DataFrame):
+        cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
+
+        for cloud_phase_flag, cloud_phase in cloud_phase_dictionary.items():        
+            # Isolate cloud phase
+            merged_df_day_phase = merged_df_day[merged_df_day['Cloud Phase 1'] == cloud_phase_flag]
+            merged_df_night_phase = merged_df_night[merged_df_night['Cloud Phase 1'] == cloud_phase_flag]
+            
+            # Save the DataFrame to a file in csv format
+            print(f"Saving {cloud_phase} spectra to {self.datapath_l1c}")
+            merged_df_day_phase.to_csv(f"{self.datapath_l1c}extracted_spectra_day_{cloud_phase}.csv", index=False, mode='w')
+            merged_df_night_phase.to_csv(f"{self.datapath_l1c}extracted_spectra_night_{cloud_phase}.csv", index=False, mode='w')
+        return
+    
+    def _split_measurements_by_local_time(self, merged_df: pd.DataFrame) -> None:
+        # Split the DataFrame into two based on 'Local Time' column
+        merged_df_day = merged_df[merged_df['Local Time'] == True]
+        merged_df_night = merged_df[merged_df['Local Time'] == False]
+        
+        # Drop the 'Local Time' column from both DataFrames
+        merged_df_day = merged_df_day.drop(columns=['Local Time'])
+        merged_df_night = merged_df_night.drop(columns=['Local Time'])
+        
+        # Separate into separate datasets for cloud phase
+        self._split_measurements_by_cloud_phase(merged_df_day, merged_df_night)
+        return
+    
     def _check_headers(self):
         required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
         missing_headers_l1c = [header for header in required_headers if header not in self.df_l1c.columns]
@@ -66,14 +93,9 @@ class Processor:
 
         # Convert the DataFrame 'Local Time' column (np.array) to boolean values
         merged_df['Local Time'] = merged_df['Local Time'].astype(bool)
-        
-        # Split the DataFrame into two based on 'Local Time' column
-        self.merged_df_day = merged_df[merged_df['Local Time'] == True]
-        self.merged_df_night = merged_df[merged_df['Local Time'] == False]
-        
-        # Drop the 'Local Time' column from both DataFrames
-        self.merged_df_day = self.merged_df_day.drop(columns=['Local Time'])
-        self.merged_df_night = self.merged_df_night.drop(columns=['Local Time'])
+
+        # Separate into separate datasets for day/night
+        merged_df_day, merged_df_night = self._split_measurements_by_local_time(merged_df)
         return
     
 

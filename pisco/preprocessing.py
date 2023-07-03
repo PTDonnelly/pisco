@@ -623,11 +623,7 @@ class Preprocessor:
             
             # Read L2 retrieved products
             self.read_l2_product_fields(valid_indices)
-            # print(self.data_record_df[self.data_record_df.isna().any(axis=1)])
-            # print(self.data_record_df[['Cloud Phase 1', 'Cloud Phase 2', 'Cloud Phase 3']])
             
-            # # Remove observations (DataFrame rows) based on IASI cloud_phase
-            # self.filter_specified_cloud_phase(self.metadata._get_clp_record_fields())
         self.close_binary_file()
 
         # Construct Local Time column

@@ -1,3 +1,4 @@
+from .diagnostics import Logger, Profiler
 from .configuration import Configurer
 from .extraction import Extractor
 from .preprocessing import Preprocessor
