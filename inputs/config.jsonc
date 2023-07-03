@@ -11,6 +11,9 @@
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",
 
+    // cloud_phase: int, The desired cloud phase from the L2 products
+    "cloud_phase": "all",
+
     // satellite_identifier: str, The IASI satellite to be analysed (A, B, or C) = "metopa" | "metopb" | "metopc"
     "satellite_identifier": "metopb",
 
