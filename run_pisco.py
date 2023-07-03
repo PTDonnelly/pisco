@@ -1,5 +1,4 @@
 import os
-import sys
 import cProfile
 
 from pisco import Extractor, Logger, Profiler
