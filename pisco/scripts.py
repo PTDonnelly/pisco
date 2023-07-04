@@ -187,23 +187,10 @@ def plot_spatial_distribution_2Dhist(datapath: str):
         x, y = m(night_icy_data['Longitude'].values, night_icy_data['Latitude'].values)
         m.scatter(x, y, latlon=True, marker=".", s=1.25, color="crimson")
 
-    def plot_spectrum(file_groups, ifile):
-        # Get icy spectra
-        day_icy_data = pd.read_csv(file_groups['day_icy']['files'][ifile]).filter(regex='Spectrum ')
-        night_icy_data = pd.read_csv(file_groups['day_icy']['files'][ifile]).filter(regex='Spectrum ')
-        icy_spectra = pd.merge(day_icy_data, night_icy_data)
-        # Get liquid spectra
-        day_liquid_data = pd.read_csv(file_groups['day_liquid']['files'][ifile]).filter(regex='Spectrum ')
-        night_liquid_data = pd.read_csv(file_groups['day_liquid']['files'][ifile]).filter(regex='Spectrum ')
-        liquid_spectra = pd.merge(day_liquid_data, night_liquid_data)
-        # Get mixed spectra
-        day_mixed_data = pd.read_csv(file_groups['day_mixed']['files'][ifile]).filter(regex='Spectrum ')
-        night_mixed_data = pd.read_csv(file_groups['day_mixed']['files'][ifile]).filter(regex='Spectrum ')
-        mixed_spectra = pd.merge(day_mixed_data, night_mixed_data)
-
-        channels, wavenumber_grid = plotter.get_iasi_spectral_grid()
-        print(channels, wavenumber_grid)
-        exit()
+    def plot_spectrum(ax, file_groups, ifile):        
+        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_icy', 'night_icy', 'royalblue')
+        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_liquid', 'night_liquid', 'forestgreen')
+        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_mixed', 'night_mixed', 'darkorchid')
         return
     
     # Instantiate the Plotter and organise files
@@ -213,7 +200,7 @@ def plot_spatial_distribution_2Dhist(datapath: str):
     # Define temporal range to plot
     target_year = '2019'
     target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 2)]
+    target_days = [str(day).zfill(2) for day in range(1, 32)]
 
     # Define spatial range to plot
     lat_range = (30, 60)
@@ -240,13 +227,13 @@ def plot_spatial_distribution_2Dhist(datapath: str):
     }
 
     # Define plotting parameters
-    fontsize = 7
+    fontsize = 10
     dpi = 720
     png_files = []
 
     for ifile in range(len(target_days)):
         # Initialize a new figure for the plot with three subplots
-        fig, axs = plt.subplots(4, 2, figsize=(8, 8), dpi=dpi)
+        fig, axs = plt.subplots(4, 2, figsize=(12, 12), dpi=dpi)
         fig.suptitle(f"IASI Spectra in the North Atlantic: {target_year}-{target_month}-{target_days[ifile]}", fontsize=fontsize+5, y=0.95)
         
         for iax, (ax, (group, attrs)) in enumerate(zip(axs.flat, file_groups.items())):
@@ -255,7 +242,9 @@ def plot_spatial_distribution_2Dhist(datapath: str):
                 m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
                 plot_scatter(m, file_groups, ifile)
             elif iax == 1:
-                plot_spectrum(file_groups, ifile)
+                plot_spectrum(ax, file_groups, ifile)
+                ax.set_xlabel(r'Wavenumber (cm$^{-1}$)', labelpad=1, fontsize=fontsize)
+                ax.set_ylabel(r'Radiance ($mWm^{-2}srm^{-1}m$)', labelpad=1, fontsize=fontsize)
             elif iax > 1:
                 # Create a basemap of the world
                 m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
@@ -269,18 +258,18 @@ def plot_spatial_distribution_2Dhist(datapath: str):
             ax.set_title(attrs["title"], fontsize=fontsize+1)
 
         # Final adjustments
-        plt.subplots_adjust(hspace=0.3, wspace=0.1)
+        plt.subplots_adjust(hspace=0.35, wspace=0.1)
 
         # Save figure
         png_file = f"{datapath}/2D_hist_{ifile}.png"
         plt.savefig(png_file, dpi=dpi, bbox_inches='tight')
         plt.close()
 
-    #     # Append filename to list of png files
-    #     png_files.append(png_file)
+        # Append filename to list of png files
+        png_files.append(png_file)
 
-    # # Convert all individual pngs to animated gif
-    # plotter.png_to_gif(f"{datapath}/2D_hist.gif", png_files)
+    # Convert all individual pngs to animated gif
+    plotter.png_to_gif(f"{datapath}/2D_hist.gif", png_files)
 
 
 def plot_spatial_distribution_unity(datapath: str):
@@ -452,8 +441,6 @@ def plot_spectra(datapath: str):
 
     # Walk through the directory
     for file, color in zip(filepaths, colors):
-        print(file)
-
         # Load the data from the file into a pandas DataFrame
         df = pd.read_csv(file)
         

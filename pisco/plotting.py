@@ -24,10 +24,16 @@ class Plotter:
         spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
         channels = spectral_grid[:, 0]
         wavenumber_grid = spectral_grid[:, 1]
-        return channels, wavenumber_grid
+        return wavenumber_grid
 
-    def iasi_channels_to_wavenumbers(self):
-        pass
+    def get_dataframe_spectral_grid(self, df: pd.DataFrame) -> List[float]:
+        # Get the full IASI spectral grid
+        wavenumber_grid = self.get_iasi_spectral_grid()
+        # Extract the numbers from the column names
+        channel_positions = df.columns.str.split().str[-1].astype(int)
+        # Extract the wavenumbers corresponding to the channel positions
+        extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
+        return extracted_wavenumbers
 
     def organize_files_by_date(self) -> None:
         """
@@ -129,7 +135,8 @@ class Plotter:
         m.drawmeridians(meridians, labels=[0,0,0,1], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
         m.drawparallels(parallels, labels=[1,0,0,0], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
         return m
-    
+
+
     def plot_geographical_heatmap(self, m: Basemap, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, cmap: str, histogram_resolution: int=1):
         """
         Function to plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
@@ -153,3 +160,21 @@ class Plotter:
         x, y = m(Lon, Lat)
         m.pcolormesh(x, y, H.T, cmap=cmap)  # Transpose H to align with coordinate grid
         return m
+    
+    def plot_geographical_scatter(self):
+        pass
+
+
+    def gather_dataframe_spectra(self, file_groups: dict, ifile: int, df_name_1='day_icy', df_name_2='night_icy'):
+        df_1 = pd.read_csv(file_groups[df_name_1]['files'][ifile]).filter(regex='Spectrum ')
+        df_2 = pd.read_csv(file_groups[df_name_2]['files'][ifile]).filter(regex='Spectrum ')
+        merged_df = pd.concat([df_1, df_2], axis=0)
+        return self.get_dataframe_spectral_grid(merged_df), merged_df
+    
+    def plot_spectra_by_cloud_phase(self, ax, file_groups, ifile, df_name_1, df_name_2, color):
+        spectrum_wavenumbers, spectrum_merged_df = self.gather_dataframe_spectra(file_groups, ifile, df_name_1, df_name_2)
+        spectrum_mean = spectrum_merged_df.mean(axis=0) * 1000
+        spectrum_stddev = spectrum_merged_df.std(axis=0) * 1000
+        ax.plot(spectrum_wavenumbers, spectrum_mean, color=color, lw=1)
+        ax.fill_between(spectrum_wavenumbers, spectrum_mean-spectrum_stddev, spectrum_mean+spectrum_stddev, color=color, alpha=0.2)
+        return
