@@ -2,6 +2,9 @@ import os
 from collections import defaultdict
 from typing import List, Dict, Tuple, Optional
 import imageio
+import numpy as np
+import pandas as pd
+from mpl_toolkits.basemap import Basemap
 
 class Plotter:
     """
@@ -17,7 +20,15 @@ class Plotter:
         self.datapath = datapath
         self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
 
-    
+    def get_iasi_spectral_grid(self):
+        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
+        channels = spectral_grid[:, 0]
+        wavenumber_grid = spectral_grid[:, 1]
+        return channels, wavenumber_grid
+
+    def iasi_channels_to_wavenumbers(self):
+        pass
+
     def organize_files_by_date(self) -> None:
         """
         Organizes .csv files in the data directory by date.
@@ -92,3 +103,53 @@ class Plotter:
         if delete_png_files:
             for png_file in png_files:
                 os.remove(png_file)
+
+
+    def create_basemap(self, lon_range: tuple, lat_range: tuple, ax, fontsize: int, resolution: str = "l"):
+        """
+        Function to create a Basemap with specified longitude and latitude ranges, and draw coastlines, meridians and parallels.
+        
+        Parameters:
+        lon_range (tuple): Tuple containing the minimum and maximum longitudes for the basemap.
+        lat_range (tuple): Tuple containing the minimum and maximum latitudes for the basemap.
+        ax (matplotlib.axes.Axes): Axes object to draw the basemap on.
+        fontsize (int): Font size for the labels on the meridians and parallels.
+        
+        Returns:
+        m (mpl_toolkits.basemap.Basemap): The created Basemap object.
+        """
+        m = Basemap(projection='cyl', resolution=resolution, llcrnrlon=lon_range[0], llcrnrlat=lat_range[0], urcrnrlon=lon_range[1]+0.1, urcrnrlat=lat_range[1], ax=ax)
+        
+        # Draw coastlines and country borders
+        m.drawcoastlines()
+
+        # Add spatial grid
+        meridians = np.arange(lon_range[0], lon_range[1]+1, 10)
+        parallels = np.arange(lat_range[0], lat_range[1]+1, 10)
+        m.drawmeridians(meridians, labels=[0,0,0,1], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
+        m.drawparallels(parallels, labels=[1,0,0,0], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
+        return m
+    
+    def plot_geographical_heatmap(self, m: Basemap, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, cmap: str, histogram_resolution: int=1):
+        """
+        Function to plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
+        
+        Parameters:
+        m (mpl_toolkits.basemap.Basemap):Basemap object.
+        data (pd.DataFrame): pandas DataFrame containing data values read from a CSV file.
+        lon_range (tuple): Tuple containing the minimum and maximum longitudes for the basemap.
+        lat_range (tuple): Tuple containing the minimum and maximum latitudes for the basemap.
+        cmap (str): String naem of the desired built-in colormap.
+        
+        Returns:
+        m (mpl_toolkits.basemap.Basemap): The same Basemap object.
+        """
+        # Define bins
+        lon_bins = np.arange(lon_range[0], lon_range[1]+1, histogram_resolution)
+        lat_bins = np.arange(lat_range[0], lat_range[1]+1, histogram_resolution)
+
+        H, xedges, yedges = np.histogram2d(data['Longitude'], data['Latitude'], bins=[lon_bins, lat_bins])
+        Lon, Lat = np.meshgrid(xedges, yedges)
+        x, y = m(Lon, Lat)
+        m.pcolormesh(x, y, H.T, cmap=cmap)  # Transpose H to align with coordinate grid
+        return m

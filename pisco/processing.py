@@ -47,7 +47,7 @@ class Processor:
         os.remove(self.datafile_l1c)
         os.remove(self.datafile_l2)
 
-    def _save_merged_data(self, df_day, df_night, cloud_phase) -> None:
+    def _save_measurements_by_cloud_phase(self, df_day: pd.DataFrame, df_night: pd.DataFrame, cloud_phase: str) -> None:
         """
         Save the merged DataFrame to a CSV file in the output directory.
         Delete the intermediate l1c and l2 products.
@@ -76,7 +76,7 @@ class Processor:
                 print("Cloud_phase is unknown or uncertain, skipping data.")
             else:
                 # Save observations
-                self._save_merged_data(df_day,df_night, cloud_phase)
+                self._save_measurements_by_cloud_phase(df_day, df_night, cloud_phase)
         else:
             cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
             for cloud_phase_flag, cloud_phase in cloud_phase_dictionary.items():        
@@ -85,9 +85,15 @@ class Processor:
                 df_night_phase = df_night[df_night['Cloud Phase 1'] == cloud_phase_flag]
 
                 # Save observations
-                self._save_merged_data(df_day_phase, df_night_phase, cloud_phase)
+                self._save_measurements_by_cloud_phase(df_day_phase, df_night_phase, cloud_phase)
         return
     
+    def _save_measurements_by_local_time(self, df_day: pd.DataFrame, df_night: pd.DataFrame) -> None:
+        print(f"Saving spectra to {self.datapath_l1c}")
+        df_day.to_csv(f"{self.datapath_l1c}extracted_spectra_day.csv", index=False, mode='w')
+        df_night.to_csv(f"{self.datapath_l1c}extracted_spectra_night.csv", index=False, mode='w')
+        pass
+
     def _split_measurements_by_local_time(self, merged_df: pd.DataFrame) -> None:
         # Split the DataFrame into two based on 'Local Time' column
         merged_df_day = merged_df[merged_df['Local Time'] == True]
@@ -96,6 +102,9 @@ class Processor:
         # Drop the 'Local Time' column from both DataFrames
         merged_df_day = merged_df_day.drop(columns=['Local Time'])
         merged_df_night = merged_df_night.drop(columns=['Local Time'])
+        
+        # Save observations
+        self._save_measurements_by_local_time(merged_df_day, merged_df_night)
         
         # Separate into separate datasets for cloud phase
         self._split_measurements_by_cloud_phase(merged_df_day, merged_df_night)

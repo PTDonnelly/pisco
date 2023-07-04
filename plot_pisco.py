@@ -1,4 +1,4 @@
-from pisco import plot_spatial_distribution, plot_spectra
+from pisco import scripts
 
 def main():
     """
@@ -7,7 +7,7 @@ def main():
     datapath = "C:\\Users\\padra\\Documents\\Research\\projects\\contrails\\iasi\\2019"
     
     # Plot map
-    plot_spatial_distribution(datapath)
+    scripts.plot_spatial_distribution_2Dhist(datapath)
     # plot_spectra(datapath)
 
 if __name__ == "__main__":
