@@ -177,4 +177,5 @@ class Plotter:
         spectrum_stddev = spectrum_merged_df.std(axis=0) * 1000
         ax.plot(spectrum_wavenumbers, spectrum_mean, color=color, lw=1)
         ax.fill_between(spectrum_wavenumbers, spectrum_mean-spectrum_stddev, spectrum_mean+spectrum_stddev, color=color, alpha=0.2)
+        ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
         return

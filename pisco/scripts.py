@@ -165,6 +165,7 @@ def plot_spatial_distribution_scatter(datapath: str):
 def plot_spatial_distribution_2Dhist(datapath: str):
     import pandas as pd
     import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
     from mpl_toolkits.basemap import Basemap
     
     def plot_scatter(m: Basemap, file_groups, ifile):
@@ -187,10 +188,10 @@ def plot_spatial_distribution_2Dhist(datapath: str):
         x, y = m(night_icy_data['Longitude'].values, night_icy_data['Latitude'].values)
         m.scatter(x, y, latlon=True, marker=".", s=1.25, color="crimson")
 
-    def plot_spectrum(ax, file_groups, ifile):        
+    def plot_spectrum(file_groups: dict, ifile: int, ax: object):        
         plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_icy', 'night_icy', 'royalblue')
         plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_liquid', 'night_liquid', 'forestgreen')
-        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_mixed', 'night_mixed', 'darkorchid')
+        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_mixed', 'night_mixed', 'darkorchid')        
         return
     
     # Instantiate the Plotter and organise files
@@ -233,16 +234,19 @@ def plot_spatial_distribution_2Dhist(datapath: str):
 
     for ifile in range(len(target_days)):
         # Initialize a new figure for the plot with three subplots
-        fig, axs = plt.subplots(4, 2, figsize=(10, 10), dpi=dpi)
+        fig = plt.figure(figsize=(10, 10), dpi=dpi)
+        gs = gridspec.GridSpec(4, 2, figure=fig)
         fig.suptitle(f"IASI Spectra in the North Atlantic: {target_year}-{target_month}-{target_days[ifile]}", fontsize=fontsize+5, y=0.95)
-        
-        for iax, (ax, (group, attrs)) in enumerate(zip(axs.flat, file_groups.items())):
+
+        axes = gs.subplots()  # Create the subplots from the GridSpec
+
+        for iax, (ax, (group, attrs)) in enumerate(zip(axes.flat, file_groups.items())):
             if iax == 0:
                 # Create a basemap of the world
                 m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
                 plot_scatter(m, file_groups, ifile)
             elif iax == 1:
-                plot_spectrum(ax, file_groups, ifile)
+                plot_spectrum(file_groups, ifile, ax)
                 ax.set_xlabel(r'Wavenumber (cm$^{-1}$)', labelpad=1, fontsize=fontsize)
                 ax.set_ylabel(r'Radiance ($mWm^{-2}srm^{-1}m$)', labelpad=1, fontsize=fontsize)
             elif iax > 1:
@@ -252,8 +256,8 @@ def plot_spatial_distribution_2Dhist(datapath: str):
                 file = attrs["files"][ifile]
                 data = pd.read_csv(file, usecols=['Longitude', 'Latitude'])
                 # Plot the observations on the map as a 2D histogram
-                plotter.plot_geographical_heatmap(m, data, lon_range, lat_range, attrs["cmap"], histogram_resolution=0.5)
-            
+                plotter.plot_geographical_heatmap(m, data, lon_range, lat_range, attrs["cmap"])
+
             # Add a title to the plot
             ax.set_title(attrs["title"], fontsize=fontsize+1)
 
