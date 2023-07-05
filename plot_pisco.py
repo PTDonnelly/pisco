@@ -7,8 +7,8 @@ def main():
     datapath = "C:\\Users\\padra\\Documents\\Research\\projects\\contrails\\iasi\\2019"
     
     # Plot map
-    scripts.plot_spatial_distribution_2Dhist(datapath)
-    # plot_spectra(datapath)
+    # scripts.plot_spatial_distribution_2Dhist(datapath)
+    scripts.plot_spectral_distributon(datapath)
 
 if __name__ == "__main__":
     main()

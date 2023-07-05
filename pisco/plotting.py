@@ -5,6 +5,7 @@ import imageio
 import numpy as np
 import pandas as pd
 from mpl_toolkits.basemap import Basemap
+import matplotlib.pyplot as plt
 
 class Plotter:
     """
@@ -19,8 +20,10 @@ class Plotter:
         """
         self.datapath = datapath
         self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
+        self.day_night_dictionary = {'night': 0, 'day': 1, 'twilight': 2}
+        self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
 
-    def get_iasi_spectral_grid(self):
+    def _get_iasi_spectral_grid(self):
         spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
         channels = spectral_grid[:, 0]
         wavenumber_grid = spectral_grid[:, 1]
@@ -28,12 +31,13 @@ class Plotter:
 
     def get_dataframe_spectral_grid(self, df: pd.DataFrame) -> List[float]:
         # Get the full IASI spectral grid
-        wavenumber_grid = self.get_iasi_spectral_grid()
+        wavenumber_grid = self._get_iasi_spectral_grid()
         # Extract the numbers from the column names
         channel_positions = df.columns.str.split().str[-1].astype(int)
         # Extract the wavenumbers corresponding to the channel positions
         extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
         return extracted_wavenumbers
+
 
     def organize_files_by_date(self) -> None:
         """
@@ -54,7 +58,6 @@ class Plotter:
 
                     # Append the file path to the corresponding date
                     self.files_by_date[(year, month, day)].append(os.path.join(root, file))
-
     
     def select_files(self, target_year: str, target_month: str, target_days: List[str], target_file_part: Optional[str] = None) -> List[str]:
         """
@@ -87,6 +90,60 @@ class Plotter:
                         selected_files.append(file)
 
         return selected_files
+    
+
+    def extract_by_cloud_phase_and_day_night(self, df: pd.DataFrame, conditions_dict: dict = None):
+        """
+        Function to extract subset of DataFrame based on conditions for Cloud Phase and Day Night Qualifier.
+
+        Args:
+            df: DataFrame to process.
+            conditions_dict: Dictionary where keys are day_night qualifiers and values are lists of cloud phases. 
+                            Default is None, which returns all data.
+        
+        Returns:
+            Subset of the original DataFrame or the original DataFrame if no conditions_dict is provided.
+        """
+        # Ensure the input is correct
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("The 'df' input should be a pandas DataFrame.")
+            
+        if conditions_dict is not None and not isinstance(conditions_dict, dict):
+            raise ValueError("The 'conditions_dict' input should be a dictionary.")
+            
+        if conditions_dict is None:
+            return df
+        else:
+            df_filtered = pd.DataFrame()
+
+            for day_night_str, cloud_phases_str in conditions_dict.items():
+                day_night = self.day_night_dictionary[day_night_str]
+                cloud_phases = [self.cloud_phase_dictionary[phase_str] for phase_str in cloud_phases_str]
+
+                for cloud_phase in cloud_phases:
+                    mask_cloud_phase = df['Cloud Phase 1'] == cloud_phase
+                    mask_day_night = df['Day Night Qualifier'] == day_night
+                    df_temp = df[mask_cloud_phase & mask_day_night]
+                    df_filtered = pd.concat([df_filtered, df_temp])
+
+            return df_filtered
+
+
+
+
+
+
+    def finalise_plot(self, png_file: str, png_files: List[str], dpi: int, hspace: float = 0.1, wspace: float = 0.1):
+        # Final adjustments
+        plt.subplots_adjust(hspace=hspace, wspace=wspace)
+
+        # Save figure
+        plt.savefig(png_file, dpi=dpi, bbox_inches='tight')
+        plt.close()
+
+        # Append filename to list of png files
+        png_files.append(png_file)
+        return png_files
     
     @staticmethod
     def png_to_gif(gifname: str, png_files: List[str], fps: int = 1, delete_png_files: bool = True) -> None:

@@ -86,8 +86,9 @@ def process_iasi(ex: Extractor):
         A CSV file containing all spectra at those locations and times.
     """  
     p = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
-    p.correlate_spectra_with_cloud_products()
+    p.merge_spectra_and_cloud_products()
     return
+
 
 
 def plot_spatial_distribution_scatter(datapath: str):
@@ -407,7 +408,6 @@ def plot_spatial_distribution_unity(datapath: str):
                 m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
                 plot_grouped_data(ax, df_all_grouped, cloud_phase_colors)
             elif iax == 2:
-                
                 pass
         
         # Final adjustments
@@ -423,6 +423,60 @@ def plot_spatial_distribution_unity(datapath: str):
 
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{datapath}/unity.gif", png_files)
+
+def plot_spectral_distributon(datapath):
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
+    from mpl_toolkits.basemap import Basemap
+    
+    # Instantiate the Plotter and organise files
+    plotter = Plotter(datapath)
+    plotter.organize_files_by_date()
+
+    # Define temporal range to plot
+    target_year = '2019'
+    target_month = '01'
+    target_days = [str(day).zfill(2) for day in range(1, 2)]
+
+    # Select files in time range
+    all_files = plotter.select_files(target_year, target_month, target_days)
+    
+    # Define plotting parameters
+    fontsize = 8
+    dpi = 360
+    png_files = []
+
+    for ifile, file in enumerate(all_files):
+        print(ifile, file)
+        # Initialize a new figure for the plot with three subplots
+        fig = plt.figure(figsize=(10, 10), dpi=dpi)
+        gs = gridspec.GridSpec(3, 4, figure=fig)
+        axes = gs.subplots()  # Create the subplots from the GridSpec
+
+        # Get current file and load data
+        df = pd.read_csv(file)
+        # liquid_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': ['liquid'], 'night': ['liquid']})
+        ice_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': ['icy'], 'night': ['icy']})
+        # mixed_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': ['mixed'], 'night': ['mixed']})
+        
+        for iax, ax in enumerate(axes.flat):
+            if iax % 3 == 0:
+                print(iax)
+                
+    #         # plot_spectrum(file_groups, ifile, ax)
+    #         ax.set_xlabel(r'Wavenumber (cm$^{-1}$)', labelpad=1, fontsize=fontsize)
+    #         ax.set_ylabel(r'Radiance ($mWm^{-2}srm^{-1}m$)', labelpad=1, fontsize=fontsize)
+
+    #         # Add a title to the plot
+    #         ax.set_title(attrs["title"], fontsize=fontsize+1)
+
+    #     # Save figure and store png filename for gif conversion
+    #     png_file = f"{datapath}/spectral_distribution_{ifile}.png"
+    #     png_files = plotter.finalise_plot(png_file, png_files, dpi)
+
+    # # Convert all individual pngs to animated gif
+    # plotter.png_to_gif(f"{datapath}/spectral_distribution.gif", png_files)
 
 
 def plot_spectra(datapath: str):

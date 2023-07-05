@@ -10,6 +10,7 @@ class Processor:
         self.cloud_phase: int = cloud_phase
         self.datapath_l1c = f"{datapath_out}l1c/{year}/{month}/{day}/"
         self.datapath_l2 = f"{datapath_out}l2/{year}/{month}/{day}/"
+        self.datapath_merged = f"{datapath_out}merged/{year}/{month}/{day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
 
@@ -46,70 +47,16 @@ class Processor:
         """
         os.remove(self.datafile_l1c)
         os.remove(self.datafile_l2)
-
-    def _save_measurements_by_cloud_phase(self, df_day: pd.DataFrame, df_night: pd.DataFrame, cloud_phase: str) -> None:
-        """
-        Save the merged DataFrame to a CSV file in the output directory.
-        Delete the intermediate l1c and l2 products.
-        """
-        print(f"Saving {cloud_phase} spectra to {self.datapath_l1c}")
-        df_day.to_csv(f"{self.datapath_l1c}extracted_spectra_day_{cloud_phase}.csv", index=False, mode='w')
-        df_night.to_csv(f"{self.datapath_l1c}extracted_spectra_night_{cloud_phase}.csv", index=False, mode='w')        
+        return
+    
+    def _save_merged_products(self, merged_df: pd.DataFrame) -> None:
+        print(f"Saving spectra to {self.datapath_merged}")
+        merged_df.to_csv(f"{self.datapath_merged}spectra_and_cloud_products.csv", index=False, mode='w')
 
         # # Delete original csv files
         # self._delete_intermediate_analysis_data()
-        return
-    
-    def _get_cloud_phase(self) -> Optional[str]:
-        """
-        Returns the cloud phase as a string based on the cloud phase value.
-        If the retrieved cloud phase is unknown or uncertain, returns None.
-        """
-        cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
-        cloud_phase = cloud_phase_dictionary.get(self.cloud_phase)
-        return None if cloud_phase is None else cloud_phase
-    
-    def _split_measurements_by_cloud_phase(self, df_day: pd.DataFrame, df_night: pd.DataFrame):
-        if not self.cloud_phase == "all":
-            cloud_phase = self._get_cloud_phase()
-            if cloud_phase is None:
-                print("Cloud_phase is unknown or uncertain, skipping data.")
-            else:
-                # Save observations
-                self._save_measurements_by_cloud_phase(df_day, df_night, cloud_phase)
-        else:
-            cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
-            for cloud_phase_flag, cloud_phase in cloud_phase_dictionary.items():        
-                # Isolate cloud phase
-                df_day_phase = df_day[df_day['Cloud Phase 1'] == cloud_phase_flag]
-                df_night_phase = df_night[df_night['Cloud Phase 1'] == cloud_phase_flag]
-
-                # Save observations
-                self._save_measurements_by_cloud_phase(df_day_phase, df_night_phase, cloud_phase)
-        return
-    
-    def _save_measurements_by_local_time(self, df_day: pd.DataFrame, df_night: pd.DataFrame) -> None:
-        print(f"Saving spectra to {self.datapath_l1c}")
-        df_day.to_csv(f"{self.datapath_l1c}extracted_spectra_day.csv", index=False, mode='w')
-        df_night.to_csv(f"{self.datapath_l1c}extracted_spectra_night.csv", index=False, mode='w')
         pass
 
-    def _split_measurements_by_local_time(self, merged_df: pd.DataFrame) -> None:
-        # Split the DataFrame into two based on 'Local Time' column
-        merged_df_day = merged_df[merged_df['Local Time'] == True]
-        merged_df_night = merged_df[merged_df['Local Time'] == False]
-        
-        # Drop the 'Local Time' column from both DataFrames
-        merged_df_day = merged_df_day.drop(columns=['Local Time'])
-        merged_df_night = merged_df_night.drop(columns=['Local Time'])
-        
-        # Save observations
-        self._save_measurements_by_local_time(merged_df_day, merged_df_night)
-        
-        # Separate into separate datasets for cloud phase
-        self._split_measurements_by_cloud_phase(merged_df_day, merged_df_night)
-        return
-    
     def _check_headers(self):
         required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
         missing_headers_l1c = [header for header in required_headers if header not in self.df_l1c.columns]
@@ -136,12 +83,13 @@ class Processor:
 
         # Convert the DataFrame 'Local Time' column (np.array) to boolean values
         merged_df['Local Time'] = merged_df['Local Time'].astype(bool)
+        merged_df.drop(columns=['Local Time'])
 
-        # Separate into separate datasets for day/night
-        self._split_measurements_by_local_time(merged_df)
+        # Save observations
+        self._save_merged_products(merged_df)
         return
     
-    def correlate_spectra_with_cloud_products(self):
+    def merge_spectra_and_cloud_products(self):
         # Load IASI spectra and cloud products
         self.load_data()      
         
