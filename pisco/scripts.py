@@ -442,22 +442,25 @@ def plot_spectral_distributon(plotter):
         ax.plot(spectrum_wavenumbers, spectrum_mean, color=color, lw=1, label=phase)
         ax.fill_between(spectrum_wavenumbers, spectrum_mean-spectrum_error, spectrum_mean+spectrum_error, color=color, alpha=0.2)
         ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
+        ax.set_ylim((0, 1.01))
         ax.legend(loc='upper right')
 
     def plot_residuals(ax, spectrum_wavenumbers, residuals, color):
         ax.plot(spectrum_wavenumbers, [0]*len(spectrum_wavenumbers), color=color, lw=1)
         ax.fill_between(spectrum_wavenumbers, -residuals, residuals, color=color, alpha=0.2)
         ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
+        ax.set_ylim((-0.4, 0.401))
 
     def plot_histogram(ax, residuals, color):
         ax.hist(residuals, bins=25, color=color, alpha=0.5)
-        ax.set_xlim((0, 0.41))
+        ax.set_xlim((0, 0.51))
+        ax.set_ylim((0, 251))
 
     # Use Plotter to organise files
     plotter.organize_files_by_date()
 
     # Select files in time range
-    all_files = plotter.select_files()
+    datafiles = plotter.select_files()
     
     # Define plotting parameters
     fontsize = 8
@@ -468,13 +471,14 @@ def plot_spectral_distributon(plotter):
     phases = ['icy', 'liquid', 'mixed']
     colors = ['royalblue', 'forestgreen', 'darkorchid']
 
-    for file in all_files:
+    for ifile, datafile in enumerate(datafiles):
         # Initialize a new figure for the plot with three subplots
         fig = plt.figure(figsize=(15, 9), dpi=dpi)
         gs = gridspec.GridSpec(ny, nx, figure=fig)
-
+        fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
+        
         # Get current file and load data
-        df = pd.read_csv(file)
+        df = pd.read_csv(datafile)
 
         for irow, (phase, color) in enumerate(zip(phases, colors)):
             sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': [phase], 'night': [phase]}).filter(regex='Spectrum ')
@@ -518,7 +522,7 @@ def plot_spectral_distributon(plotter):
                 ax.set_ylabel(ylabel, labelpad=1, fontsize=fontsize)
 
         # Save figure and store png filename for gif conversion
-        png_file = os.path.join(plotter.datapath, f"spectral_distribution_{(irow * nx) + icol}.png")
+        png_file = os.path.join(plotter.datapath, f"spectral_distribution_{ifile}.png")
         plotter.finalise_plot(png_file, png_files, dpi, hspace=0.2, wspace=0.4)
 
     # Convert all individual pngs to animated gif
