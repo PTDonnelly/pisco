@@ -425,57 +425,104 @@ def plot_spatial_distribution_unity(datapath: str):
     plotter.png_to_gif(f"{datapath}/unity.gif", png_files)
 
 
-def plot_spectral_distributon(datapath):
+def plot_spectral_distributon(plotter):
+    import os
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     
-    # Instantiate the Plotter and organise files
-    plotter = Plotter(datapath)
+    def check_sub_df(sub_df: pd.DataFrame, phase: str) -> None:
+        # Ensure the dataframe is not empty
+        if sub_df.empty:
+            raise ValueError(f"No data available for phase: {phase}")
+        else:
+            return
+        
+    def plot_spectrum(ax, spectrum_wavenumbers, spectrum_mean, spectrum_error, phase, color):
+        ax.plot(spectrum_wavenumbers, spectrum_mean, color=color, lw=1, label=phase)
+        ax.fill_between(spectrum_wavenumbers, spectrum_mean-spectrum_error, spectrum_mean+spectrum_error, color=color, alpha=0.2)
+        ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
+        ax.legend(loc='upper right')
+
+    def plot_residuals(ax, spectrum_wavenumbers, residuals, color):
+        ax.plot(spectrum_wavenumbers, [0]*len(spectrum_wavenumbers), color=color, lw=1)
+        ax.fill_between(spectrum_wavenumbers, -residuals, residuals, color=color, alpha=0.2)
+        ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
+
+    def plot_histogram(ax, residuals, color):
+        ax.hist(residuals, bins=25, color=color, alpha=0.5)
+        ax.set_xlim((0, 0.41))
+
+    # Use Plotter to organise files
     plotter.organize_files_by_date()
 
-    # Define temporal range to plot
-    target_year = '2019'
-    target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 2)]
-
     # Select files in time range
-    all_files = plotter.select_files(target_year, target_month, target_days)
+    all_files = plotter.select_files()
     
     # Define plotting parameters
     fontsize = 8
     dpi = 360
     png_files = []
+    nx, ny = 5, 3
+    titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
+    phases = ['icy', 'liquid', 'mixed']
+    colors = ['royalblue', 'forestgreen', 'darkorchid']
 
-    for ifile, file in enumerate(all_files):
-        print(ifile, file)
+    for file in all_files:
         # Initialize a new figure for the plot with three subplots
-        fig = plt.figure(figsize=(10, 10), dpi=dpi)
-        axes = gridspec.GridSpec(3, 4, figure=fig).subplots()  # Create the subplots from the GridSpec
+        fig = plt.figure(figsize=(15, 9), dpi=dpi)
+        gs = gridspec.GridSpec(ny, nx, figure=fig)
 
         # Get current file and load data
         df = pd.read_csv(file)
-        # liquid_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': ['liquid'], 'night': ['liquid']})
-        ice_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': ['icy'], 'night': ['icy']})
-        # mixed_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': ['mixed'], 'night': ['mixed']})
-        
-        for iax, ax in enumerate(axes.flat):
-            if iax % 3 == 0:
-                print(iax)
 
-    #         # plot_spectrum(file_groups, ifile, ax)
-    #         ax.set_xlabel(r'Wavenumber (cm$^{-1}$)', labelpad=1, fontsize=fontsize)
-    #         ax.set_ylabel(r'Radiance ($mWm^{-2}srm^{-1}m$)', labelpad=1, fontsize=fontsize)
+        for irow, (phase, color) in enumerate(zip(phases, colors)):
+            sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': [phase], 'night': [phase]}).filter(regex='Spectrum ')
 
-    #         # Add a title to the plot
-    #         ax.set_title(attrs["title"], fontsize=fontsize+1)
+            # Make sure DataFrame is not empty
+            check_sub_df(sub_df, phase)
+            
+            # Calculate plotting data
+            spectrum_wavenumbers = plotter.get_dataframe_spectral_grid(sub_df)
+            spectrum_mean = sub_df.mean(axis=0) * 1000
+            spectrum_error = sub_df.std(axis=0) * 1000
+            # spectrum_error = (sub_df.max(axis=0) - sub_df.min(axis=0)) * 1000
+            residuals = spectrum_error / spectrum_mean
 
-    #     # Save figure and store png filename for gif conversion
-    #     png_file = f"{datapath}/spectral_distribution_{ifile}.png"
-    #     png_files = plotter.finalise_plot(png_file, png_files, dpi)
+            for icol in range(nx):
+                if icol == 0:
+                    ax = fig.add_subplot(gs[irow, icol:icol+2])
+                    plot_spectrum(ax, spectrum_wavenumbers, spectrum_mean, spectrum_error, phase, color)
+                    xlabel = r'Wavenumber (cm$^{-1}$)'
+                    ylabel = r'Radiance ($mWm^{-2}srm^{-1}m$)'
+                elif icol == 2:
+                    ax = fig.add_subplot(gs[irow, icol:icol+2])
+                    plot_residuals(ax, spectrum_wavenumbers, residuals, color)
+                    xlabel = r'Wavenumber (cm$^{-1}$)'
+                    ylabel = r'Normalised Error'
+                elif icol == 4:
+                    ax = fig.add_subplot(gs[irow, icol])
+                    plot_histogram(ax, residuals, color)
+                    xlabel = r'Normalised Spread'
+                    ylabel = r'Counts'
 
-    # # Convert all individual pngs to animated gif
-    # plotter.png_to_gif(f"{datapath}/spectral_distribution.gif", png_files)
+                if irow == 0:
+                    if icol in [0, 1]:  # For the first two columns
+                        ax.set_title(titles[0], fontsize=fontsize+1)
+                    elif icol in [2, 3]:  # For the next two columns
+                        ax.set_title(titles[1], fontsize=fontsize+1)
+                    elif icol == 4:  # For the last column
+                        ax.set_title(titles[2], fontsize=fontsize+1)
+                if irow == 2:
+                    ax.set_xlabel(xlabel, labelpad=1, fontsize=fontsize)
+                ax.set_ylabel(ylabel, labelpad=1, fontsize=fontsize)
+
+        # Save figure and store png filename for gif conversion
+        png_file = os.path.join(plotter.datapath, f"spectral_distribution_{(irow * nx) + icol}.png")
+        plotter.finalise_plot(png_file, png_files, dpi, hspace=0.2, wspace=0.4)
+
+    # Convert all individual pngs to animated gif
+    plotter.png_to_gif(f"{plotter.datapath}/spectral_distribution.gif", png_files)
 
 
 def plot_spectra(datapath: str):

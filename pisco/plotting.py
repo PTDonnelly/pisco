@@ -11,7 +11,7 @@ class Plotter:
     """
     Class to contain useful plotting functions for the IASI dataset
     """
-    def __init__(self, datapath: str):
+    def __init__(self, datapath: str, target_year: str, target_month: str, target_days: List[str], target_file_part: Optional[str] = None):
         """
         Initializes the Plotter class with a given data path.
 
@@ -19,6 +19,9 @@ class Plotter:
             datapath (str): The path to the data directory.
         """
         self.datapath = datapath
+        self.target_year = target_year
+        self.target_month = target_month
+        self.target_days = target_days
         self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
         self.day_night_dictionary = {'night': 0, 'day': 1, 'twilight': 2}
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
@@ -59,7 +62,7 @@ class Plotter:
                     # Append the file path to the corresponding date
                     self.files_by_date[(year, month, day)].append(os.path.join(root, file))
     
-    def select_files(self, target_year: str, target_month: str, target_days: List[str], target_file_part: Optional[str] = None) -> List[str]:
+    def select_files(self) -> List[str]:
         """
         Selects files from the dictionary created by organize_files_by_date method
         based on a target year, month, days and file name part.
@@ -78,16 +81,11 @@ class Plotter:
         # Iterate through dictionary keys
         for (year, month, day), files in self.files_by_date.items():
             # Check if the year, month and day match your conditions
-            if year == target_year and month == target_month and day in target_days:
+            if year == self.target_year and month == self.target_month and day in self.target_days:
                 # Iterate through the files for this date
                 for file in files:
-                    # Check if the file name contains the target part
-                    if target_file_part == None:
-                        # Select file containing all measurements
-                        selected_files.append(file)
-                    elif target_file_part in file:
-                        # Select file containing specified measurements
-                        selected_files.append(file)
+                    # Select file containing all measurements
+                    selected_files.append(file)
 
         return selected_files
     
@@ -127,10 +125,6 @@ class Plotter:
                     df_filtered = pd.concat([df_filtered, df_temp])
 
             return df_filtered
-
-
-
-
 
 
     def finalise_plot(self, png_file: str, png_files: List[str], dpi: int, hspace: float = 0.1, wspace: float = 0.1):
