@@ -424,11 +424,11 @@ def plot_spatial_distribution_unity(datapath: str):
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{datapath}/unity.gif", png_files)
 
+
 def plot_spectral_distributon(datapath):
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
-    from mpl_toolkits.basemap import Basemap
     
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath)
@@ -451,8 +451,7 @@ def plot_spectral_distributon(datapath):
         print(ifile, file)
         # Initialize a new figure for the plot with three subplots
         fig = plt.figure(figsize=(10, 10), dpi=dpi)
-        gs = gridspec.GridSpec(3, 4, figure=fig)
-        axes = gs.subplots()  # Create the subplots from the GridSpec
+        axes = gridspec.GridSpec(3, 4, figure=fig).subplots()  # Create the subplots from the GridSpec
 
         # Get current file and load data
         df = pd.read_csv(file)
@@ -463,7 +462,7 @@ def plot_spectral_distributon(datapath):
         for iax, ax in enumerate(axes.flat):
             if iax % 3 == 0:
                 print(iax)
-                
+
     #         # plot_spectrum(file_groups, ifile, ax)
     #         ax.set_xlabel(r'Wavenumber (cm$^{-1}$)', labelpad=1, fontsize=fontsize)
     #         ax.set_ylabel(r'Radiance ($mWm^{-2}srm^{-1}m$)', labelpad=1, fontsize=fontsize)
