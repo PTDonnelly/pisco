@@ -227,13 +227,13 @@ def plot_spatial_distribution_2Dhist(datapath: str):
     }
 
     # Define plotting parameters
-    fontsize = 10
-    dpi = 720
+    fontsize = 8
+    dpi = 360
     png_files = []
 
     for ifile in range(len(target_days)):
         # Initialize a new figure for the plot with three subplots
-        fig, axs = plt.subplots(4, 2, figsize=(12, 12), dpi=dpi)
+        fig, axs = plt.subplots(4, 2, figsize=(10, 10), dpi=dpi)
         fig.suptitle(f"IASI Spectra in the North Atlantic: {target_year}-{target_month}-{target_days[ifile]}", fontsize=fontsize+5, y=0.95)
         
         for iax, (ax, (group, attrs)) in enumerate(zip(axs.flat, file_groups.items())):
@@ -252,7 +252,7 @@ def plot_spatial_distribution_2Dhist(datapath: str):
                 file = attrs["files"][ifile]
                 data = pd.read_csv(file, usecols=['Longitude', 'Latitude'])
                 # Plot the observations on the map as a 2D histogram
-                plotter.plot_geographical_heatmap(m, data, lon_range, lat_range, attrs["cmap"])
+                plotter.plot_geographical_heatmap(m, data, lon_range, lat_range, attrs["cmap"], histogram_resolution=0.5)
             
             # Add a title to the plot
             ax.set_title(attrs["title"], fontsize=fontsize+1)
