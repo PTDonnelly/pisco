@@ -3,7 +3,7 @@
     "L1C": true,
 
     // L2: bool, Specifies whether Level 2 data should be processed
-    "L2": false,
+    "L2": true,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": true,
@@ -24,7 +24,7 @@
     "year_list": [2019],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [2, 3, 4],
+    "month_list": [2],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
     "day_list": "all",
