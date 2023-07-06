@@ -169,10 +169,10 @@ def plot_spatial_distribution_2Dhist(plotter: object):
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     
-    def check_sub_df(sub_df: pd.DataFrame, phase: str) -> None:
+    def check_sub_df(datafile: str, sub_df: pd.DataFrame, phase: str) -> None:
         # Ensure the dataframe is not empty
         if sub_df.empty:
-            print(f"No data available for phase: {phase}")
+            print(f"{datafile}: \n    No data available for phase: {phase}")
         #     raise ValueError(f"No data available for phase: {phase}")
         # else:
         #     return
@@ -219,9 +219,9 @@ def plot_spatial_distribution_2Dhist(plotter: object):
             local_time = attrs["local_time"]
             phase = attrs["phase"]
             sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {local_time: [phase]})
-
+            
             # Check if DataFrame contains information
-            if not check_sub_df(sub_df, phase):
+            if not check_sub_df(datafile, sub_df, phase):
                 # Create a basemap of the world
                 m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
 
@@ -236,7 +236,7 @@ def plot_spatial_distribution_2Dhist(plotter: object):
         png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.1)
 
     # Convert all individual pngs to animated gif
-    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
+    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files, delete_png_files=False)
 
 
 def plot_spatial_distribution_unity(datapath: str):
@@ -454,7 +454,7 @@ def plot_spectral_distributon(plotter: object):
             # spectrum_error = (sub_df.max(axis=0) - sub_df.min(axis=0)) * 1000
             residuals = spectrum_error / spectrum_mean
 
-            for icol in range(nx):
+            for icol in range(5):
                 if icol == 0:
                     ax = fig.add_subplot(gs[irow, icol:icol+2])
                     plot_spectrum(ax, spectrum_wavenumbers, spectrum_mean, spectrum_error, phase, color)

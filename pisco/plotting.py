@@ -23,7 +23,7 @@ class Plotter:
         self.target_month = target_month
         self.target_days = target_days
         self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
-        self.day_night_dictionary = {'night': 0, 'day': 1, 'twilight': 2}
+        self.day_night_dictionary = {"night": 0, "day": 1, "twilight": 2}
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
 
     def _get_iasi_spectral_grid(self):
@@ -117,13 +117,11 @@ class Plotter:
             for day_night_str, cloud_phases_str in conditions_dict.items():
                 day_night = self.day_night_dictionary[day_night_str]
                 cloud_phases = [self.cloud_phase_dictionary[phase_str] for phase_str in cloud_phases_str]
-
                 for cloud_phase in cloud_phases:
                     mask_cloud_phase = df['Cloud Phase 1'] == cloud_phase
                     mask_day_night = df['Day Night Qualifier'] == day_night
                     df_temp = df[mask_cloud_phase & mask_day_night]
                     df_filtered = pd.concat([df_filtered, df_temp])
-
             return df_filtered
 
 
