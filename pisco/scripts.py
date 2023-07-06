@@ -163,12 +163,19 @@ def plot_spatial_distribution_scatter(datapath: str):
     plotter.png_to_gif(f"{datapath}/spatial_distribution.gif", png_files)
 
 
-def plot_spatial_distribution_2Dhist(datapath: str):
+def plot_spatial_distribution_2Dhist(plotter: object):
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
     from mpl_toolkits.basemap import Basemap
     
+    def check_sub_df(sub_df: pd.DataFrame, phase: str) -> None:
+        # Ensure the dataframe is not empty
+        if sub_df.empty:
+            raise ValueError(f"No data available for phase: {phase}")
+        else:
+            return
+        
     def plot_scatter(m: Basemap, file_groups, ifile):
         # Get all spectra
         all_files = plotter.select_files(target_year, target_month, target_days)
@@ -195,48 +202,63 @@ def plot_spatial_distribution_2Dhist(datapath: str):
         plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_mixed', 'night_mixed', 'darkorchid')        
         return
     
-    # Instantiate the Plotter and organise files
-    plotter = Plotter(datapath)
+    # Use Plotter to organise files
     plotter.organize_files_by_date()
 
-    # Define temporal range to plot
-    target_year = '2019'
-    target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 32)]
-
-    # Define spatial range to plot
-    lat_range = (30, 60)
-    lon_range = (-60, 0)
-
     # Select files in time range
-    day_icy_files = plotter.select_files(target_year, target_month, target_days, "day_icy")
-    night_icy_files = plotter.select_files(target_year, target_month, target_days, "night_icy")
-    day_liquid_files = plotter.select_files(target_year, target_month, target_days, "day_aqueous")
-    night_liquid_files = plotter.select_files(target_year, target_month, target_days, "night_aqueous")
-    day_mixed_files = plotter.select_files(target_year, target_month, target_days, "day_mixed")
-    night_mixed_files = plotter.select_files(target_year, target_month, target_days, "night_mixed")
-
-    # Define file groups and the plot attributes
-    file_groups = {
-        "dummy1": {"files": None, "cmap": None, "title": "Icy Spectra"},
-        "dummy2": {"files": None, "cmap": None, "title": "IASI Spectra"},
-        "day_icy": {"files": day_icy_files, "cmap": 'Blues', "title": "Ice Phase: Day"},
-        "night_icy": {"files": night_icy_files, "cmap": 'Blues', "title": "Ice Phase: Night"},
-        "day_liquid": {"files": day_liquid_files, "cmap": 'Greens', "title": "Liquid Phase: Day"},
-        "night_liquid": {"files": night_liquid_files, "cmap": 'Greens', "title": "Liquid Phase: Night"},
-        "day_mixed": {"files": day_mixed_files, "cmap": 'Purples', "title": "Mixed: Day"},
-        "night_mixed": {"files": night_mixed_files, "cmap": 'Purples', "title": "Mixed: Night"},
-    }
-
+    datafiles = plotter.select_files()
+    
     # Define plotting parameters
     fontsize = 8
     dpi = 360
     png_files = []
+    nx, ny = 3, 2
+    
+    titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
+    phases = ['icy', 'liquid', 'mixed']
+    colors = ['royalblue', 'forestgreen', 'darkorchid']
+
+    # Define spatial range to plot
+    lat_range = (30, 60)
+    lon_range = (-60, 0)
+    
+    # Define file groups and the plot attributes
+    plot_params = {
+        "day_icy": {"local_time": "day", "phase": "icy", "cmap": "Blues", "title": "Ice Phase: Day"},
+        "night_icy": {"local_time": "night", "phase": "icy", "cmap": "Blues", "title": "Ice Phase: Night"},
+        "day_liquid": {"local_time": "day", "phase": "liquid", "cmap": "Greens", "title": "Liquid Phase: Day"},
+        "night_liquid": {"local_time": "night", "phase": "liquid", "cmap": "Greens", "title": "Liquid Phase: Night"},
+        "day_mixed": {"local_time": "day", "phase": "mixed", "cmap": "Purples", "title": "Mixed: Day"},
+        "night_mixed": {"local_time": "night", "phase": "mixed", "cmap": "Purples", "title": "Mixed: Night"},
+    }
+
+    for ifile, datafile in enumerate(datafiles):
+        # Initialize a new figure for the plot with three subplots
+        fig = plt.figure(figsize=(15, 9), dpi=dpi)
+        axes = gridspec.GridSpec(ny, nx, figure=fig).subplots()
+        fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
+        
+        # Get current file and load data
+        df = pd.read_csv(datafile)
+
+        for iax, (ax, (group, attrs)) in enumerate(zip(axes.flat, plot_params.items())):
+            local_time = attrs["local_time"]
+            phase = attrs["phase"]
+            sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {local_time: [phase]}).filter(regex='Spectrum ')
+
+            # Make sure DataFrame is not empty
+            check_sub_df(sub_df, phase)
+
+            # Create a basemap of the world
+            m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
+
+            # Plot the observations on the map as a 2D histogram
+            plotter.plot_geographical_heatmap(sub_df, lon_range, lat_range, m, attrs["cmap"])
 
     for ifile in range(len(target_days)):
         # Initialize a new figure for the plot with three subplots
         fig = plt.figure(figsize=(10, 10), dpi=dpi)
-        gs = gridspec.GridSpec(4, 2, figure=fig)
+        gs = gridspec.GridSpec(3, 2, figure=fig)
         fig.suptitle(f"IASI Spectra in the North Atlantic: {target_year}-{target_month}-{target_days[ifile]}", fontsize=fontsize+5, y=0.95)
 
         axes = gs.subplots()  # Create the subplots from the GridSpec
@@ -425,7 +447,7 @@ def plot_spatial_distribution_unity(datapath: str):
     plotter.png_to_gif(f"{datapath}/unity.gif", png_files)
 
 
-def plot_spectral_distributon(plotter):
+def plot_spectral_distributon(plotter: object):
     import os
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -466,7 +488,6 @@ def plot_spectral_distributon(plotter):
     fontsize = 8
     dpi = 360
     png_files = []
-    nx, ny = 5, 3
     titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
     phases = ['icy', 'liquid', 'mixed']
     colors = ['royalblue', 'forestgreen', 'darkorchid']
@@ -474,7 +495,7 @@ def plot_spectral_distributon(plotter):
     for ifile, datafile in enumerate(datafiles):
         # Initialize a new figure for the plot with three subplots
         fig = plt.figure(figsize=(15, 9), dpi=dpi)
-        gs = gridspec.GridSpec(ny, nx, figure=fig)
+        gs = gridspec.GridSpec(3, 5, figure=fig)
         fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
         
         # Get current file and load data

@@ -188,7 +188,7 @@ class Plotter:
         return m
 
 
-    def plot_geographical_heatmap(self, m: Basemap, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, cmap: str, histogram_resolution: int=1):
+    def plot_geographical_heatmap(self, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str, histogram_resolution: int=1):
         """
         Function to plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
         
