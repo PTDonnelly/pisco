@@ -11,6 +11,6 @@ set -x
 # purging all module to be sure to not having interferaence with current environnement
 module purge
 # loading only needed module for sample
-module load python/meso-3.8
+module load /net/nfs/tools/meso-u20/modules/Python/python/meso-3.8
 # execute my program
-python run_pisco.py
+python /data/pdonnelly/github/pisco/run_pisco.py
