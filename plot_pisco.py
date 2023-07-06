@@ -436,7 +436,7 @@ def main():
     plotter = Plotter(datapath, target_year, target_month, target_days)
 
     # Plot data
-    plot_spatial_distribution_2Dhist(plotter)
+    # plot_spatial_distribution_2Dhist(plotter)
     plot_spectral_distributon(plotter)
 
 if __name__ == "__main__":
