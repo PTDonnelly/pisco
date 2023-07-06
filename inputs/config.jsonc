@@ -24,7 +24,7 @@
     "year_list": [2019],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [1],
+    "month_list": [2, 3, 4],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
     "day_list": "all",
