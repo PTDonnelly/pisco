@@ -93,10 +93,6 @@ def plot_spatial_distribution_2Dhist(plotter: object):
     fontsize = 8
     dpi = 150
     png_files = []
-    
-    titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
-    phases = ['icy', 'liquid', 'mixed']
-    colors = ['royalblue', 'forestgreen', 'darkorchid']
 
     # Define spatial range to plot
     lat_range = (30, 60)
