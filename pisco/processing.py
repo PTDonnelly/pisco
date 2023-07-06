@@ -13,6 +13,7 @@ class Processor:
         self.datapath_merged = f"{datapath_out}merged/{year}/{month}/{day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
+        self.reduced_fields: List[int] = None
 
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
@@ -66,7 +67,18 @@ class Processor:
         missing_headers_l2 = [header for header in required_headers if header not in self.df_l2.columns]
         if missing_headers_l1c or missing_headers_l2:
             raise ValueError(f"Missing required headers in df_l1c: {missing_headers_l1c} or df_l2: {missing_headers_l2}")
-        
+    
+    def _get_reduced_fields(self, df_columns: pd.DataFrame) -> None:
+        print(type(df_columns))
+        print(df_columns)
+        exit()
+        self.reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
+        return
+
+    def _reduce_fields(self, df: pd.DataFrame) -> None:
+        self._get_reduced_fields(df.columns)
+
+
     def correlate_measurements(self) -> None:
         """
         Create a single DataFrame for all contemporaneous observations 
@@ -82,14 +94,15 @@ class Processor:
         
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
-        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime', 'Local Time'], how='inner')
+        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
+        print(merged_df)
 
-        # Convert the DataFrame 'Local Time' column (np.array) to boolean values
-        merged_df['Local Time'] = merged_df['Local Time'].astype(bool)
-        merged_df.drop(columns=['Local Time'])
-
+        # Drop columns containing variables not present in self.reduced_fields
+        reduced_df = self._reduce_fields(merged_df)
+        print(reduced_df)
+        
         # Save observations
-        self._save_merged_products(merged_df)
+        self._save_merged_products(reduced_df)
         return
     
     def merge_spectra_and_cloud_products(self):

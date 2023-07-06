@@ -16,7 +16,7 @@ def main():
 
     # Plot map
     scripts.plot_spatial_distribution_2Dhist(plotter)
-    # scripts.plot_spectral_distributon(plotter)
+    scripts.plot_spectral_distributon(plotter)
 
 if __name__ == "__main__":
     main()

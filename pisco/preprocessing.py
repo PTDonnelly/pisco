@@ -64,7 +64,8 @@ class Metadata:
     
     def _read_record_size(self) -> int:
         self.f.seek(self.header_size + 8, 0)
-        self.record_size = np.fromfile(self.f, dtype='uint32', count=1)[0]
+        record_size = np.fromfile(self.f, dtype='uint32', count=1)
+        self.record_size = None if len(record_size) == 0 else record_size[0]
         return
     
     def _verify_header(self) -> None:
