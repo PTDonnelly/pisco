@@ -68,16 +68,14 @@ class Processor:
         if missing_headers_l1c or missing_headers_l2:
             raise ValueError(f"Missing required headers in df_l1c: {missing_headers_l1c} or df_l2: {missing_headers_l2}")
     
-    def _get_reduced_fields(self, df_columns: pd.DataFrame) -> None:
-        print(type(df_columns))
-        print(df_columns)
-        exit()
+    def _get_reduced_fields(self) -> None:
         self.reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
         return
 
     def _reduce_fields(self, df: pd.DataFrame) -> None:
         self._get_reduced_fields(df.columns)
-
+        spectrum_columns = [col for col in df if "Spectrum " in col]
+        return df.filter(self.reduced_fields + spectrum_columns)
 
     def correlate_measurements(self) -> None:
         """
@@ -100,7 +98,7 @@ class Processor:
         # Drop columns containing variables not present in self.reduced_fields
         reduced_df = self._reduce_fields(merged_df)
         print(reduced_df)
-        
+
         # Save observations
         self._save_merged_products(reduced_df)
         return
