@@ -42,6 +42,27 @@ class Processor:
         return
     
 
+    def _check_headers(self):
+        required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
+        missing_headers_l1c = [header for header in required_headers if header not in self.df_l1c.columns]
+        missing_headers_l2 = [header for header in required_headers if header not in self.df_l2.columns]
+        if missing_headers_l1c or missing_headers_l2:
+            raise ValueError(f"Missing required headers in df_l1c: {missing_headers_l1c} or df_l2: {missing_headers_l2}")
+        
+    def correlate_measurements(self) -> None:
+        """
+        Create a single DataFrame for all contemporaneous observations
+        """
+        # Check that latitude, longitude, datetime, and local time are present in both file headers 
+        self._check_headers()
+
+        # Latitude and longitude values are rounded to 2 decimal places.
+        decimal_places = 4
+        self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(decimal_places)
+        self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(decimal_places)
+        return
+    
+
     def _delete_intermediate_analysis_data(self) -> None:
         """
         Delete the intermediate analysis data files used for correlating spectra and clouds.
@@ -60,36 +81,24 @@ class Processor:
         # # Delete original csv files
         # self._delete_intermediate_analysis_data()
         pass
-
-    def _check_headers(self):
-        required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
-        missing_headers_l1c = [header for header in required_headers if header not in self.df_l1c.columns]
-        missing_headers_l2 = [header for header in required_headers if header not in self.df_l2.columns]
-        if missing_headers_l1c or missing_headers_l2:
-            raise ValueError(f"Missing required headers in df_l1c: {missing_headers_l1c} or df_l2: {missing_headers_l2}")
     
-    def _get_reduced_fields(self) -> None:
-        self.reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
-        return
+    @staticmethod
+    def _get_reduced_fields() -> List[int]:
+        return ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
 
-    def _reduce_fields(self, df: pd.DataFrame) -> None:
-        self._get_reduced_fields()
-        spectrum_columns = [col for col in df if "Spectrum " in col]
-        return df.filter(self.reduced_fields + spectrum_columns)
-
-    def correlate_measurements(self) -> None:
-        """
-        Create a single DataFrame for all contemporaneous observations,
-        remove unwanted columns, and save to CSV.
-        """
-        # Check that latitude, longitude, datetime, and local time are present in both file headers 
-        self._check_headers()
-
-        # Latitude and longitude values are rounded to 2 decimal places.
-        decimal_places = 4
-        self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(decimal_places)
-        self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(decimal_places)
-        return
+    def reduce_fields(self, df: pd.DataFrame) -> None:
+        # Merge two DataFrames based on latitude, longitude and datetime,
+        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
+        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
+        
+        # Keep only columns containing variables present in reduced_fields and spectral channels
+        reduced_fields = self._get_reduced_fields()
+        spectrum_columns = [col for col in merged_df if "Spectrum " in col]
+        reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
+        
+        # Save observations
+        self._save_merged_products(reduced_df)
+    
     
     def merge_spectra_and_cloud_products(self):
         # Load IASI spectra and cloud products
@@ -97,13 +106,6 @@ class Processor:
         
         # Correlates measurements, keep matching locations and times of observation
         self.correlate_measurements()
-
-        # Merge two DataFrames based on latitude, longitude and datetime,
-        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
-        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
-
-        # Drop columns containing variables not present in self.reduced_fields
-        reduced_df = self._reduce_fields(merged_df)
-
-        # Save observations
-        self._save_merged_products(reduced_df)
+        
+        # Merge DataFrames, dropping uncorrelated rows and unwated columns
+        reduced_df = self.reduce_fields()
