@@ -82,10 +82,10 @@ class Processor:
         # self._delete_intermediate_analysis_data()
         pass
     
-    @staticmethod
-    def _get_reduced_fields() -> List[int]:
-        return ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
-
+    def _get_reduced_fields(self) -> None:
+        self.reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
+        return
+    
     def reduce_fields(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
