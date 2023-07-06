@@ -86,13 +86,13 @@ class Processor:
     def _get_reduced_fields() -> List[int]:
         return ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
 
-    def reduce_fields(self, df: pd.DataFrame) -> None:
+    def reduce_fields(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
         
         # Keep only columns containing variables present in reduced_fields and spectral channels
-        reduced_fields = Processor._get_reduced_fields()
+        reduced_fields = self._get_reduced_fields()
         spectrum_columns = [col for col in merged_df if "Spectrum " in col]
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
         
@@ -108,4 +108,4 @@ class Processor:
         self.correlate_measurements()
         
         # Merge DataFrames, dropping uncorrelated rows and unwated columns
-        reduced_df = self.reduce_fields()
+        self.reduce_fields()
