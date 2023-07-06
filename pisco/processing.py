@@ -73,7 +73,7 @@ class Processor:
         return
 
     def _reduce_fields(self, df: pd.DataFrame) -> None:
-        self._get_reduced_fields(df.columns)
+        self._get_reduced_fields()
         spectrum_columns = [col for col in df if "Spectrum " in col]
         return df.filter(self.reduced_fields + spectrum_columns)
 
