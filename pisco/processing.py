@@ -79,8 +79,8 @@ class Processor:
 
     def correlate_measurements(self) -> None:
         """
-        Create a single DataFrame for all contemporaneous observations 
-        Then separate into day and night observations
+        Create a single DataFrame for all contemporaneous observations,
+        remove unwanted columns, and save to CSV.
         """
         # Check that latitude, longitude, datetime, and local time are present in both file headers 
         self._check_headers()
@@ -89,18 +89,6 @@ class Processor:
         decimal_places = 4
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(decimal_places)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(decimal_places)
-        
-        # Merge two DataFrames based on latitude, longitude and datetime,
-        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
-        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
-        print(merged_df)
-
-        # Drop columns containing variables not present in self.reduced_fields
-        reduced_df = self._reduce_fields(merged_df)
-        print(reduced_df)
-
-        # Save observations
-        self._save_merged_products(reduced_df)
         return
     
     def merge_spectra_and_cloud_products(self):
@@ -109,3 +97,13 @@ class Processor:
         
         # Correlates measurements, keep matching locations and times of observation
         self.correlate_measurements()
+
+        # Merge two DataFrames based on latitude, longitude and datetime,
+        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
+        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
+
+        # Drop columns containing variables not present in self.reduced_fields
+        reduced_df = self._reduce_fields(merged_df)
+
+        # Save observations
+        self._save_merged_products(reduced_df)
