@@ -127,11 +127,12 @@ class Plotter:
             return df_filtered
 
 
-    def finalise_plot(self, png_file: str, png_files: List[str], dpi: int, hspace: float = 0.1, wspace: float = 0.1):
+    def finalise_plot(self, filename: str, ifile: int, png_files: List[str], dpi: int, hspace: float = 0.1, wspace: float = 0.1):
         # Final adjustments
         plt.subplots_adjust(hspace=hspace, wspace=wspace)
 
         # Save figure
+        png_file = os.path.join(self.datapath, f"{filename}_{ifile}.png")
         plt.savefig(png_file, dpi=dpi, bbox_inches='tight')
         plt.close()
 

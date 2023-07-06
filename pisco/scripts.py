@@ -164,44 +164,19 @@ def plot_spatial_distribution_scatter(datapath: str):
 
 
 def plot_spatial_distribution_2Dhist(plotter: object):
+    import os
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
-    from mpl_toolkits.basemap import Basemap
     
     def check_sub_df(sub_df: pd.DataFrame, phase: str) -> None:
         # Ensure the dataframe is not empty
         if sub_df.empty:
-            raise ValueError(f"No data available for phase: {phase}")
-        else:
-            return
+            print(f"No data available for phase: {phase}")
+        #     raise ValueError(f"No data available for phase: {phase}")
+        # else:
+        #     return
         
-    def plot_scatter(m: Basemap, file_groups, ifile):
-        # Get all spectra
-        all_files = plotter.select_files(target_year, target_month, target_days)
-        all_data = pd.read_csv(all_files[ifile], usecols=['Longitude', 'Latitude'])
-        # Get icy spectra
-        day_icy_data = pd.read_csv(file_groups['day_icy']['files'][ifile], usecols=['Longitude', 'Latitude'])
-        night_icy_data = pd.read_csv(file_groups['day_icy']['files'][ifile], usecols=['Longitude', 'Latitude'])
-
-        # Plot the observations on the map
-        x, y = m(all_data['Longitude'].values, all_data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=1, color="silver", alpha=0.8)
-       
-        # Plot the observations on the map
-        x, y = m(day_icy_data['Longitude'].values, day_icy_data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=1.25, color="crimson")
-        
-        # Plot the observations on the map
-        x, y = m(night_icy_data['Longitude'].values, night_icy_data['Latitude'].values)
-        m.scatter(x, y, latlon=True, marker=".", s=1.25, color="crimson")
-
-    def plot_spectrum(file_groups: dict, ifile: int, ax: object):        
-        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_icy', 'night_icy', 'royalblue')
-        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_liquid', 'night_liquid', 'forestgreen')
-        plotter.plot_spectra_by_cloud_phase(ax, file_groups, ifile, 'day_mixed', 'night_mixed', 'darkorchid')        
-        return
-    
     # Use Plotter to organise files
     plotter.organize_files_by_date()
 
@@ -212,7 +187,6 @@ def plot_spatial_distribution_2Dhist(plotter: object):
     fontsize = 8
     dpi = 360
     png_files = []
-    nx, ny = 3, 2
     
     titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
     phases = ['icy', 'liquid', 'mixed']
@@ -234,69 +208,35 @@ def plot_spatial_distribution_2Dhist(plotter: object):
 
     for ifile, datafile in enumerate(datafiles):
         # Initialize a new figure for the plot with three subplots
-        fig = plt.figure(figsize=(15, 9), dpi=dpi)
-        axes = gridspec.GridSpec(ny, nx, figure=fig).subplots()
+        fig = plt.figure(figsize=(10, 8), dpi=dpi)
+        axes = gridspec.GridSpec(3, 2, figure=fig).subplots()
         fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
         
         # Get current file and load data
-        df = pd.read_csv(datafile)
+        df = pd.read_csv(datafile, usecols=['Longitude', 'Latitude', 'Cloud Phase 1', 'Day Night Qualifier'])
 
         for iax, (ax, (group, attrs)) in enumerate(zip(axes.flat, plot_params.items())):
             local_time = attrs["local_time"]
             phase = attrs["phase"]
-            sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {local_time: [phase]}).filter(regex='Spectrum ')
+            sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {local_time: [phase]})
 
-            # Make sure DataFrame is not empty
-            check_sub_df(sub_df, phase)
-
-            # Create a basemap of the world
-            m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
-
-            # Plot the observations on the map as a 2D histogram
-            plotter.plot_geographical_heatmap(sub_df, lon_range, lat_range, m, attrs["cmap"])
-
-    for ifile in range(len(target_days)):
-        # Initialize a new figure for the plot with three subplots
-        fig = plt.figure(figsize=(10, 10), dpi=dpi)
-        gs = gridspec.GridSpec(3, 2, figure=fig)
-        fig.suptitle(f"IASI Spectra in the North Atlantic: {target_year}-{target_month}-{target_days[ifile]}", fontsize=fontsize+5, y=0.95)
-
-        axes = gs.subplots()  # Create the subplots from the GridSpec
-
-        for iax, (ax, (group, attrs)) in enumerate(zip(axes.flat, file_groups.items())):
-            if iax == 0:
+            # Check if DataFrame contains information
+            if not check_sub_df(sub_df, phase):
                 # Create a basemap of the world
                 m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
-                plot_scatter(m, file_groups, ifile)
-            elif iax == 1:
-                plot_spectrum(file_groups, ifile, ax)
-                ax.set_xlabel(r'Wavenumber (cm$^{-1}$)', labelpad=1, fontsize=fontsize)
-                ax.set_ylabel(r'Radiance ($mWm^{-2}srm^{-1}m$)', labelpad=1, fontsize=fontsize)
-            elif iax > 1:
-                # Create a basemap of the world
-                m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
-                # Get current file and load data
-                file = attrs["files"][ifile]
-                data = pd.read_csv(file, usecols=['Longitude', 'Latitude'])
+
                 # Plot the observations on the map as a 2D histogram
-                plotter.plot_geographical_heatmap(m, data, lon_range, lat_range, attrs["cmap"])
+                plotter.plot_geographical_heatmap(sub_df, lon_range, lat_range, m, attrs["cmap"])
 
-            # Add a title to the plot
-            ax.set_title(attrs["title"], fontsize=fontsize+1)
+                # Add a title to the plot
+                ax.set_title(attrs["title"], fontsize=fontsize+1)
 
-        # Final adjustments
-        plt.subplots_adjust(hspace=0.35, wspace=0.1)
-
-        # Save figure
-        png_file = f"{datapath}/2D_hist_{ifile}.png"
-        plt.savefig(png_file, dpi=dpi, bbox_inches='tight')
-        plt.close()
-
-        # Append filename to list of png files
-        png_files.append(png_file)
+        # Save figure and store png filename for gif conversion
+        filename = "2D_hist"
+        png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.1)
 
     # Convert all individual pngs to animated gif
-    plotter.png_to_gif(f"{datapath}/2D_hist.gif", png_files)
+    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
 def plot_spatial_distribution_unity(datapath: str):
@@ -544,7 +484,7 @@ def plot_spectral_distributon(plotter: object):
 
         # Save figure and store png filename for gif conversion
         png_file = os.path.join(plotter.datapath, f"spectral_distribution_{ifile}.png")
-        plotter.finalise_plot(png_file, png_files, dpi, hspace=0.2, wspace=0.4)
+        png_files = plotter.finalise_plot(png_file, png_files, dpi, hspace=0.2, wspace=0.4)
 
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{plotter.datapath}/spectral_distribution.gif", png_files)
