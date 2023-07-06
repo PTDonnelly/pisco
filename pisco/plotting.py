@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter
 
 class Plotter:
     """
@@ -202,14 +203,48 @@ class Plotter:
         Returns:
         m (mpl_toolkits.basemap.Basemap): The same Basemap object.
         """
-        # Define bins
+        # Define bins and compute histogram
         lon_bins = np.arange(lon_range[0], lon_range[1]+1, grid)
         lat_bins = np.arange(lat_range[0], lat_range[1]+1, grid)
-
         H, xedges, yedges = np.histogram2d(data['Longitude'], data['Latitude'], bins=[lon_bins, lat_bins])
-        Lon, Lat = np.meshgrid(xedges, yedges)
-        x, y = m(Lon, Lat)
+
+        lon, lat = np.meshgrid(xedges, yedges)
+        x, y = m(lon, lat)
         m.pcolormesh(x, y, H.T, cmap=cmap)  # Transpose H to align with coordinate grid
+        return m
+    
+    def plot_geographical_contour(self, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str = 'cividis', grid: float = 1.0, levels: int = 10):
+        """
+        Function to plot a two-dimensional histogram (contour) on a Basemap object in the specified longitude and latitude ranges.
+        
+        Parameters:
+        data (pd.DataFrame): pandas DataFrame containing data values read from a CSV file.
+        lon_range (tuple): Tuple containing the minimum and maximum longitudes for the basemap.
+        lat_range (tuple): Tuple containing the minimum and maximum latitudes for the basemap.
+        m (mpl_toolkits.basemap.Basemap):Basemap object.
+        cmap (str): String name of the desired built-in colormap.
+        grid (float): float describing the spatial resolution of the histogram grid in degrees
+
+        Returns:
+        m (mpl_toolkits.basemap.Basemap): The same Basemap object.
+        """
+        # Define bins and compute histogram
+        lon_bins = np.arange(lon_range[0], lon_range[1]+1, grid)
+        lat_bins = np.arange(lat_range[0], lat_range[1]+1, grid)
+        H, xedges, yedges = np.histogram2d(data['Longitude'], data['Latitude'], bins=[lon_bins, lat_bins])
+
+        # Apply a Gaussian filter to the histogram
+        H = gaussian_filter(H, sigma=1)
+
+        # Compute bin centers from edges
+        xcenters = xedges[:-1] + 0.5 * (xedges[1:] - xedges[:-1])
+        ycenters = yedges[:-1] + 0.5 * (yedges[1:] - yedges[:-1])
+
+        lon, lat = np.meshgrid(xcenters, ycenters)
+        x, y = m(lon, lat)
+        
+        # Create a filled contour plot
+        m.contourf(x, y, H.T, levels=levels, cmap=cmap, antialiased=True)
         return m
     
     def plot_geographical_scatter(self, data: pd.DataFrame, m: Basemap, s: float = 1.0, alpha: float = 1.0, cmap: str = 'cividis'):

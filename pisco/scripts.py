@@ -226,12 +226,13 @@ def plot_spatial_distribution_2Dhist(plotter: object):
 
                 # Plot the observations on the map as a 2D histogram
                 plotter.plot_geographical_heatmap(sub_df, lon_range, lat_range, m, attrs["cmap"])
+                # plotter.plot_geographical_contour(sub_df, lon_range, lat_range, m, attrs["cmap"])
 
                 # Add a title to the plot
                 ax.set_title(attrs["title"], fontsize=fontsize+1)
 
         # Save figure and store png filename for gif conversion
-        filename = "2D_hist"
+        filename = "spectral_distribution"
         png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.1)
 
     # Convert all individual pngs to animated gif
@@ -482,7 +483,7 @@ def plot_spectral_distributon(plotter: object):
 
         # Save figure and store png filename for gif conversion
         filename = "spectral_distribution"
-        png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.2, wspace=0.4)
+        png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.4)
 
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{plotter.datapath}/spectral_distribution.gif", png_files)
