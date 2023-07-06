@@ -11,7 +11,6 @@
 
 ## Future
 
-- FOV limit condition, add to Preprocessor._get_indices(). Consider generalising this to other filter parameters too.
 - Parallelisation of run_pisco.py, this can be easily achieved with Python and multiple packages will be tested.
 - HDF5 output format if files tend to be too large
 - Think about implementing direct reading of binary structure or memory mapping with np.memmap() instead of np.fromfile(), for faster reading of values (for flagging and storing)

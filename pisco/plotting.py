@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 import imageio
 import numpy as np
 import pandas as pd
@@ -161,6 +161,7 @@ class Plotter:
                 os.remove(png_file)
 
 
+
     def create_basemap(self, lon_range: tuple, lat_range: tuple, ax, fontsize: int, resolution: str = "l"):
         """
         Function to create a Basemap with specified longitude and latitude ranges, and draw coastlines, meridians and parallels.
@@ -186,24 +187,24 @@ class Plotter:
         m.drawparallels(parallels, labels=[1,0,0,0], linewidth=0.5, dashes=[1, 1], fontsize=fontsize)
         return m
 
-
-    def plot_geographical_heatmap(self, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str, histogram_resolution: int=1):
+    def plot_geographical_heatmap(self, data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str = 'cividis', grid: float = 1.0):
         """
         Function to plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
         
         Parameters:
-        m (mpl_toolkits.basemap.Basemap):Basemap object.
         data (pd.DataFrame): pandas DataFrame containing data values read from a CSV file.
         lon_range (tuple): Tuple containing the minimum and maximum longitudes for the basemap.
         lat_range (tuple): Tuple containing the minimum and maximum latitudes for the basemap.
-        cmap (str): String naem of the desired built-in colormap.
-        
+        m (mpl_toolkits.basemap.Basemap):Basemap object.
+        cmap (str): String name of the desired built-in colormap.
+        grid (float): float describing the spatial resolution of the histogram grid in degrees
+
         Returns:
         m (mpl_toolkits.basemap.Basemap): The same Basemap object.
         """
         # Define bins
-        lon_bins = np.arange(lon_range[0], lon_range[1]+1, histogram_resolution)
-        lat_bins = np.arange(lat_range[0], lat_range[1]+1, histogram_resolution)
+        lon_bins = np.arange(lon_range[0], lon_range[1]+1, grid)
+        lat_bins = np.arange(lat_range[0], lat_range[1]+1, grid)
 
         H, xedges, yedges = np.histogram2d(data['Longitude'], data['Latitude'], bins=[lon_bins, lat_bins])
         Lon, Lat = np.meshgrid(xedges, yedges)
@@ -211,21 +212,21 @@ class Plotter:
         m.pcolormesh(x, y, H.T, cmap=cmap)  # Transpose H to align with coordinate grid
         return m
     
-    def plot_geographical_scatter(self):
-        pass
+    def plot_geographical_scatter(self, data: pd.DataFrame, m: Basemap, s: float = 1.0, alpha: float = 1.0, cmap: str = 'cividis'):
+        """
+        Function to plot a two-dimensional scatter on a Basemap object in the specified longitude and latitude ranges.
+        
+        Parameters:
+        data (pd.DataFrame): pandas DataFrame containing data values read from a CSV file.
+        m (mpl_toolkits.basemap.Basemap):Basemap object.
+        s (float): float describing the markersize (as default functionality)
+        alpha (float): float describing the marker opacity (as default functionality)
+        cmap (str): String name of the desired built-in colormap.
 
-
-    def gather_dataframe_spectra(self, file_groups: dict, ifile: int, df_name_1='day_icy', df_name_2='night_icy'):
-        df_1 = pd.read_csv(file_groups[df_name_1]['files'][ifile]).filter(regex='Spectrum ')
-        df_2 = pd.read_csv(file_groups[df_name_2]['files'][ifile]).filter(regex='Spectrum ')
-        merged_df = pd.concat([df_1, df_2], axis=0)
-        return self.get_dataframe_spectral_grid(merged_df), merged_df
-    
-    def plot_spectra_by_cloud_phase(self, ax, file_groups, ifile, df_name_1, df_name_2, color):
-        spectrum_wavenumbers, spectrum_merged_df = self.gather_dataframe_spectra(file_groups, ifile, df_name_1, df_name_2)
-        spectrum_mean = spectrum_merged_df.mean(axis=0) * 1000
-        spectrum_stddev = spectrum_merged_df.std(axis=0) * 1000
-        ax.plot(spectrum_wavenumbers, spectrum_mean, color=color, lw=1)
-        ax.fill_between(spectrum_wavenumbers, spectrum_mean-spectrum_stddev, spectrum_mean+spectrum_stddev, color=color, alpha=0.2)
-        ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
-        return
+        Returns:
+        m (mpl_toolkits.basemap.Basemap): The same Basemap object.
+        """
+        # Plot the observations on the map
+        x, y = m(data['Longitude'].values, data['Latitude'].values)
+        m.scatter(x, y, latlon=True, marker=".", s=s, cmap=cmap, alpha=alpha)
+        return m

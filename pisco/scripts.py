@@ -164,7 +164,6 @@ def plot_spatial_distribution_scatter(datapath: str):
 
 
 def plot_spatial_distribution_2Dhist(plotter: object):
-    import os
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
@@ -185,7 +184,7 @@ def plot_spatial_distribution_2Dhist(plotter: object):
     
     # Define plotting parameters
     fontsize = 8
-    dpi = 360
+    dpi = 150
     png_files = []
     
     titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
@@ -236,7 +235,7 @@ def plot_spatial_distribution_2Dhist(plotter: object):
         png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.1)
 
     # Convert all individual pngs to animated gif
-    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files, delete_png_files=False)
+    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
 def plot_spatial_distribution_unity(datapath: str):
@@ -388,7 +387,6 @@ def plot_spatial_distribution_unity(datapath: str):
 
 
 def plot_spectral_distributon(plotter: object):
-    import os
     import pandas as pd
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
@@ -426,7 +424,7 @@ def plot_spectral_distributon(plotter: object):
     
     # Define plotting parameters
     fontsize = 8
-    dpi = 360
+    dpi = 150
     png_files = []
     titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
     phases = ['icy', 'liquid', 'mixed']
@@ -483,8 +481,8 @@ def plot_spectral_distributon(plotter: object):
                 ax.set_ylabel(ylabel, labelpad=1, fontsize=fontsize)
 
         # Save figure and store png filename for gif conversion
-        png_file = os.path.join(plotter.datapath, f"spectral_distribution_{ifile}.png")
-        png_files = plotter.finalise_plot(png_file, png_files, dpi, hspace=0.2, wspace=0.4)
+        filename = "spectral_distribution"
+        png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.2, wspace=0.4)
 
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{plotter.datapath}/spectral_distribution.gif", png_files)
