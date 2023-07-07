@@ -325,6 +325,7 @@ def plot_spectral_distributon(plotter: object):
     titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
     phases = ['icy', 'liquid', 'mixed']
     colors = ['royalblue', 'forestgreen', 'darkorchid']
+    cmaps = ['Blues', 'Greens', 'Purples']
 
     for ifile, datafile in enumerate(datafiles):
         # Initialize a new figure for the plot with three subplots
@@ -335,17 +336,17 @@ def plot_spectral_distributon(plotter: object):
         # Get current file and load data
         df = pd.read_csv(datafile)
 
-        for irow, (phase, color) in enumerate(zip(phases, colors)):
-            sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': [phase], 'night': [phase]}).filter(regex='Spectrum ')
-
+        for irow, (phase, color, cmap) in enumerate(zip(phases, colors, cmaps)):
+            # Create smaller dataframe of spectra by cloud phase and local time, and convert to mW
+            sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': [phase], 'night': [phase]}).filter(regex='Spectrum ') * 1000
+            
             # Make sure DataFrame is not empty
             check_sub_df(sub_df, phase)
             
             # Calculate plotting data
             spectrum_wavenumbers = plotter.get_dataframe_spectral_grid(sub_df)
-            spectrum_mean = sub_df.mean(axis=0) * 1000
-            spectrum_error = sub_df.std(axis=0) * 1000
-            # spectrum_error = (sub_df.max(axis=0) - sub_df.min(axis=0)) * 1000
+            spectrum_mean = sub_df.mean(axis=0)
+            spectrum_error = sub_df.std(axis=0)
             residuals = spectrum_error / spectrum_mean
 
             for icol in range(5):
@@ -356,7 +357,8 @@ def plot_spectral_distributon(plotter: object):
                     ylabel = r'Radiance ($mWm^{-2}srm^{-1}m$)'
                 elif icol == 2:
                     ax = fig.add_subplot(gs[irow, icol:icol+2])
-                    plot_residuals(ax, spectrum_wavenumbers, residuals, color)
+                    plotter.plot_spectral_heatmap(sub_df, spectrum_mean, spectrum_wavenumbers, ax, cmap=cmap)
+                    # plot_residuals(ax, spectrum_wavenumbers, residuals, color)
                     xlabel = r'Wavenumber (cm$^{-1}$)'
                     ylabel = r'Normalised Error'
                 elif icol == 4:
@@ -377,11 +379,11 @@ def plot_spectral_distributon(plotter: object):
                 ax.set_ylabel(ylabel, labelpad=1, fontsize=fontsize)
 
         # Save figure and store png filename for gif conversion
-        filename = "spectral_distribution"
+        filename = "spectral_distribution_hist"
         png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.4)
 
     # Convert all individual pngs to animated gif
-    plotter.png_to_gif(f"{plotter.datapath}/spectral_distribution.gif", png_files)
+    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
 def plot_spectra(datapath: str):
@@ -430,7 +432,7 @@ def main():
     # Define temporal range to plot
     target_year = '2019'
     target_month = '01'
-    target_days = [str(day).zfill(2) for day in range(1, 32)]
+    target_days = [str(day).zfill(2) for day in range(1, 2)]
 
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath, target_year, target_month, target_days)

@@ -265,3 +265,47 @@ class Plotter:
         x, y = m(data['Longitude'].values, data['Latitude'].values)
         m.scatter(x, y, latlon=True, marker=".", s=s, cmap=cmap, alpha=alpha)
         return m
+
+    def plot_spectral_heatmap(self, data: pd.DataFrame, spectrum_mean: List[float], wavenumbers: List[int], ax: object, cmap: str = 'cividis', w_grid: float = 5.0, s_grid: float = 0.05):
+        """
+        Function to plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
+        
+        Parameters:
+        wavenumbers (List[float]): List containing float values of wavelengths for each spectral channel
+        data (pd.DataFrame): pandas DataFrame containing float values of radiance for each spectral channel
+        spectrum_mean (List[float]): List containing float values of mean radiance for each spectral channel
+        w_grid (float): float describing the spectral resolution of the histogram grid in wavenumbers
+        s_grid (float): float describing the radiance or radiance error resolution of the histogram grid in radiance units or dimensional fraction
+        cmap (str): String name of the desired built-in colormap.
+
+        Returns:
+        ax (matplotlib.axes.Axes): The same Axes object.
+        """
+        # Get extents of wavenumber grid
+        w_range = tuple((wavenumbers[0], wavenumbers[-1]))
+        # Get extents of spectral radiance
+        max_extent = data.abs().max().max()  # find the maximum absolute value in the DataFrame
+        s_range = tuple((-0.5, 0.5)) #tuple((-max_extent, max_extent))  # create symmetrical extents around 0
+
+        # Define bins and compute histogram
+        wavenumber_bins = np.arange(w_range[0], w_range[1] + (w_grid/10), w_grid)
+        data_bins = np.arange(s_range[0], s_range[1] + (s_grid/10), s_grid)
+
+        # Create an empty array to accumulate histogram data
+        H_accum = np.zeros((len(wavenumber_bins)-1, len(data_bins)-1))
+        
+        # Iterate over each spectrum in the data
+        for _, spectrum in data.iterrows():
+            residuals = np.subtract(spectrum.values, spectrum_mean)
+            normalised_residuals = np.divide(residuals, spectrum_mean)
+            # Calculate histogram for current spectrum and add it to the accumulated histogram
+            H, _, _ = np.histogram2d(wavenumbers, normalised_residuals, bins=[wavenumber_bins, data_bins])
+            H_accum += H
+        
+        # Divide the accumulated histogram by the number of spectra to get the average
+        H_average = np.divide(H_accum, data.shape[0])
+
+        # Plot the average histogram
+        X, Y = np.meshgrid(wavenumber_bins, data_bins)
+        ax.pcolormesh(X, Y, H_average.T, cmap=cmap)  # Transpose H_average to align with coordinate grid
+        return ax
