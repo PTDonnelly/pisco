@@ -6,7 +6,7 @@ import numpy as np
 from mpl_toolkits.basemap import Basemap
 import matplotlib.gridspec as gridspec
 
-from pisco import Plotter
+from pisco import Plotter, SpectralHeatmap
 
 def plot_spatial_distribution_scatter(datapath: str):
     # Instantiate the Plotter and organise files
@@ -76,13 +76,7 @@ def plot_spatial_distribution_scatter(datapath: str):
     plotter.png_to_gif(f"{datapath}/spatial_distribution.gif", png_files)
 
 
-def plot_spatial_distribution_2Dhist(plotter: object):    
-    def check_sub_df(datafile: str, sub_df: pd.DataFrame, phase: str) -> None:
-        # Ensure the dataframe is not empty
-        if sub_df.empty:
-            print(f"{datafile}: \n    No data available for phase: {phase}")
-            return False
-        
+def plot_spatial_distribution_2Dhist(plotter: object):        
     # Use Plotter to organise files
     plotter.organize_files_by_date()
 
@@ -126,7 +120,7 @@ def plot_spatial_distribution_2Dhist(plotter: object):
             m = plotter.create_basemap(lon_range, lat_range, ax, fontsize)
 
             # Check if DataFrame contains information
-            if not check_sub_df(datafile, sub_df, phase):
+            if not plotter.check_df(datafile, sub_df, phase):
                 # Plot the observations on the map as a 2D histogram
                 # plotter.plot_geographical_heatmap(sub_df, lon_range, lat_range, m, attrs["cmap"])
                 plotter.plot_geographical_contour(sub_df, lon_range, lat_range, m, attrs["cmap"])
@@ -286,14 +280,7 @@ def plot_spatial_distribution_unity(datapath: str):
     plotter.png_to_gif(f"{datapath}/unity.gif", png_files)
 
 
-def plot_spectral_distributon(plotter: object):    
-    def check_sub_df(sub_df: pd.DataFrame, phase: str) -> None:
-        # Ensure the dataframe is not empty
-        if sub_df.empty:
-            raise ValueError(f"No data available for phase: {phase}")
-        else:
-            return
-        
+def plot_spectral_distributon(plotter: object):            
     def plot_spectrum(ax, spectrum_wavenumbers, spectrum_mean, spectrum_error, phase, color):
         ax.plot(spectrum_wavenumbers, spectrum_mean, color=color, lw=1, label=phase)
         ax.fill_between(spectrum_wavenumbers, spectrum_mean-spectrum_error, spectrum_mean+spectrum_error, color=color, alpha=0.2)
@@ -302,10 +289,10 @@ def plot_spectral_distributon(plotter: object):
         ax.legend(loc='upper right')
 
     def plot_residuals(ax, spectrum_wavenumbers, residuals, color):
-        ax.plot(spectrum_wavenumbers, [0]*len(spectrum_wavenumbers), color=color, lw=1)
-        ax.fill_between(spectrum_wavenumbers, -residuals, residuals, color=color, alpha=0.2)
-        ax.set_xlim((spectrum_wavenumbers[0], spectrum_wavenumbers[-1]))
-        ax.set_ylim((-0.4, 0.401))
+        # ax.plot(spectrum_wavenumbers, [0]*len(spectrum_wavenumbers), color=color, lw=1)
+        # ax.fill_between(spectrum_wavenumbers, -residuals, residuals, color=color, alpha=0.2)
+        ax.plot(spectrum_wavenumbers, -residuals, color=color, lw=1)
+        ax.plot(spectrum_wavenumbers, residuals, color=color, lw=1)
 
     def plot_histogram(ax, residuals, color):
         ax.hist(residuals, bins=25, color=color, alpha=0.5)
@@ -318,9 +305,6 @@ def plot_spectral_distributon(plotter: object):
     # Select files in time range
     datafiles = plotter.select_files()
     
-    # Define plotting parameters
-    fontsize = 8
-    dpi = 150
     png_files = []
     titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
     phases = ['icy', 'liquid', 'mixed']
@@ -329,9 +313,9 @@ def plot_spectral_distributon(plotter: object):
 
     for ifile, datafile in enumerate(datafiles):
         # Initialize a new figure for the plot with three subplots
-        fig = plt.figure(figsize=(15, 9), dpi=dpi)
+        fig = plt.figure(figsize=(15, 9), dpi=plotter.dpi)
         gs = gridspec.GridSpec(3, 5, figure=fig)
-        fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
+        fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=plotter.fontsize+5, y=0.95)
         
         # Get current file and load data
         df = pd.read_csv(datafile)
@@ -340,50 +324,49 @@ def plot_spectral_distributon(plotter: object):
             # Create smaller dataframe of spectra by cloud phase and local time, and convert to mW
             sub_df = plotter.extract_by_cloud_phase_and_day_night(df, {'day': [phase], 'night': [phase]}).filter(regex='Spectrum ') * 1000
             
-            # Make sure DataFrame is not empty
-            check_sub_df(sub_df, phase)
-            
-            # Calculate plotting data
-            spectrum_wavenumbers = plotter.get_dataframe_spectral_grid(sub_df)
-            spectrum_mean = sub_df.mean(axis=0)
-            spectrum_error = sub_df.std(axis=0)
-            residuals = spectrum_error / spectrum_mean
+            # Check if DataFrame contains information
+            if not plotter.check_df(datafile, sub_df, phase):
+                # Calculate plotting data
+                wavenumbers = plotter.get_dataframe_spectral_grid(sub_df)
+                spectrum_mean = sub_df.mean(axis=0)
+                spectrum_error = sub_df.std(axis=0)
+                residuals = spectrum_error / spectrum_mean
 
-            for icol in range(5):
-                if icol == 0:
-                    ax = fig.add_subplot(gs[irow, icol:icol+2])
-                    plot_spectrum(ax, spectrum_wavenumbers, spectrum_mean, spectrum_error, phase, color)
-                    xlabel = r'Wavenumber (cm$^{-1}$)'
-                    ylabel = r'Radiance ($mWm^{-2}srm^{-1}m$)'
-                elif icol == 2:
-                    ax = fig.add_subplot(gs[irow, icol:icol+2])
-                    plotter.plot_spectral_heatmap(sub_df, spectrum_mean, spectrum_wavenumbers, ax, cmap=cmap)
-                    # plot_residuals(ax, spectrum_wavenumbers, residuals, color)
-                    xlabel = r'Wavenumber (cm$^{-1}$)'
-                    ylabel = r'Normalised Error'
-                elif icol == 4:
-                    ax = fig.add_subplot(gs[irow, icol])
-                    plot_histogram(ax, residuals, color)
-                    xlabel = r'Normalised Spread'
-                    ylabel = r'Counts'
+                for icol in range(5):
+                    if icol == 0:
+                        ax = fig.add_subplot(gs[irow, icol:icol+2])
+                        plot_spectrum(ax, wavenumbers, spectrum_mean, spectrum_error, phase, color)
+                        xlabel = r'Wavenumber (cm$^{-1}$)'
+                        ylabel = r'Radiance ($mWm^{-2}srm^{-1}m$)'
+                    elif icol == 2:
+                        ax = fig.add_subplot(gs[irow, icol:icol+2])
+                        ax = SpectralHeatmap(sub_df, wavenumbers).plot(ax, mode="mean", cmap=cmap)
+                        plot_residuals(ax, wavenumbers, residuals, color)
+                        xlabel = r'Wavenumber (cm$^{-1}$)'
+                        ylabel = r'Normalised Error'
+                    elif icol == 4:
+                        ax = fig.add_subplot(gs[irow, icol])
+                        plot_histogram(ax, residuals, color)
+                        xlabel = r'Normalised Spread'
+                        ylabel = r'Counts'
 
-                if irow == 0:
-                    if icol in [0, 1]:  # For the first two columns
-                        ax.set_title(titles[0], fontsize=fontsize+1)
-                    elif icol in [2, 3]:  # For the next two columns
-                        ax.set_title(titles[1], fontsize=fontsize+1)
-                    elif icol == 4:  # For the last column
-                        ax.set_title(titles[2], fontsize=fontsize+1)
-                if irow == 2:
-                    ax.set_xlabel(xlabel, labelpad=1, fontsize=fontsize)
-                ax.set_ylabel(ylabel, labelpad=1, fontsize=fontsize)
+                    if irow == 0:
+                        if icol in [0, 1]:  # For the first two columns
+                            ax.set_title(titles[0], fontsize=plotter.fontsize+1)
+                        elif icol in [2, 3]:  # For the next two columns
+                            ax.set_title(titles[1], fontsize=plotter.fontsize+1)
+                        elif icol == 4:  # For the last column
+                            ax.set_title(titles[2], fontsize=plotter.fontsize+1)
+                    if irow == 2:
+                        ax.set_xlabel(xlabel, labelpad=1, fontsize=plotter.fontsize)
+                    ax.set_ylabel(ylabel, labelpad=1, fontsize=plotter.fontsize)
 
         # Save figure and store png filename for gif conversion
         filename = "spectral_distribution_hist"
-        png_files = plotter.finalise_plot(filename, ifile, png_files, dpi, hspace=0.35, wspace=0.4)
+        png_files = plotter.finalise_plot(filename, ifile, png_files, plotter.dpi, hspace=0.35, wspace=0.4)
 
-    # Convert all individual pngs to animated gif
-    plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
+    # # Convert all individual pngs to animated gif
+    # plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
 def plot_spectra(datapath: str):
@@ -421,8 +404,6 @@ def plot_spectra(datapath: str):
     # Show the plot
     plt.savefig(f"{datapath}/average_spectra.png", dpi=540, bbox_inches='tight')
 
-
-
 def main():
     """
     """
@@ -434,8 +415,12 @@ def main():
     target_month = '01'
     target_days = [str(day).zfill(2) for day in range(1, 2)]
 
+    # Define plotting parameters
+    fontsize = 8
+    dpi = 150
+
     # Instantiate the Plotter and organise files
-    plotter = Plotter(datapath, target_year, target_month, target_days)
+    plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
 
     # Plot data
     # plot_spatial_distribution_2Dhist(plotter)
