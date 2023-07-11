@@ -1,5 +1,6 @@
 from typing import List
 import commentjson
+import os
 
 class Configurer:
     def __init__(self, path_to_config_file: str):
@@ -12,16 +13,23 @@ class Configurer:
             
         # Perform any necessary post-processing before executing
         self.latitude_range, self.longitude_range = tuple(self.latitude_range), tuple(self.longitude_range)
-        self.channels: List[int] = self.set_channels(self.channel_mode)
+        self.channels: List[int] = None
+        self.datapath_out = f"{self.datapath_out}{self.satellite_identifier}/"
+        os.makedirs(self.datapath_out, exist_ok=True)
     
     @staticmethod
     def set_channels(mode):
         # Set the list of IASI spectral channel indices
         if mode == "all":
-            # Defaults to maximum of 8461 channels
+            # Extract all 8461 IASI L1C spectral channels
             return [(i + 1) for i in range(8461)]
         elif mode == "range":
-            n = 1
-            return [(i + 1) for i in range(n)]
+            # Specify a subset of channels
+            start_channel = 1221
+            end_channel = 2020
+            return  [i for i in range(start_channel, end_channel+1)]
+        elif mode == "flag":
+            # Select single channel for fast processing
+            return [1]
         else:
-            raise ValueError('mode but be "all" or "range" for L1C reduction')
+            raise ValueError('mode must be "all", "range", or "flag" for L1C reduction')

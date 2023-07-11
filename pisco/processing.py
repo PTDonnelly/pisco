@@ -1,17 +1,19 @@
 import glob
 import os
 import pandas as pd
-from typing import Optional
+from typing import List, Optional
+
+import numpy as np
 
 class Processor:
     def __init__(self, datapath_out: str, year: str, month: str, day: str, cloud_phase: int):
         self.cloud_phase: int = cloud_phase
         self.datapath_l1c = f"{datapath_out}l1c/{year}/{month}/{day}/"
         self.datapath_l2 = f"{datapath_out}l2/{year}/{month}/{day}/"
+        self.datapath_merged = f"{datapath_out}merged/{year}/{month}/{day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
-        self.merged_df_day: object = None
-        self.merged_df_night: object = None
+        self.reduced_fields: List[int] = None
 
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
@@ -49,8 +51,7 @@ class Processor:
         
     def correlate_measurements(self) -> None:
         """
-        Create a single DataFrame for all contemporaneous observations 
-        Then separate into day and night observations
+        Create a single DataFrame for all contemporaneous observations
         """
         # Check that latitude, longitude, datetime, and local time are present in both file headers 
         self._check_headers()
@@ -59,21 +60,6 @@ class Processor:
         decimal_places = 4
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(decimal_places)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(decimal_places)
-        
-        # Merge two DataFrames based on latitude, longitude and datetime,
-        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
-        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime', 'Local Time'], how='inner')
-
-        # Convert the DataFrame 'Local Time' column (np.array) to boolean values
-        merged_df['Local Time'] = merged_df['Local Time'].astype(bool)
-        
-        # Split the DataFrame into two based on 'Local Time' column
-        self.merged_df_day = merged_df[merged_df['Local Time'] == True]
-        self.merged_df_night = merged_df[merged_df['Local Time'] == False]
-        
-        # Drop the 'Local Time' column from both DataFrames
-        self.merged_df_day = self.merged_df_day.drop(columns=['Local Time'])
-        self.merged_df_night = self.merged_df_night.drop(columns=['Local Time'])
         return
     
 
@@ -81,45 +67,45 @@ class Processor:
         """
         Delete the intermediate analysis data files used for correlating spectra and clouds.
         """
-        # os.remove(self.datafile_l1c)
-        # os.remove(self.datafile_l2)
+        os.remove(self.datafile_l1c)
+        os.remove(self.datafile_l2)
+        return
+    
+    def _save_merged_products(self, merged_df: pd.DataFrame) -> None:
+        # Create the output directory if it doesn't exist
+        os.makedirs(self.datapath_merged, exist_ok=True)
 
-    def _get_cloud_phase(self) -> Optional[str]:
-        """
-        Returns the cloud phase as a string based on the cloud phase value.
-        If the retrieved cloud phase is unknown or uncertain, returns None.
-        """
-        cloud_phase_dictionary = {1: "aqueous", 2: "icy", 3: "mixed", 4: "clear"}
-        cloud_phase = cloud_phase_dictionary.get(self.cloud_phase)
-        return None if cloud_phase is None else cloud_phase
+        print(f"Saving spectra to {self.datapath_merged}")
+        merged_df.to_csv(f"{self.datapath_merged}spectra_and_cloud_products.csv", index=False, mode='w')
 
-    def save_merged_data(self) -> None:
-        """
-        Save the merged DataFrame to a CSV file in the output directory.
-        If the output directory is unknown (because the cloud phase is unknown), print a message and return.
-        Delete the intermediate l1c and l2 products.
-        """
-        cloud_phase = self._get_cloud_phase()
-        if cloud_phase is None:
-            print("Cloud_phase is unknown or uncertain, skipping data.")
-        else:
-            print(f"Saving {cloud_phase} spectra to {self.datapath_l1c}")            
-            # Save the DataFrame to a file in csv format, split by local time
-            # df.to_hdf(f"{datapath_out}{datafile_out}.h5", key='df', mode='w')
-            self.merged_df_day.to_csv(f"{self.datapath_l1c}extracted_spectra_{cloud_phase}_day.csv", index=False, mode='w')
-            self.merged_df_night.to_csv(f"{self.datapath_l1c}extracted_spectra_{cloud_phase}_night.csv", index=False, mode='w')
-        
         # # Delete original csv files
         # self._delete_intermediate_analysis_data()
+        pass
+    
+    def _get_reduced_fields(self) -> None:
+        self.reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
         return
-
-
-    def correlate_spectra_with_cloud_products(self):
+    
+    def reduce_fields(self) -> None:
+        # Merge two DataFrames based on latitude, longitude and datetime,
+        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
+        merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
+        
+        # Keep only columns containing variables present in reduced_fields and spectral channels
+        reduced_fields = self._get_reduced_fields()
+        spectrum_columns = [col for col in merged_df if "Spectrum " in col]
+        reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
+        
+        # Save observations
+        self._save_merged_products(reduced_df)
+    
+    
+    def merge_spectra_and_cloud_products(self):
         # Load IASI spectra and cloud products
         self.load_data()      
         
         # Correlates measurements, keep matching locations and times of observation
         self.correlate_measurements()
         
-        # Saves the merged data, and deletes the original data.
-        self.save_merged_data()
+        # Merge DataFrames, dropping uncorrelated rows and unwated columns
+        self.reduce_fields()

@@ -55,7 +55,9 @@ class Extractor:
         # Check the data level
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
-            return f"/bdd/metopc/{self.data_level}/iasi/"
+            return f"/bdd/{self.config.satellite_identifier}/{self.data_level}/iasi/"
+        # elif  (self.data_level == 'l2'):
+        #     return f"/bdd/IASI/L2/"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -70,14 +72,26 @@ class Extractor:
         self.datapath_out = self._get_datapath_out()
 
 
-    def check_extracted_files(self, result: object) -> bool:
-        # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
-        if ("No L1C data files found" in result.stdout) or ("No L2 data files found" in result.stdout):
-            print(result.stdout)
-            os.remove(self.intermediate_file)
-            return False
+    def create_intermediate_filepath(self) -> None:
+        """
+        Creates the directory to save the output files, based on the input file name and time.
+        
+        Returns:
+            intermediate_file (str): the full path to the intermediate file produced by IASI extraction script.
+        """
+        if self.data_level == 'l1c':
+            # Get the output file name from the input file name
+            self.datafile_out = "extracted_spectra.bin"
+        elif self.data_level == 'l2':
+            self.datafile_out = "cloud_products.bin"
+            # self.datafile_out = self.datafile_in.split(",")[2]
         else:
-            return True
+            # If the data level is not 'l1c' or 'l2', raise an error
+            raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
+        
+        # Create the output directory if it doesn't exist
+        os.makedirs(self.datapath_out, exist_ok=True)
+        return f"{self.datapath_out}{self.datafile_out}"
 
 
     def _build_parameters(self) -> str:
@@ -90,16 +104,16 @@ class Extractor:
         # Define the parameters for the command
         if (self.data_level == 'l1c'):
             list_of_parameters = [
-                f"-d {self.datapath_in}",
+                f"-d {self.datapath_in}", # l1c data directory
                 f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",  # first and last day
                 f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
                 f"-of bin"  # output file format
             ]
         elif (self.data_level == 'l2'):
             list_of_parameters = [
-                f"-d2 {self.datapath_in}",
-                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",
-                f"-t2 {self.config.products}",
+                f"-d2 {self.datapath_in}", # l2 data directory
+                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}", # first and last day
+                f"-t2 {self.config.products}", # l2 products
                 f"-of bin"  # output file format
             ]
         # Join the parameters into a single string and return
@@ -172,28 +186,14 @@ class Extractor:
         return subprocess.CompletedProcess(args=command, returncode=return_code, stdout='\n'.join(command_output), stderr=None)
 
 
-
-    def create_intermediate_filepath(self) -> None:
-        """
-        Creates the directory to save the output files, based on the input file name and time.
-        
-        Returns:
-            intermediate_file (str): the full path to the intermediate file produced by IASI extraction script.
-        """
-        if self.data_level == 'l1c':
-            # Get the output file name from the input file name
-            self.datafile_out = "extracted_spectra.bin"
-        elif self.data_level == 'l2':
-            self.datafile_out = "cloud_products.bin"
-            # self.datafile_out = self.datafile_in.split(",")[2]
+    def check_extracted_files(self, result: object) -> bool:
+        # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
+        if ("No L1C data files found" in result.stdout) or ("No L2 data files found" in result.stdout):
+            print(result.stdout)
+            os.remove(self.intermediate_file)
+            return False
         else:
-            # If the data level is not 'l1c' or 'l2', raise an error
-            raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
-        
-        # Create the output directory if it doesn't exist
-        os.makedirs(self.datapath_out, exist_ok=True)
-        return f"{self.datapath_out}{self.datafile_out}"
-
+            return True
 
     def extract_files(self) -> Tuple[bool, str]:
         """
