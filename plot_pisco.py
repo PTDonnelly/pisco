@@ -349,7 +349,7 @@ def plot_spectral_distributon(plotter: object):
                             ax.set_title(titles[2], fontsize=plotter.fontsize+1)
                     if irow == 2:
                         ax.set_xlabel(xlabel, labelpad=1, fontsize=plotter.fontsize)
-                    ax.set_ylabel(ylabel, labelpad=1, fontsize=plotter.fontsize)
+                    ax.set_ylabel(ylabel, labelpad=2, fontsize=plotter.fontsize)
 
         # Save figure and store png filename for gif conversion
         filename = "spectral_distribution_hist"

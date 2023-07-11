@@ -463,6 +463,7 @@ class Spectrum():
         # Plot 1D histogram of all normalised and downsampled residuals
         ax.hist(downsampled_residuals, bins=number_of_bins, density=True, range=self.spectrum_range, color=color, alpha=0.5)
         ax.set_xlim(self.spectrum_range)
+        ax.set_ylim((0, 5))
         return ax
 
     def plot_histogram_2d(self, ax: plt.Axes, mode: str = '', cmap: str = 'cividis') -> plt.Axes:
