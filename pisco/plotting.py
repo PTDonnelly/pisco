@@ -29,6 +29,7 @@ class Plotter:
         self.day_night_dictionary = {"night": 0, "day": 1, "twilight": 2}
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
 
+    # IASI-specific methods
     def _get_iasi_spectral_grid(self):
         spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
         channels = spectral_grid[:, 0]
@@ -44,7 +45,7 @@ class Plotter:
         extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
         return extracted_wavenumbers
 
-
+    # File I/O methods
     def organize_files_by_date(self) -> None:
         """
         Organizes .csv files in the data directory by date.
@@ -92,6 +93,7 @@ class Plotter:
 
         return selected_files
     
+    # DataFrame manipulation methods
     @staticmethod
     def check_df(datafile: str, sub_df: pd.DataFrame, local_time: Optional[str] = None, phase: Optional[str] = None) -> bool:
         # Ensure the dataframe is not empty
@@ -138,6 +140,12 @@ class Plotter:
             return df_filtered
 
 
+    # Plot-related methods
+    @staticmethod
+    def get_color_from_cmap(cmap):
+        cmap = plt.get_cmap(cmap)
+        return cmap(0.75)
+    
     def finalise_plot(self, filename: str, ifile: int, png_files: List[str], dpi: int, hspace: float = 0.1, wspace: float = 0.1):
         # Final adjustments
         plt.subplots_adjust(hspace=hspace, wspace=wspace)
@@ -175,7 +183,11 @@ class Plotter:
 
 
 
-    def create_basemap(self, lon_range: tuple, lat_range: tuple, ax, resolution: str = "l"):
+class Geographic:
+    def __init__(self, fontsize: int = 10):
+        self.fontsize = fontsize
+
+    def create_basemap(self, ax, lon_range: tuple, lat_range: tuple, resolution: str = "l"):
         """
         Function to create a Basemap with specified longitude and latitude ranges, and draw coastlines, meridians and parallels.
         
@@ -201,9 +213,9 @@ class Plotter:
         return m
 
     @staticmethod
-    def plot_geographical_heatmap(data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str = 'cividis', grid: float = 1.0):
+    def plot_geographical_histogram_2d(data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str = 'cividis', grid: float = 1.0):
         """
-        Function to plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
+        Function to plot a two-dimensional histogram (histogram_2d) on a Basemap object in the specified longitude and latitude ranges.
         
         Parameters:
         data (pd.DataFrame): pandas DataFrame containing data values read from a CSV file.
@@ -225,7 +237,7 @@ class Plotter:
         x, y = m(lon, lat)
         m.pcolormesh(x, y, H.T, cmap=cmap)  # Transpose H to align with coordinate grid
         return m
-    
+
     @staticmethod
     def plot_geographical_contour(data: pd.DataFrame, lon_range: tuple, lat_range: tuple, m: Basemap, cmap: str = 'cividis', grid: float = 1.0, levels: int = 10):
         """
@@ -282,7 +294,8 @@ class Plotter:
         return m
 
 
-class SpectralHeatmap():
+
+class Spectrum():
     def __init__(self, data: pd.DataFrame, wavenumbers: List[float], wavenumber_grid: float = 5.0, spectrum_grid: float = 0.05):
         """
         Initialise SpectralHeatmap with data, wavenumbers and optional parameters w_grid and spectrum_grid.
@@ -302,9 +315,33 @@ class SpectralHeatmap():
         self.spectrum_range: Tuple[float] = None
         self.wavenumber_bins: List[float] = None
         self.spectrum_bins: List[float] = None
+        self.all_residuals: np.array = None
+        self.histogram_2d: np.array = None
+        self.x_positions: np.array = None
+        self.y_positions: np.array = None
 
-    @staticmethod
-    def transform_histogram_into_scatter(H: np.ndarray, xedges: np.ndarray, yedges: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def get_axis_ranges(self) -> None:
+        # Set up wavenumber and spectrum ranges
+        self.wavenumber_range = tuple((self.wavenumbers[0], self.wavenumbers[-1]))
+        max_extent = self.data.abs().max().max()  
+        self.spectrum_range = tuple((-1, 1)) #tuple((-max_extent, max_extent))
+        return
+    
+    def get_bins(self) -> None:
+        self.wavenumber_bins = np.arange(self.wavenumber_range[0], self.wavenumber_range[1] + (self.wavenumber_grid / 10), self.wavenumber_grid)
+        self.spectrum_bins = np.arange(self.spectrum_range[0], self.spectrum_range[1] + (self.spectrum_grid / 10), self.spectrum_grid)
+        return
+    
+    def build(self) -> None:        
+        # Set up wavenumber and data ranges
+        self.get_axis_ranges()
+
+        # Generate bins for wavenumbers and data
+        self.get_bins()
+        return
+    
+
+    def _transform_histogram_2d_into_scatter(self) -> None:
         """
         Transform histogram into a scatter plot data.
 
@@ -316,17 +353,17 @@ class SpectralHeatmap():
         Returns:
         Tuple containing the normalised histogram and the x and y centres.
         """
-        xcentres = (xedges[:-1] + xedges[1:]) / 2
-        ycentres = (yedges[:-1] + yedges[1:]) / 2
+        xcentres = (self.x_positions[:-1] + self.x_positions[1:]) / 2
+        ycentres = (self.y_positions[:-1] + self.y_positions[1:]) / 2
 
-        H = H.flatten()
-        xcentres = np.repeat(xcentres, len(ycentres))
-        ycentres = np.tile(ycentres, len(xedges)-1)
+        self.histogram_2d = self.histogram_2d.flatten()
+        self.x_positions = np.repeat(xcentres, len(ycentres))
+        self.y_positions = np.tile(ycentres, len(self.x_positions)-1)
 
-        H_normalised = H / H.max()
-        return H_normalised, xcentres, ycentres
+        self.histogram_2d = self.histogram_2d / self.histogram_2d.max()
+        return
     
-    def compute_single_histogram(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute_single_histogram_2d(self) -> None:
         """
         Compute a 2D histogram for a single spectrum.
 
@@ -334,96 +371,103 @@ class SpectralHeatmap():
         Tuple containing the histogram, the xedges and yedges.
         """
         # Compute 2D histogram
-        H, xedges, yedges = np.histogram2d(self.wavenumbers, self.data.values.flatten(), bins=[self.wavenumber_bins, self.spectrum_bins])
-        H = np.nan_to_num(H)
-        return H, xedges, yedges
-
-    def compute_mean_histogram(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        self.histogram_2d, self.x_positions, self.y_positions = np.histogram2d(self.wavenumbers, self.data.values.flatten(), bins=[self.wavenumber_bins, self.spectrum_bins])
+        self.histogram_2d = np.nan_to_num(self.histogram_2d)
+        return
+    
+    def compute_mean_histogram_2d(self) -> None:
         """
         Compute a 2D histogram for mean spectrum.
 
         Returns:
         Tuple containing the average histogram, the xedges and yedges.
         """
+        # Calculate all residuals and normalised residuals at once
+        residuals = np.subtract(self.data, self.spectrum_mean)
+        normalised_residuals = np.divide(residuals, self.spectrum_mean)
+        
         # Initialize histogram accumulator
-        H_accum = np.zeros((len(self.wavenumber_bins) - 1, len(self.spectrum_bins) - 1))
+        total_histogram = np.zeros((len(self.wavenumber_bins) - 1, len(self.spectrum_bins) - 1))
 
-        # Loop over data to accumulate histograms
-        for _, spectrum in self.data.iterrows():
-            residuals = np.subtract(spectrum.values, self.spectrum_mean)
-            normalised_residuals = np.divide(residuals, self.spectrum_mean)
-            H, xedges, yedges = np.histogram2d(self.wavenumbers, normalised_residuals, bins=[self.wavenumber_bins, self.spectrum_bins])
-            H_accum += H
+        # Calculate 2D histogram for each spectrum and accumulate
+        for i in range(normalised_residuals.shape[0]):
+            histogram, xedges, yedges = np.histogram2d(self.wavenumbers, normalised_residuals.iloc[i], bins=[self.wavenumber_bins, self.spectrum_bins])
+            total_histogram += histogram
+
+        # Flatten normalised residuals into 1D list
+        self.all_residuals = normalised_residuals.values.flatten().tolist()
 
         # Average accumulated histogram and replace NaN values with zero
-        H_average = np.divide(H_accum, self.data.shape[0])
-        H_average = np.nan_to_num(H_average)
-        return H_average, xedges, yedges
+        self.histogram_2d = np.divide(total_histogram, self.data.shape[0])
+        self.histogram_2d = np.nan_to_num(self.histogram_2d)
 
-    def get_axis_ranges(self) -> None:
-        # Set up wavenumber and spectrum ranges
-        self.wavenumber_range = tuple((self.wavenumbers[0], self.wavenumbers[-1]))
-        max_extent = self.data.abs().max().max()  
-        self.spectrum_range = tuple((-max_extent, max_extent))
+        # Set x and y positions for bins
+        self.x_positions = xedges
+        self.y_positions = yedges
         return
-    
-    def get_bins(self) -> None:
-        self.wavenumber_bins = np.arange(self.wavenumber_range[0], self.wavenumber_range[1] + (self.wavenumber_grid / 10), self.wavenumber_grid)
-        self.spectrum_bins = np.arange(self.spectrum_range[0], self.spectrum_range[1] + (self.spectrum_grid / 10), self.spectrum_grid)
-        return
-    
-    def construct_spectral_heatmap(self, mode: str) -> plt.Axes:
+
+
+    def plot_spectrum(self, ax: plt.Axes, phase: Optional[str], color: str = 'black'):
+        # Convert DataFrame to numpy array
+        data_array = self.data.values
+
+        # Calculate the maximum and minimum values for each wavelength
+        max_values = np.max(data_array, axis=0)
+        min_values = np.min(data_array, axis=0)
+
+        # Plot mean spectrum and range
+        ax.plot(self.wavenumbers, self.spectrum_mean, color=color, lw=1, label=phase)
+        ax.fill_between(self.wavenumbers, min_values, max_values, color=color, lw=1, alpha=0.2)
+        ax.set_xlim(self.wavenumber_range)
+        ax.set_ylim((0, 1.01))
+        ax.legend(loc='upper right')
+        return ax
+
+    def plot_histogram2d_in_histogram1d(self, ax: plt.Axes, color: str = 'color') -> plt.Axes:
         """
-        Build a two-dimensional histogram (heatmap) from spectral data. The value of the "mode" argument determines
-        which instance methods to run to computer the desired histogram.
+        Plot a one-dimensional histogram from all counts in histogram_2d.
         
         Parameters:
-        mode (str): String containing instructions on the kind of histogram to be plotted.
+        ax (matplotlib.axes.Axes): Axes object on which histogram will be plotted.
+        color (str): String name of the desired built-in color, default 'black'.
 
         Returns:
-        histogram (np.Array): Numpy nd.array containing the 2-D histogram data
-        x_positions (np.Array): Numpy nd.array containing the x_ positions (xedges for hsitogram and xcentres for scatter)
-        y_positions (np.Array): Numpy nd.array containing the x_ positions (yedges for hsitogram and ycentres for scatter)
+        ax (matplotlib.axes.Axes): The same Axes object with the plotted histogram_2d.
         """
-        # Define a dictionary mapping keywords to the corresponding functions for computing histograms
-        compute_histogram_funcs = {
-            "single": self.compute_single_histogram,
-            "mean": self.compute_mean_histogram,
-        }
-        
-        # Define a dictionary mapping keywords to the corresponding functions for transforming histograms
-        transform_histogram_funcs = {
-            "scatter": self.transform_histogram_into_scatter,
-            "default": lambda H, xedges, yedges: (H, xedges, yedges)
-        }
-        
-        # Iterate over compute_histogram_funcs to find which function to use based on the mode
-        for key in compute_histogram_funcs:
-            if key in mode:
-                compute_func = compute_histogram_funcs[key]  # Set the compute function based on the mode
-                break
-        else:
-            # If the loop doesn't break, raise an error that the input mode doesn't contain any of the expected keywords
-            raise ValueError(f"Plot mode == {mode} must contain 'mean' or 'single'")
+        # Flatten the 2D histogram into a 1D array
+        histogram = self.histogram_2d.flatten()
 
-        # Iterate over transform_histogram_funcs to find which function to use based on the mode
-        for key in transform_histogram_funcs:
-            if key in mode:
-                transform_func = transform_histogram_funcs[key]  # Set the transform function based on the mode
-                break
-        else:
-            # If the loop doesn't break set the transform function to the default transform function
-            transform_func = transform_histogram_funcs["default"]
+        # Calculate the range of values in the histogram
+        hmin, hmax = np.min(histogram), np.max(histogram)
+        print(hmin, hmax)
+        # Plot 1D histogram of 2D histogram values
+        ax.hist(histogram, bins=25, color=color, alpha=0.5, range=(hmin, hmax))
+        # ax.set_xlim((-2, 2))
+        # # ax.set_ylim((0, 251))
+        return ax
 
-        # Call the compute function to get histogram data
-        histogram, x_positions, y_positions = compute_func()
-
-        # Apply the transformation to the histogram data and return the result
-        return transform_func(histogram, x_positions, y_positions)
-
-    def plot(self, ax: plt.Axes, mode: str, cmap: str = 'cividis') -> plt.Axes:
+    def plot_residuals_histogram_1d(self, ax: plt.Axes, number_of_bins: int = 20, color: str = 'black') -> plt.Axes:
         """
-        Plot a two-dimensional histogram (heatmap) on a Basemap object in the specified longitude and latitude ranges.
+        Plot a one-dimensional histogram from all y-values collected when creating the 2-D heatmap.
+
+        Parameters:
+        ax (matplotlib.axes.Axes): Axes object on which histogram will be plotted.
+        color (str): String name of the desired built-in color, default 'black'.
+
+        Returns:
+        ax (matplotlib.axes.Axes): The same Axes object with the plotted histogram.
+        """
+        # Convert to lower precision data type
+        downsampled_residuals = np.asarray(self.all_residuals).astype(np.float16)
+
+        # Plot 1D histogram of all normalised and downsampled residuals
+        ax.hist(downsampled_residuals, bins=number_of_bins, density=True, range=self.spectrum_range, color=color, alpha=0.5)
+        ax.set_xlim(self.spectrum_range)
+        return ax
+
+    def plot_histogram_2d(self, ax: plt.Axes, mode: str = '', cmap: str = 'cividis') -> plt.Axes:
+        """
+        Plot a two-dimensional histogram of a set of spectra.
         
         Parameters:
         ax (matplotlib.axes.Axes): Axes object on which histogram will be plotted.
@@ -431,37 +475,15 @@ class SpectralHeatmap():
         cmap (str): String name of the desired built-in colormap, default 'cividis'.
 
         Returns:
-        ax (matplotlib.axes.Axes): The same Axes object with the plotted heatmap.
+        ax (matplotlib.axes.Axes): The same Axes object with the plotted histogram_2d.
         """
-        # Check if mode parameter is a string
-        if not isinstance(mode, str):
-            raise ValueError("Mode must be a string.")
-        
-        # Set up wavenumber and data ranges
-        self.get_axis_ranges()
-
-        # Generate bins for wavenumbers and data
-        self.get_bins()
-
-        # Build a two-dimensional histogram (heatmap) from spectral data.
-        histogram, x_positions, y_positions = self.construct_spectral_heatmap(mode)
-        
-        # Define a dictionary mapping keywords to the corresponding functions for plotting histograms
-        plot_histogram_funcs = {
-            "scatter": lambda: ax.scatter(x_positions, y_positions, c=histogram, s=5, cmap=cmap, alpha=histogram),
-            "default": lambda: ax.pcolormesh(*np.meshgrid(x_positions, y_positions), histogram.T, cmap=cmap) 
-        }
-
-        # Iterate over plot_histogram_funcs to find which function to use based on the mode
-        for key in plot_histogram_funcs:
-            if key in mode:
-                plot_func = plot_histogram_funcs[key]  # Set the plot function based on the mode
-                break
+        if "scatter" in mode:
+            self._transform_histogram_into_scatter()
+            ax.scatter(self.x_positions, self.y_positions, c=self.histogram_2d, s=5, cmap=cmap, alpha=self.histogram_2d)
         else:
-            # If the loop doesn't break set the transform function to the default transform function
-            plot_func = plot_histogram_funcs["default"]
-        
-        plot_func()  # Call the selected plot function
+            X, Y = np.meshgrid(self.x_positions, self.y_positions)
+            ax.pcolormesh(X, Y, self.histogram_2d.T, cmap=cmap) 
+
         ax.set_xlim(self.wavenumber_range)
         ax.set_ylim(self.spectrum_range)
         return ax
