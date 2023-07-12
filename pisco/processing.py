@@ -13,7 +13,6 @@ class Processor:
         self.datapath_merged = f"{datapath_out}merged/{year}/{month}/{day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
-        self.reduced_fields: List[int] = None
 
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
@@ -83,8 +82,8 @@ class Processor:
         pass
     
     def _get_reduced_fields(self) -> None:
-        self.reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
-        return
+        reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
+        return reduced_fields
     
     def reduce_fields(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
