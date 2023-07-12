@@ -70,16 +70,16 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
-    def _save_merged_products(self, merged_df: pd.DataFrame) -> None:
+    def _save_merged_products(self, merged_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_merged, exist_ok=True)
 
         print(f"Saving spectra to {self.datapath_merged}")
         merged_df.to_csv(f"{self.datapath_merged}spectra_and_cloud_products.csv", index=False, mode='w')
 
-        # # Delete original csv files
-        # self._delete_intermediate_analysis_data()
-        pass
+        if delete_obr_files == True:
+            # Delete original csv files
+            self._delete_intermediate_analysis_data()
     
     @staticmethod
     def _get_reduced_fields() -> List[str]:
