@@ -391,7 +391,7 @@ class Spectrum():
 
         # Calculate 2D histogram for each spectrum and accumulate
         for i in range(normalised_residuals.shape[0]):
-            histogram, xedges, yedges = np.histogram2d(self.wavenumbers, normalised_residuals.iloc[i], bins=[self.wavenumber_bins, self.spectrum_bins])
+            histogram, xedges, yedges = np.histogram2d(self.wavenumbers, normalised_residuals.iloc[i], density=True, bins=[self.wavenumber_bins, self.spectrum_bins])
             total_histogram += histogram
 
         # Flatten normalised residuals into 1D list

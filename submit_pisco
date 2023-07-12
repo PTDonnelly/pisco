@@ -7,7 +7,7 @@
 #SBATCH --mem=10GB
 
 # to debug script could be interessant to have
-set -x
+# set -x
 # purging all module to be sure to not having interferaence with current environnement
 module purge
 # loading only needed module for sample

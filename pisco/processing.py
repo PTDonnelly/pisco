@@ -101,6 +101,9 @@ class Processor:
     
     
     def merge_spectra_and_cloud_products(self):
+        """
+        Intended to be operated on a specific day, e.g. in the nested year-month-day loop of the default run_pisco.py
+        """
         # Load IASI spectra and cloud products
         self.load_data()      
         

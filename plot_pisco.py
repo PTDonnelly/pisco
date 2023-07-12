@@ -290,7 +290,7 @@ def plot_spectral_distributon(plotter: object):
     datafiles = plotter.select_files()
     
     png_files = []
-    titles = ['Spectrum', 'Normalised Residuals', 'Histogram-Residuals']
+    titles = ['Spectrum', 'Normalised Residuals', 'Normalised Residuals']
     phases = ['icy', 'liquid', 'mixed']
     cmaps = ['Blues', 'Greens', 'Purples']
 
