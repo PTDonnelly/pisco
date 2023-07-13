@@ -3,7 +3,7 @@
 # --ntasks=x to give the number of mpi process
 #SBATCH --ntasks=1
 # asking time could be in minute 120 or 2:00:00  or 1-00:00:00(24H)
-#SBATCH --time 24:00:00
+#SBATCH --time 72:00:00
 #SBATCH --mem=10GB
 
 # to debug script could be interessant to have
