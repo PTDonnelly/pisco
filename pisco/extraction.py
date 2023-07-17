@@ -185,10 +185,15 @@ class Extractor:
         # Create a CompletedProcess object that contains the result of execution
         return subprocess.CompletedProcess(args=command, returncode=return_code, stdout='\n'.join(command_output), stderr=None)
 
+    @staticmethod
+    def _get_l2_products_for_file_check(products):
+        return products.split(',')
 
     def check_extracted_files(self, result: object) -> bool:
+        products = self._get_l2_products_for_file_check(self.config.products)
+
         # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
-        if ("No L1C data files found" in result.stdout) or ("No L2 data files found" in result.stdout):
+        if "No L1C data files found" in result.stdout or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
             print(result.stdout)
             os.remove(self.intermediate_file)
             return False

@@ -64,8 +64,7 @@ class Metadata:
     
     def _read_record_size(self) -> int:
         self.f.seek(self.header_size + 8, 0)
-        record_size = np.fromfile(self.f, dtype='uint32', count=1)
-        self.record_size = None if len(record_size) == 0 else record_size[0]
+        self.record_size = np.fromfile(self.f, dtype='uint32', count=1)[0]
         return
     
     def _verify_header(self) -> None:
@@ -87,7 +86,6 @@ class Metadata:
         # Check if header sizes match
         assert self.header_size == header_size_check, "Header size mismatch"
 
-    
     def _read_iasi_common_header_metadata(self) -> None:
         """
         Reads the header of the binary file to obtain the header size and number of channels.
