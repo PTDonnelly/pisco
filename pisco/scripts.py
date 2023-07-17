@@ -4,7 +4,6 @@ import numpy as np
 from .extraction import Extractor
 from .preprocessing import Preprocessor
 from .processing import Processor
-from .plotting import Plotter
 
 def flag_data(ex: Extractor, data_level: str):
     """This function is a truncated form of the main preprocess_iasi function, but bypasses most
