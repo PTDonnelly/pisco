@@ -67,8 +67,8 @@ def preprocess_iasi(ex: Extractor, valid_indices: np.array, data_level: str):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
-        p = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
-        p.preprocess_files(ex.year, ex.month, ex.day, valid_indices)
+        pre = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
+        pre.preprocess_files(ex.year, ex.month, ex.day, valid_indices)
     return
 
 
@@ -85,6 +85,11 @@ def process_iasi(ex: Extractor):
     Result:
         A CSV file containing all spectra at those locations and times.
     """  
-    p = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
-    p.merge_spectra_and_cloud_products()
+    # Instantiate a Processor class 
+    pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
+
+    # Check that both L1C and L2 data exist
+    if pro.check_l1c_l2_data_exist():
+        # Merge data sets
+        pro.merge_spectra_and_cloud_products()
     return
