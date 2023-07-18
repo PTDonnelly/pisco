@@ -91,6 +91,8 @@ class Extractor:
         
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_out, exist_ok=True)
+        print(self.datapath_out)
+        input()
         return f"{self.datapath_out}{self.datafile_out}"
 
 
