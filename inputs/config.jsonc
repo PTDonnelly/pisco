@@ -1,6 +1,6 @@
 {
     // L1C: bool, Specifies whether Level 1C data should be processed
-    "L1C": true,
+    "L1C": false,
 
     // L2: bool, Specifies whether Level 2 data should be processed
     "L2": true,
