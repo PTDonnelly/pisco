@@ -11,6 +11,7 @@
 
 ## Future
 
+- Class containing all filepaths for data reading and writing, instead of being distributed throughout the other classes.
 - Parallelisation of run_pisco.py, this can be easily achieved with Python and multiple packages will be tested.
 - HDF5 output format if files tend to be too large
 - Think about implementing direct reading of binary structure or memory mapping with np.memmap() instead of np.fromfile(), for faster reading of values (for flagging and storing)

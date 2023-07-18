@@ -10,7 +10,7 @@
 module purge
 
 # loading only needed module for sample
-module load /net/nfs/tools/meso-u20/modules/Python/python/meso-3.8
+module load python/meso-3.8
 
 # execute my program
 python /data/pdonnelly/github/pisco/run_pisco.py
