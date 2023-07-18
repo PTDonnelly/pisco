@@ -1,16 +1,16 @@
 #!/bin/sh
-#OPENMPI JOB
-# --ntasks=x to give the number of mpi process
 #SBATCH --ntasks=1
-# asking time could be in minute 120 or 2:00:00  or 1-00:00:00(24H)
 #SBATCH --time 72:00:00
 #SBATCH --mem=10GB
 
 # to debug script could be interessant to have
 # set -x
+
 # purging all module to be sure to not having interferaence with current environnement
 module purge
+
 # loading only needed module for sample
 module load /net/nfs/tools/meso-u20/modules/Python/python/meso-3.8
+
 # execute my program
 python /data/pdonnelly/github/pisco/run_pisco.py
