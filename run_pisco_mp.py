@@ -5,7 +5,7 @@ from pisco import Extractor
 def generate_slurm_script(year, month, day, config_file, script_name):
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{year}_{month}_{day}
-#SBATCH --output=/data/pdonnelly/iasi/pisco_{year}_{month}_{day}.log
+#SBATCH --output=/data/pdonnelly/iasi/logfiles/pisco_{year}_{month}_{day}.log
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=8GB
@@ -36,6 +36,10 @@ def main():
     # Instantiate an Extractor class to get data from raw binary files
     ex = Extractor(path_to_config_file)
 
+    # Create the output directory if it doesn't exist
+    log_directory = "/data/pdonnelly/iasi/pisco_logfiles/"
+    os.makedirs(log_directory, exist_ok=True)
+
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)
     for year in ex.config.year_list:
         month_range = ex.config.month_list if (not ex.config.month_list == "all") else range(1, 13)
@@ -44,7 +48,7 @@ def main():
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[im] + 1)
             
             for day in day_range:
-                script_name = f"/data/pdonnelly/iasi/pisco_{year}_{month}_{day}.sh"
+                script_name = f"{log_directory}pisco_{year}_{month}_{day}.sh"
                 generate_slurm_script(year, month, day, path_to_config_file, script_name)
                 
                 # Set permissions and submit the batch script to SLURM

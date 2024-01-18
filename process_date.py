@@ -17,6 +17,5 @@ def process_date(year, month, day, config):
         if ex.config.process:
             scripts.process_iasi(ex)
     
-    # Move SLURM script and log file to desired location
-    os.replace(f"{ex.config.datapath_out}pisco_{year}_{month}_{day}.sh", f"{ex.datapath_out}pisco_{year}_{month}_{day}.sh")
+    # Move log file to desired location
     os.replace(f"{ex.config.datapath_out}pisco_{year}_{month}_{day}.log", f"{ex.datapath_out}pisco_{year}_{month}_{day}.log")
