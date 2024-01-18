@@ -54,11 +54,11 @@ def main():
                 script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
                 generate_slurm_script(metop, year, month, day, path_to_config_file, script_name)
                 
-                # # Set execute permissions on the script
-                # subprocess.run(["chmod", "+x", script_name])
+                # Set execute permissions on the script
+                subprocess.run(["chmod", "+x", script_name])
 
-                # # Submit the batch script to SLURM using sbatch
-                # subprocess.run(["sbatch", script_name])
+                # Submit the batch script to SLURM using sbatch
+                subprocess.run(["sbatch", script_name])
 
 if __name__ == "__main__":
     main()
