@@ -4,11 +4,14 @@ from pisco import Extractor, Logger, scripts
 
 def process_date(metop, year, month, day, config):
     ex = Extractor(config)
-    ex.year = year
-    ex.month = month
-    ex.day = day
+    ex.year = f"{year:04d}"
+    ex.month = f"{month:02d}"
+    ex.day = f"{day:02d}"
+    
+    print(f"{ex.config.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log")
 
-    with Logger(f"{ex.config.datapath_out}piscoXXX_{metop}_{ex.year}_{ex.month}_{ex.day}.log") as log:
+    
+    with Logger(f"{ex.config.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log") as log:
         if ex.config.L1C:
             valid_indices = scripts.flag_data(ex, data_level="l1c")
             scripts.preprocess_iasi(ex, valid_indices, data_level="l1c")

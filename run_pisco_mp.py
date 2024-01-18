@@ -5,7 +5,7 @@ from pisco import Extractor
 def generate_slurm_script(metop, year, month, day, config_file, script_name):
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
-#SBATCH --output=/data/pdonnelly/iasi/piscoYYY_{metop}_{year}_{month}_{day}.log
+#SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=8GB
@@ -54,11 +54,11 @@ def main():
                 script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
                 generate_slurm_script(metop, year, month, day, path_to_config_file, script_name)
                 
-                # Set execute permissions on the script
-                subprocess.run(["chmod", "+x", script_name])
+                # # Set execute permissions on the script
+                # subprocess.run(["chmod", "+x", script_name])
 
-                # Submit the batch script to SLURM using sbatch
-                subprocess.run(["sbatch", script_name])
+                # # Submit the batch script to SLURM using sbatch
+                # subprocess.run(["sbatch", script_name])
 
 if __name__ == "__main__":
     main()
