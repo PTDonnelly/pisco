@@ -5,7 +5,7 @@ from pisco import Extractor
 def generate_slurm_script(metop, year, month, day, config_file, script_name):
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
-#SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
+#SBATCH --output=/data/pdonnelly/iasi/piscoYYY_{metop}_{year}_{month}_{day}.log
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=8GB
@@ -30,7 +30,7 @@ def main():
     developed by IASI team, then produce conveniently-formatted spatio-temporal data
     of IASI products: L1C calibrated spectra or L2 cloud products.
     """
-     # Location of jsonc configuration file
+    # Location of jsonc configuration file
     path_to_config_file = "inputs/config.jsonc"
     
     # Instantiate an Extractor class to get data from raw binary files
