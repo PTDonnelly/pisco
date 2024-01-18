@@ -23,10 +23,10 @@
     // runpath: str, The user-defined path containing the code
 
     // year_list: List[int], List of years for extraction
-    "year_list": [2020],
+    "year_list": [2016, 2017, 2018, 2019],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [3],
+    "month_list": [3, 4, 5],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
     "day_list": [1],
