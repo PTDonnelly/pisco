@@ -19,8 +19,9 @@ def process_date(metop, year, month, day, config):
             scripts.process_iasi(ex)
     
     # Move SLURM script and log file to desired location
-    os.replace(f"{ex.config.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.sh", f"{ex.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.sh")
-    os.replace(f"{ex.config.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log", f"{ex.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log")
+    output_file = f"pisco_{metop}_{ex.year}_{ex.month}_{ex.day}"
+    os.replace(f"{ex.config.datapath_out}{output_file}.sh", f"{ex.datapath_out}{output_file}.sh")
+    os.replace(f"{ex.config.datapath_out}{output_file}.log", f"{ex.datapath_out}{output_file}.log")
 
 
 if __name__ == "__main__":
