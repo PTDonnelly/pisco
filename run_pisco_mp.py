@@ -47,8 +47,11 @@ def main():
                 script_name = f"pisco_{year}_{month}_{day}.sh"
                 generate_slurm_script(year, month, day, path_to_config_file, script_name)
                 
-                # Set permissions and submit the batch script to SLURM
+                # Set execute permissions on the script
                 subprocess.run(["chmod", "+x", script_name])
+
+                # Submit the batch script to SLURM using sbatch
+                subprocess.run(["sbatch", script_name])
 
 if __name__ == "__main__":
     main()
