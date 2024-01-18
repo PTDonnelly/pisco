@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 from .configuration import Configurer
 
 class Extractor:
-    def __init__(self, path_to_config_file: str):
+    def __init__(self, runpath: str, path_to_config_file: str):
         """
         Initialize the Extractor class with given parameters.
 
@@ -14,6 +14,7 @@ class Extractor:
         """
         # Instantiate the Config class and set_parameters() for analysis
         self.config = Configurer(path_to_config_file)
+        self.runpath: str = runpath
         self.data_level: str = None
         self.year: str = None
         self.month: str = None
@@ -131,11 +132,11 @@ class Extractor:
         """
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Define the path to the run executable
-            runpath = f"./bin/obr_v4"
+            full_runpath = f"{self.runpath}/bin/obr_v4"
             # Get the command parameters
             parameters = self._build_parameters()
             # Return the complete command
-            return f"{runpath} {parameters} -out {self.datapath_out}{self.datafile_out}"
+            return f"{full_runpath} {parameters} -out {self.datapath_out}{self.datafile_out}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")

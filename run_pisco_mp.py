@@ -30,12 +30,15 @@ def main():
     developed by IASI team, then produce conveniently-formatted spatio-temporal data
     of IASI products: L1C calibrated spectra or L2 cloud products.
     """
-    # Point to location of jsonc configuration file
-    path_to_config_file = "./inputs/config.jsonc"
+    # Directory from which the MAIN level code is being executed
+    runpath = os.getcwd() # "/data/pdonnelly/github/pisco/"
+
+    # Location of jsonc configuration file
+    path_to_config_file = "inputs/config.jsonc"
     
     # Instantiate an Extractor class to get data from raw binary files
-    ex = Extractor(path_to_config_file)
-
+    ex = Extractor(runpath, path_to_config_file)
+    
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)
     for year in ex.config.year_list:
         month_range = ex.config.month_list if (not ex.config.month_list == "all") else range(1, 13)
