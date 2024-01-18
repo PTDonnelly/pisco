@@ -30,14 +30,11 @@ def main():
     developed by IASI team, then produce conveniently-formatted spatio-temporal data
     of IASI products: L1C calibrated spectra or L2 cloud products.
     """
-    # Directory from which the MAIN level code is being executed
-    runpath = os.getcwd() # "/data/pdonnelly/github/pisco/"
-
-    # Location of jsonc configuration file
+     # Location of jsonc configuration file
     path_to_config_file = "inputs/config.jsonc"
     
     # Instantiate an Extractor class to get data from raw binary files
-    ex = Extractor(runpath, path_to_config_file)
+    ex = Extractor(path_to_config_file)
     
     # The MetOp satellite identifier for these observations (A, B, or C)
     metop = ex.config.satellite_identifier
@@ -53,7 +50,7 @@ def main():
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[im] + 1)
             for day in day_range:
                 day = f"{day:02d}"
-                
+
                 script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
                 generate_slurm_script(metop, year, month, day, path_to_config_file, script_name)
                 

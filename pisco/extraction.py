@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 from .configuration import Configurer
 
 class Extractor:
-    def __init__(self, runpath: str, path_to_config_file: str):
+    def __init__(self, path_to_config_file: str):
         """
         Initialize the Extractor class with given parameters.
 
@@ -14,7 +14,7 @@ class Extractor:
         """
         # Instantiate the Config class and set_parameters() for analysis
         self.config = Configurer(path_to_config_file)
-        self.runpath: str = runpath
+        self.runpath: str = os.getcwd()
         self.data_level: str = None
         self.year: str = None
         self.month: str = None
