@@ -4,9 +4,9 @@ from pisco import Extractor, Logger, scripts
 
 def process_date(year, month, day, config):
     ex = Extractor(config)
-    ex.year = f"{year:04d}"
-    ex.month = f"{month:02d}"
-    ex.day = f"{day:02d}"
+    ex.year = year
+    ex.month = month
+    ex.day = day
 
     with Logger(f"{ex.config.datapath_out}pisco_{ex.year}_{ex.month}_{ex.day}.log") as log:
         if ex.config.L1C:
