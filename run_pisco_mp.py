@@ -31,7 +31,7 @@ def main():
     of IASI products: L1C calibrated spectra or L2 cloud products.
     """
     # Point to location of jsonc configuration file
-    path_to_config_file = "/data/pdonnelly/github/pisco/inputs/config.jsonc"
+    path_to_config_file = "./inputs/config.jsonc"
     
     # Instantiate an Extractor class to get data from raw binary files
     ex = Extractor(path_to_config_file)
@@ -44,7 +44,7 @@ def main():
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[im] + 1)
             
             for day in day_range:
-                script_name = f"/data/pdonnelly/iasi/pisco_{year}_{month}_{day}.sh"
+                script_name = f"pisco_{year}_{month}_{day}.sh"
                 generate_slurm_script(year, month, day, path_to_config_file, script_name)
                 
                 # Set permissions and submit the batch script to SLURM
