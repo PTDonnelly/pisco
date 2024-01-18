@@ -20,11 +20,13 @@
     // datapath_out: str, The user-defined data path for the processed output files
     "datapath_out": "/data/pdonnelly/iasi/",
 
+    // runpath: str, The user-defined path containing the code
+
     // year_list: List[int], List of years for extraction
-    "year_list": [2019],
+    "year_list": [2017],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [6, 7, 8, 9, 10, 11, 12],
+    "month_list": [3, 4, 5],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
     "day_list": "all",
