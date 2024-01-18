@@ -25,10 +25,11 @@ def process_date(year, month, day, config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process IASI data for a given date.")
+    parser.add_argument("metop", type=str, help="Satellite identifier")
     parser.add_argument("year", type=int, help="Year to process")
     parser.add_argument("month", type=int, help="Month to process")
     parser.add_argument("day", type=int, help="Day to process")
     parser.add_argument("config", type=str, help="Path to configuration file")
 
     args = parser.parse_args()
-    process_date(args.year, args.month, args.day, args.config)
+    process_date(args.metop, args.year, args.month, args.day, args.config)
