@@ -401,11 +401,17 @@ class Preprocessor:
 
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
-        if not field == "Spectrum":
+        if field != "Spectrum":
             self.data_record_df[field] = data
-        elif field == "Spectrum":
-            for i, channel_ID in enumerate(self.metadata.channel_IDs):
-                self.data_record_df[f'Spectrum {channel_ID}'] = data[i, :]
+        else:
+            # Prepare new columns for the spectrum data
+            spectrum_columns = {f'Spectrum {channel_ID}': data[i, :] for i, channel_ID in enumerate(self.metadata.channel_IDs)}
+            
+            # Create a new DataFrame from the spectrum columns
+            spectrum_df = pd.DataFrame(spectrum_columns)
+
+            # Concatenate this new DataFrame with the existing one
+            self.data_record_df = pd.concat([self.data_record_df, spectrum_df], axis=1)
         return
 
     def _read_binary_data(self, valid_indices: np.array, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
