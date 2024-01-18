@@ -2,10 +2,10 @@ import os
 import subprocess
 from pisco import Extractor
 
-def generate_slurm_script(year, month, day, config_file, script_name):
+def generate_slurm_script(metop, year, month, day, config_file, script_name):
     script_content = f"""#!/bin/bash
-#SBATCH --job-name=pisco_{year:04d}_{month:02d}_{day:02d}
-#SBATCH --output=/data/pdonnelly/iasi/pisco_{year:04d}_{month:02d}_{day:02d}.log
+#SBATCH --job-name=pisco_{metop}_{year:04d}_{month:02d}_{day:02d}
+#SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year:04d}_{month:02d}_{day:02d}.log
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=8GB
@@ -39,6 +39,9 @@ def main():
     # Instantiate an Extractor class to get data from raw binary files
     ex = Extractor(runpath, path_to_config_file)
     
+    # The MetOp satellite identifier for these observations (A, B, or C)
+    metop = ex.config.satellite_identifier
+
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)
     for year in ex.config.year_list:
         month_range = ex.config.month_list if (not ex.config.month_list == "all") else range(1, 13)
@@ -47,8 +50,8 @@ def main():
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[im] + 1)
             
             for day in day_range:
-                script_name = f"pisco_{year:04d}_{month:02d}_{day:02d}.sh"
-                generate_slurm_script(year, month, day, path_to_config_file, script_name)
+                script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year:04d}_{month:02d}_{day:02d}.sh"
+                generate_slurm_script(metop, year, month, day, path_to_config_file, script_name)
                 
                 # Set execute permissions on the script
                 subprocess.run(["chmod", "+x", script_name])
