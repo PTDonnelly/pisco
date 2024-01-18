@@ -4,8 +4,8 @@ from pisco import Extractor
 
 def generate_slurm_script(year, month, day, config_file, script_name):
     script_content = f"""#!/bin/bash
-#SBATCH --job-name=pisco_{year}_{month}_{day}
-#SBATCH --output=/data/pdonnelly/iasi/pisco_{year}_{month}_{day}.log
+#SBATCH --job-name=pisco_{year:04d}_{month:02d}_{day:02d}
+#SBATCH --output=/data/pdonnelly/iasi/pisco_{year:04d}_{month:02d}_{day:02d}.log
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=8GB
@@ -44,7 +44,7 @@ def main():
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[im] + 1)
             
             for day in day_range:
-                script_name = f"pisco_{year}_{month}_{day}.sh"
+                script_name = f"pisco_{year:04d}_{month:02d}_{day:02d}.sh"
                 generate_slurm_script(year, month, day, path_to_config_file, script_name)
                 
                 # Set execute permissions on the script
