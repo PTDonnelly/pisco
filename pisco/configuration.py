@@ -25,8 +25,8 @@ class Configurer:
             return [(i + 1) for i in range(8461)]
         elif mode == "range":
             # Specify a subset of channels
-            start_channel = 1221
-            end_channel = 2020
+            start_channel = 220
+            end_channel = 2220
             return  [i for i in range(start_channel, end_channel+1)]
         elif mode == "flag":
             # Select single channel for fast processing
