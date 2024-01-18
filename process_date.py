@@ -1,3 +1,4 @@
+import argparse
 import os
 from pisco import Extractor, Logger, scripts
 
@@ -20,3 +21,14 @@ def process_date(year, month, day, config):
     # Move SLURM script and log file to desired location
     os.replace(f"{ex.config.datapath_out}pisco_{year}_{month}_{day}.sh", f"{ex.datapath_out}pisco_{year}_{month}_{day}.sh")
     os.replace(f"{ex.config.datapath_out}pisco_{year}_{month}_{day}.log", f"{ex.datapath_out}pisco_{year}_{month}_{day}.log")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process IASI data for a given date.")
+    parser.add_argument("year", type=int, help="Year to process")
+    parser.add_argument("month", type=int, help="Month to process")
+    parser.add_argument("day", type=int, help="Day to process")
+    parser.add_argument("config", type=str, help="Path to configuration file")
+
+    args = parser.parse_args()
+    process_date(args.year, args.month, args.day, args.config)
