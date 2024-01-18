@@ -2,7 +2,7 @@ import argparse
 import os
 from pisco import Extractor, Logger, scripts
 
-def process_date(year, month, day, config):
+def process_date(metop, year, month, day, config):
     ex = Extractor(config)
     ex.year = year
     ex.month = month
@@ -19,8 +19,8 @@ def process_date(year, month, day, config):
             scripts.process_iasi(ex)
     
     # Move SLURM script and log file to desired location
-    os.replace(f"{ex.config.datapath_out}pisco_{ex.year}_{ex.month}_{ex.day}.sh", f"{ex.datapath_out}pisco_{ex.year}_{ex.month}_{ex.day}.sh")
-    os.replace(f"{ex.config.datapath_out}pisco_{ex.year}_{ex.month}_{ex.day}.log", f"{ex.datapath_out}pisco_{ex.year}_{ex.month}_{ex.day}.log")
+    os.replace(f"{ex.config.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.sh", f"{ex.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.sh")
+    os.replace(f"{ex.config.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log", f"{ex.datapath_out}pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log")
 
 
 if __name__ == "__main__":
