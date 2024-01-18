@@ -31,7 +31,7 @@ def main():
     of IASI products: L1C calibrated spectra or L2 cloud products.
     """
     # Point to location of jsonc configuration file
-    path_to_config_file = "/data/pdonnelly/github/inputs/config.jsonc"
+    path_to_config_file = "/data/pdonnelly/github/pisco/inputs/config.jsonc"
     
     # Instantiate an Extractor class to get data from raw binary files
     ex = Extractor(path_to_config_file)
