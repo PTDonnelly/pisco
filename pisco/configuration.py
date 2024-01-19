@@ -5,7 +5,8 @@ import os
 class Configurer:
     def __init__(self, path_to_config_file: str):
         self.data_level: str = ""
-        
+        self.datapath_out: str = None
+
         # Initialise the Config class with your JSON configuration file
         with open(path_to_config_file, 'r') as file:
             # Access the parameters directly as attributes of the class. 
@@ -14,7 +15,7 @@ class Configurer:
         # Perform any necessary post-processing before executing
         self.latitude_range, self.longitude_range = tuple(self.latitude_range), tuple(self.longitude_range)
         self.channels: List[int] = None
-        self.datapath_out = f"{self.datapath_out}{self.satellite_identifier}/"
+        self.datapath_out = f"{self.datapath}{self.satellite_identifier}/"
         os.makedirs(self.datapath_out, exist_ok=True)
     
     @staticmethod
