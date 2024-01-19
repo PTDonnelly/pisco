@@ -1,5 +1,6 @@
 import argparse
 import os
+import numpy as np
 from pisco import Extractor, Preprocessor, Processor
 
 def flag_data(ex: Extractor, data_level: str):
