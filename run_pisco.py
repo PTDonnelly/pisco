@@ -95,14 +95,14 @@ def process_iasi(ex: Extractor):
 def clean_up_files(ex: Extractor, metop: str):
     
     # Define the output file name
-    output_file = f"pisco_{metop}_{ex.year:04d}_{ex.month:02d}_{ex.day:02d}"
+    output_file = f"pisco_{metop}_{ex.year}_{ex.month}_{ex.day}"
 
     # Define source and target paths for the .sh and .log files
     source_sh = os.path.join(ex.datapath, f"{output_file}.sh")
-    target_sh = os.path.join(ex.datapath, metop, "merged", f"{ex.year:04d}", f"{ex.month:02d}", f"{ex.day:02d}", f"{output_file}.sh")
+    target_sh = os.path.join(ex.datapath, metop, "merged", f"{ex.year}", f"{ex.month}", f"{ex.day}", f"{output_file}.sh")
 
     source_log = os.path.join(ex.datapath, f"{output_file}.log")
-    target_log = os.path.join(ex.datapath, metop, "merged", f"{ex.year:04d}", f"{ex.month:02d}", f"{ex.day:02d}", f"{output_file}.log")
+    target_log = os.path.join(ex.datapath, metop, "merged", f"{ex.year}", f"{ex.month}", f"{ex.day}", f"{output_file}.log")
 
     # Function to move a file
     def move_file(source, target):
