@@ -2,7 +2,12 @@ import os
 import subprocess
 from pisco import Extractor
 
-def generate_slurm_script(metop, year, month, day, config_file, script_name):
+def generate_slurm_script(metop, year, month, day, config_file):
+    # Format date integers to date strings
+    year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
+    
+    # Prepare SLURM submission script
+    script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
 #SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
@@ -19,9 +24,10 @@ module load python/meso-3.8
 python /data/pdonnelly/github/pisco/run_pisco.py {metop} {year} {month} {day} {config_file}
 
 """
-    
     with open(script_name, 'w') as file:
         file.write(script_content)
+
+    return script_name
 
 def main():
     """PISCO: Package for IASI Spectra and Cloud Observations
@@ -45,17 +51,13 @@ def main():
         for im, month in enumerate(month_range):
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[month-1] + 1)
             for day in day_range:
-                
-                # Format date integers to date strings and prepare SLURM submission script
-                year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
-                script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
-                generate_slurm_script(metop, year, month, day, path_to_config_file, script_name)
+                script = generate_slurm_script(metop, year, month, day, path_to_config_file)
                 
                 # Set execute permissions on the script
-                subprocess.run(["chmod", "+x", script_name])
+                subprocess.run(["chmod", "+x", script])
 
                 # Submit the batch script to SLURM using sbatch
-                subprocess.run(["sbatch", script_name])
+                subprocess.run(["sbatch", script])
 
 if __name__ == "__main__":
     main()
