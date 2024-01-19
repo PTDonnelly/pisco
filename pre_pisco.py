@@ -16,7 +16,7 @@ module purge
 # Load necessary modules
 module load python/meso-3.8
 
-python /data/pdonnelly/github/pisco/process_date.py {metop} {year} {month} {day} {config_file}
+python /data/pdonnelly/github/pisco/run_pisco.py {metop} {year} {month} {day} {config_file}
 
 """
     
