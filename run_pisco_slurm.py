@@ -36,7 +36,7 @@ def main():
     # Instantiate an Extractor class to get data from raw binary files
     ex = Extractor(path_to_config_file)
     
-    # The MetOp satellite identifier for these observations (A, B, or C)
+    # The MetOp satellite identifier for these observations (metopa, metopb, or metopc)
     metop = ex.config.satellite_identifier
 
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)

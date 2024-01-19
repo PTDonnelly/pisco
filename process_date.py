@@ -20,8 +20,8 @@ def process_date(metop, year, month, day, config):
     
     # Move SLURM script and log file to desired location
     output_file = f"pisco_{metop}_{ex.year}_{ex.month}_{ex.day}"
-    os.replace(f"{ex.config.datapath_out}{output_file}.sh", f"{ex.datapath_out}{output_file}.sh")
-    os.replace(f"{ex.config.datapath_out}{output_file}.log", f"{ex.datapath_out}{output_file}.log")
+    os.replace(f"{ex.config.datapath}{output_file}.sh", f"{ex.config.datapath}{metop}/merged/{year}/{month}/{day}/pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.sh")
+    os.replace(f"{ex.config.datapath}{output_file}.log", f"{ex.config.datapath}{metop}/merged/{year}/{month}/{day}/pisco_{metop}_{ex.year}_{ex.month}_{ex.day}.log")
 
 
 if __name__ == "__main__":
