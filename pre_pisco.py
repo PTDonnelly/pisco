@@ -41,16 +41,13 @@ def main():
 
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)
     for year in ex.config.year_list:
-        year = f"{year:04d}"
-
         month_range = ex.config.month_list if (not ex.config.month_list == "all") else range(1, 13)
         for im, month in enumerate(month_range):
-            month = f"{month:02d}"
-
-            day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[im] + 1)
+            day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[month-1] + 1)
             for day in day_range:
-                day = f"{day:02d}"
-
+                
+                # Format date integers to date strings and prepare SLURM submission script
+                year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
                 script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
                 generate_slurm_script(metop, year, month, day, path_to_config_file, script_name)
                 
