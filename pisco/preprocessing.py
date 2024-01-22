@@ -458,6 +458,10 @@ class Preprocessor:
                 spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
                 data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
         
+        if "Cloud Phase" in field:
+            print(field, data)
+            input()
+
         # Store the data in the DataFrame
         self._store_data_in_df(field, data)
         return
@@ -476,9 +480,6 @@ class Preprocessor:
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
             print(f"Extracting: {field}")
-
-            if "Cloud Phase" in field:
-                print(field, dtype, dtype_size)
             
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
