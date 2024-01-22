@@ -440,27 +440,33 @@ class Preprocessor:
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
         if not field == "Spectrum":
+            
             # Prepare an NaN array to store the data of the current field
             data = np.full(len(valid_indices_increments), np.nan, dtype="float32")
             for i, increment in enumerate(valid_indices_increments):
+                
                 # Read the value for the current measurement
                 step = (byte_offset * increment) + (dtype_size * (increment - 1))
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
+
+                if "Cloud Phase" in field:
+                    print(field, byte_offset, increment, dtype_size, step, value)
+                
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[i] = value[0] if len(value) != 0 else data[i]
+            input()
         elif field == "Spectrum":
+            
             # Prepare an NaN array to store the data of the spectrum field
             data = np.full((self.metadata.number_of_channels, len(valid_indices_increments)), np.nan, dtype="float32")
             for i, increment in enumerate(valid_indices_increments):
+                
                 # Read the value for the current measurement
                 step = (byte_offset * increment) + (dtype_size * (increment - 1))
+                
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
                 data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
-        
-        if "Cloud Phase" in field:
-            print(field, data)
-            input()
 
         # Store the data in the DataFrame
         self._store_data_in_df(field, data)
