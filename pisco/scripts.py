@@ -361,15 +361,60 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
+def plot_phase_distribution_with_time(plotter: object):
+    # Use Plotter to organize files
+    plotter.organize_files_by_date()
+
+    # Select files in time range
+    datafiles = plotter.select_files()
+
+    for ifile, datafile in enumerate(datafiles):
+        # Initialize a new figure for the plot with one subplot
+        fig = plt.figure(figsize=(10, 8), dpi=plotter.dpi)
+        axes = gridspec.GridSpec(1, 1, figure=fig).subplots()
+        fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=plotter.fontsize+5, y=0.95)
+
+        # Get current file and load data
+        df = pd.read_csv(datafile, usecols=['Datetime', 'Cloud Phase 1'])
+
+        # Convert the 'Datetime' column to pandas Datetime objects
+        df['Datetime'] = pd.to_datetime(df['Datetime'], format='%YYYY%mm%dd.%HH%MM%SS')
+
+        # Group data by datetime and count the number of occurrences for each phase
+        phase_counts = df.groupby(['Datetime', 'Cloud Phase 1']).size().unstack(fill_value=0)
+
+        print(phase_counts.head())
+
+        # Calculate the ratio of ice to clear data
+        ice_clear_ratio = phase_counts[1] / phase_counts[2]
+
+        # Create a plot for the ratio over time
+        plt.plot(phase_counts['Datetime'], ice_clear_ratio.values, label='ice', color='red')
+        # plt.plot(clear_data.index, clear_data.values, label='clear', color='blue')
+
+        # Customize the plot
+        plt.xlabel('Datetime')
+        plt.ylabel('NUmber')
+        plt.title('Ratio of Ice to Clear Spectra Over Time')
+        plt.legend()
+        plt.grid(True)
+
+        # Show the plot
+        plt.show()
+
+        exit()
+
+
+
 def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    datapath = "C:\\Users\\padra\\Documents\\Research\\projects\\contrails\\iasi\\2019"
+    datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
 
     # Define temporal range to plot
-    target_year = '2019'
-    target_month = '01'
+    target_year = '2016'
+    target_month = '03'
     target_days = [str(day).zfill(2) for day in range(1, 32)]
 
     # Define plotting parameters
@@ -380,8 +425,7 @@ def plot_pisco():
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
 
     # Plot data
-    # plot_spatial_distribution_2Dhist(plotter)
-    plot_spectral_distributon(plotter)
+    plot_phase_distribution_with_time(plotter)
 
 if __name__ == "__main__":
     plot_pisco()
