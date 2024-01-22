@@ -476,6 +476,9 @@ class Preprocessor:
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
             print(f"Extracting: {field}")
+
+            if "Cloud Phase" in field:
+                print(field, dtype, dtype_size)
             
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
