@@ -632,7 +632,7 @@ class Preprocessor:
             
         self.close_binary_file()
 
-        print(self.data_record_df["Cloud Phase 1", "Cloud Phase 2", "Cloud Phase 3"].head())
+        print(self.data_record_df.iloc[:, -10:].head())
 
         # Construct Local Time column
         self.build_local_time()
