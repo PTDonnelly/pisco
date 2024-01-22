@@ -632,7 +632,8 @@ class Preprocessor:
             
         self.close_binary_file()
 
-        print(self.data_record_df.iloc[:, -10:].head())
+        cloud_phase_columns = [col for col in df.columns if "Cloud Phase" in col]
+        print(self.data_record_df[cloud_phase_columns].head())
 
         # Construct Local Time column
         self.build_local_time()
