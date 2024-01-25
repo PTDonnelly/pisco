@@ -386,7 +386,8 @@ class Preprocessor:
     
     def _set_field_start_position(self, cumsize: int) -> None:
         self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
-        self.f.tell()
+        print(cumsize, self.metadata.header_size + 12 + cumsize, self.f.tell())
+        input()
         return
     
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
