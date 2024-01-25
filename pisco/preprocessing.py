@@ -29,13 +29,17 @@ class Metadata:
     def __init__(self, file: BinaryIO):
         self.f: BinaryIO = file
         self.header_size: int = None
+        self.record_size: int = None
+        self.number_of_measurements: int = None
         self.number_of_channels: int = None
+        self.channel_IDs: np.array = None
         self.number_of_l2_products: int = None
+        self.l2_product_IDs: List[int] = None
     
-    def _print_metadata(self, header_size: int, record_size: int, number_of_measurements: int) -> None:
-        print(f"Header  : {header_size} bytes")
-        print(f"Record  : {record_size} bytes")
-        print(f"Data    : {number_of_measurements} measurements")
+    def _print_metadata(self) -> None:
+        print(f"Header  : {self.header_size} bytes")
+        print(f"Record  : {self.record_size} bytes")
+        print(f"Data    : {self.number_of_measurements} measurements")
         return
 
     def _verify_header(self) -> None:
@@ -57,7 +61,7 @@ class Metadata:
         # Check if header sizes match
         assert self.header_size == header_size_check, "Header size mismatch"
 
-    def _count_measurements(self, header_size: int, record_size: int) -> int:
+    def _count_measurements(self) -> int:
         """
         Calculate the number of measurements in the binary file based on its size, 
         header size and record size.
@@ -68,7 +72,8 @@ class Metadata:
         # Get the total size of the file
         file_size = self.f.seek(0, 2)
         # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
-        return ((file_size - header_size - 8) // (record_size + 8)) - 1
+        self.number_of_measurements = ((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
+        return
     
     def _read_header_record_size(self, common_header_fields: List[Tuple]) -> [int, int]:
         # Read header size
@@ -79,16 +84,18 @@ class Metadata:
         # Read record size
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
-        record_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        return record_size
-     
-    def _get_field_from_tuples(self, key, tuples_list):
+        self.record_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        return
+
+
+    def _get_field_from_tuples(self, key, tuples_list) -> Any[Tuple, None]:
         for tup in tuples_list:
             if tup[0] == key:
                 return tup
         return None
-    
-    def _get_fixed_size_fields_pre(self):
+
+
+    def _get_fixed_size_fields_pre(self) -> List[Tuple]:
         "Byte table for values occuring before Channel IDs"
         pre_channel_id_fields = [
             ('Header Size', 'uint32', 4, 4),
@@ -101,16 +108,7 @@ class Metadata:
         ]
         return pre_channel_id_fields
 
-    def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
-        """This is variable and treated separately."""
-        # Get the tuple for 'Number of Channels'
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
-        # Read the value from the binary file
-        self.f.seek(cumsize-dtype_size, 0)
-        number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        return [('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)]
-    
-    def _get_fixed_size_fields_post(self, channel_id_field: Tuple):
+    def _get_fixed_size_fields_post(self, channel_id_field: Tuple) -> List[Tuple]:
         "Byte table for values occuring after Channel IDs"
         # Get the tuple for 'Channel IDs'
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Channel IDs', channel_id_field)
@@ -120,6 +118,32 @@ class Metadata:
         ]
         return post_channel_id_fields
     
+
+    def _read_channel_ids(self, channel_id_field: Tuple, number_of_channels: int) -> None:
+        dtype_size, cumsize = channel_id_field[2], channel_id_field[3]
+        self.f.seek(cumsize-dtype_size, 0)
+        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_channels)[0]
+        return
+    
+    def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
+        """This is variable and treated separately."""
+        # Get the tuple for 'Number of Channels'
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
+        # Read the value from the binary file
+        self.f.seek(cumsize-dtype_size, 0)
+        number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        # Store Channel IDs for later
+        channel_id_field = ('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)
+        self._read_channel_ids(channel_id_field, number_of_channels)
+        return [channel_id_field]
+
+    
+    def _read_l2_product_ids(self, l2_product_id_field: Tuple, number_of_l2_products: int) -> None:
+        dtype_size, cumsize = l2_product_id_field[2], l2_product_id_field[3]
+        self.f.seek(cumsize-dtype_size, 0)
+        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_l2_products)[0]
+        return
+        
     def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
         """This is variable and treated separately."""
         # Get the tuple for 'Number of L2 Products'
@@ -127,7 +151,11 @@ class Metadata:
         # Read the value from the binary file
         self.f.seek(cumsize-dtype_size, 0)
         number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
+        # Store the L@ products for later
+        l2_product_id_field = ('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)
+        self._read_l2_product_ids(l2_product_id_field, number_of_l2_products)
+        return [l2_product_id_field]
+    
 
     def _build_iasi_common_header_fields(self):
         # Step 1: Get pre-channel ID fields
@@ -145,10 +173,11 @@ class Metadata:
     
     def check_iasi_common_header(self) -> None:
         common_header_fields = self._build_iasi_common_header_fields()
-        record_size = self._read_header_record_size(common_header_fields)
-        number_of_measurements = self._count_measurements(self.header_size, record_size)
-        self._print_metadata(self.header_size, record_size, number_of_measurements)
+        self._read_header_record_size(common_header_fields)
+        self._count_measurements()
+        self._print_metadata()
         return
+
 
     def _get_iasi_common_record_fields(self) -> List[tuple]:
         # common_header_fields = self._build_iasi_common_header_fields()
