@@ -36,8 +36,8 @@
     "days_in_months": [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 
     // latitude_range: List[int], The spatial range for binning latitudes [min, max]
-    "latitude_range": [30, 60],
+    "latitude_range": [3, 6],
 
     // longitude_range: List[int], The spatial range for binning longitudes [min, max]
-    "longitude_range": [-60, 0]
+    "longitude_range": [-6, 0]
 }

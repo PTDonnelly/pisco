@@ -121,8 +121,11 @@ class Metadata:
 
     def _read_channel_ids(self, cumsize: int, number_of_channels: int) -> None:
         self.f.seek(cumsize, 0)
-        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_channels)
+        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=4*number_of_channels)
         print(np.shape(self.channel_IDs), number_of_channels, self.channel_IDs)
+        for i, id in enumerate(self.channel_IDs):
+            print(i, id)
+            input()
         return
     
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
@@ -140,7 +143,7 @@ class Metadata:
     
     def _read_l2_product_ids(self, cumsize: int, number_of_l2_products: int) -> None:
         self.f.seek(cumsize, 0)
-        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_l2_products)
+        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=4*number_of_l2_products)
         print(np.shape(self.l2_product_IDs), number_of_l2_products, self.l2_product_IDs)
         return
         
