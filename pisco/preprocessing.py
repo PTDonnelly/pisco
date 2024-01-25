@@ -119,8 +119,7 @@ class Metadata:
         return post_channel_id_fields
     
 
-    def _read_channel_ids(self, channel_id_field: Tuple, number_of_channels: int) -> None:
-        dtype_size, cumsize = channel_id_field[2], channel_id_field[3]
+    def _read_channel_ids(self, dtype_size: int, cumsize: int, number_of_channels: int) -> None:
         self.f.seek(cumsize-dtype_size, 0)
         self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_channels)[0]
         return
@@ -128,18 +127,16 @@ class Metadata:
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
         """This is variable and treated separately."""
         # Get the tuple for 'Number of Channels'
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
         # Read the value from the binary file
         self.f.seek(cumsize-dtype_size, 0)
         number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
         # Store Channel IDs for later
-        channel_id_field = ('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)
-        self._read_channel_ids(channel_id_field, number_of_channels)
-        return [channel_id_field]
+        self._read_channel_ids(dtype_size, cumsize, number_of_channels)
+        return [('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)]
 
     
-    def _read_l2_product_ids(self, l2_product_id_field: Tuple, number_of_l2_products: int) -> None:
-        dtype_size, cumsize = l2_product_id_field[2], l2_product_id_field[3]
+    def _read_l2_product_ids(self, dtype_size: int, cumsize: int, number_of_l2_products: int) -> None:
         self.f.seek(cumsize-dtype_size, 0)
         self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_l2_products)[0]
         return
@@ -147,14 +144,13 @@ class Metadata:
     def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
         """This is variable and treated separately."""
         # Get the tuple for 'Number of L2 Products'
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
         # Read the value from the binary file
         self.f.seek(cumsize-dtype_size, 0)
         number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        # Store the L@ products for later
-        l2_product_id_field = ('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)
-        self._read_l2_product_ids(l2_product_id_field, number_of_l2_products)
-        return [l2_product_id_field]
+        # Store the L2 products for later
+        self._read_l2_product_ids(dtype_size, cumsize, number_of_l2_products)
+        return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
     
 
     def _build_iasi_common_header_fields(self):
