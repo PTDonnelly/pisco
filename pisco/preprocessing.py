@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import numpy as np
 import pandas as pd
-from typing import Any, List, BinaryIO, Tuple, List
+from typing import Any, List, BinaryIO, Tuple, List, Optional
 
 import numpy as np
 
@@ -88,7 +88,7 @@ class Metadata:
         return
 
 
-    def _get_field_from_tuples(self, key, tuples_list) -> Any[Tuple, None]:
+    def _get_field_from_tuples(self, key, tuples_list) -> Optional[Tuple, None]:
         for tup in tuples_list:
             if tup[0] == key:
                 return tup
