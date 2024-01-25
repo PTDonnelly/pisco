@@ -84,14 +84,9 @@ class Metadata:
      
     def _get_field_from_tuples(self, key, tuples_list):
         for tup in tuples_list:
-            print(tup)
-            input()
             if tup[0] == key:
-                print(tup)
-                input()
                 return tup
-            else:
-                return None
+        return None
     
     def _get_fixed_size_fields_pre(self):
         "Byte table for values occuring before Channel IDs"
