@@ -28,6 +28,7 @@ class Metadata:
     """
     def __init__(self, file: BinaryIO):
         self.f: BinaryIO = file
+        self.header_size: int = None
         self.number_of_channels: int = None
         self.number_of_l2_products: int = None
     
@@ -73,13 +74,13 @@ class Metadata:
         # Read header size
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
-        header_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        self.header_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
 
         # Read record size
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
         record_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        return header_size, record_size
+        return record_size
      
     def _get_field_from_tuples(self, key, tuples_list):
         for tup in tuples_list:
@@ -144,9 +145,9 @@ class Metadata:
     
     def check_iasi_common_header(self) -> None:
         common_header_fields = self._build_iasi_common_header_fields()
-        header_size, record_size = self._read_header_record_size(common_header_fields)
-        number_of_measurements = self._count_measurements(header_size, record_size)
-        self._print_metadata(header_size, record_size, number_of_measurements)
+        record_size = self._read_header_record_size(common_header_fields)
+        number_of_measurements = self._count_measurements(self.header_size, record_size)
+        self._print_metadata(self.header_size, record_size, number_of_measurements)
         return
 
     def _get_iasi_common_record_fields(self) -> List[tuple]:
