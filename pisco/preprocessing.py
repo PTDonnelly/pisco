@@ -72,19 +72,19 @@ class Metadata:
         # Get the total size of the file
         file_size = self.f.seek(0, 2)
         # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
-        self.number_of_measurements = ((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
+        self.number_of_measurements = int(((file_size - self.header_size - 8) // (self.record_size + 8)) - 1)
         return
     
-    def _read_header_record_size(self, common_header_fields: List[Tuple]) -> [int, int]:
+    def _read_header_record_size(self, common_header_fields: List[Tuple]) -> None:
         # Read header size
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
-        self.header_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        self.header_size = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
 
         # Read record size
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
-        self.record_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        self.record_size = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
         return
 
 
@@ -134,8 +134,8 @@ class Metadata:
             # Get the tuple for 'Number of Channels'
             _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
             self.f.seek(cumsize-dtype_size, 0)
-            self.number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
-            print(type(self.number_of_channels))
+            self.number_of_channels = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
+
             if not isinstance(self.number_of_channels, int) or self.number_of_channels <= 0:
                 raise ValueError("Number of channels must be a positive integer")
 
@@ -158,7 +158,7 @@ class Metadata:
             # Get the tuple for 'Number of L2 Products'
             _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
             self.f.seek(cumsize-dtype_size, 0)
-            number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
+            number_of_l2_products = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
 
             if not isinstance(number_of_l2_products, int) or number_of_l2_products < 0:
                 raise ValueError("Number of L2 products must be a non-negative integer")
