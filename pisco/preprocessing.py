@@ -122,10 +122,6 @@ class Metadata:
     def _read_channel_ids(self, cumsize: int, number_of_channels: int) -> None:
         self.f.seek(cumsize, 0)
         self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=number_of_channels)
-        print(np.shape(self.channel_IDs), number_of_channels, self.channel_IDs)
-        for i, id in enumerate(self.channel_IDs):
-            print(i, id)
-            input()
         return
     
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
@@ -136,7 +132,6 @@ class Metadata:
         self.f.seek(cumsize-dtype_size, 0)
         number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
         # Store Channel IDs for later
-        print(field, dtype, dtype_size, cumsize)
         self._read_channel_ids(cumsize, number_of_channels)
         return [('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)]
 
