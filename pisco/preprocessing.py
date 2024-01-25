@@ -132,7 +132,7 @@ class Metadata:
         """This is variable and treated separately."""
         try:
             # Get the tuple for 'Number of Channels'
-            _, dtype, dtype_size, cumsize = self._get_value_from_tuples('Number of Channels', pre_channel_id_fields)
+            _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
             self.f.seek(cumsize-dtype_size, 0)
             self.number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
 
@@ -156,7 +156,7 @@ class Metadata:
         """This is variable and treated separately."""
         try:
             # Get the tuple for 'Number of L2 Products'
-            _, dtype, dtype_size, cumsize = self._get_value_from_tuples('Number of L2 Products', post_channel_id_fields)
+            _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
             self.f.seek(cumsize-dtype_size, 0)
             number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
 
@@ -439,7 +439,7 @@ class Preprocessor:
             data = np.full(self.metadata.number_of_measurements, np.nan, dtype="float32")
             for i in range(self.metadata.number_of_measurements):
                 
-                # Read the value for the current measurement
+                # Read the field for the current measurement
                 step = (byte_offset * i) + (dtype_size * (i - 1))
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
