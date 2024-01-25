@@ -123,9 +123,10 @@ class Metadata:
         return post_channel_id_fields
     
 
-    def _read_channel_ids(self, cumsize: int, number_of_channels: int) -> None:
+    def _read_channel_ids(self, cumsize: int) -> None:
         self.f.seek(cumsize, 0)
-        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=number_of_channels)
+        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
+        print(type(self.channel_IDs))
         return
     
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
@@ -139,6 +140,10 @@ class Metadata:
             if not isinstance(self.number_of_channels, int) or self.number_of_channels <= 0:
                 raise ValueError("Number of channels must be a positive integer")
 
+            # Store for later
+            self._read_channel_ids(cumsize)
+
+            # Return as a list for concatenation with other fields
             return [('Channel IDs', 'uint32', 4 * self.number_of_channels, cumsize + (4 * self.number_of_channels))]
         except Exception as e:
             # Handle or log the exception
@@ -147,9 +152,10 @@ class Metadata:
 
 
     
-    def _read_l2_product_ids(self, cumsize: int, number_of_l2_products: int) -> None:
+    def _read_l2_product_ids(self, cumsize: int) -> None:
         self.f.seek(cumsize, 0)
-        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=number_of_l2_products)
+        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_l2_products)
+        exit()
         return
         
     def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
@@ -158,12 +164,16 @@ class Metadata:
             # Get the tuple for 'Number of L2 Products'
             _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
             self.f.seek(cumsize-dtype_size, 0)
-            number_of_l2_products = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
+            self.number_of_l2_products = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
 
-            if not isinstance(number_of_l2_products, int) or number_of_l2_products < 0:
+            if not isinstance(self.number_of_l2_products, int) or self.number_of_l2_products < 0:
                 raise ValueError("Number of L2 products must be a non-negative integer")
+            
+            # Store for later
+            self._read_l2_product_ids(cumsize)
 
-            return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, cumsize + (4 * number_of_l2_products))]
+            # Return as a list for concatenation with other fields
+            return [('L2 Product IDs', 'uint32', 4 * self.number_of_l2_products, cumsize + (4 * self.number_of_l2_products))]
         except Exception as e:
             # Handle or log the exception
             print(f"Error in _get_l2_product_id_field: {e}")
