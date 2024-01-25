@@ -553,6 +553,9 @@ class Preprocessor:
             
         self.close_binary_file()
 
+        print(self.data_record_df.head())
+
+
         # Construct Local Time column
         self.build_local_time()
         # Construct Datetime column and remove individual time elements
