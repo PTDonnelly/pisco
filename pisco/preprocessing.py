@@ -89,10 +89,14 @@ class Metadata:
 
 
     def _get_field_from_tuples(self, key, tuples_list) -> Optional[Tuple]:
-        for tup in tuples_list:
-            if tup[0] == key:
-                return tup
-        return None
+        try:
+            for tup in tuples_list:
+                if tup[0] == key:
+                    return tup
+            raise ValueError(f"Key '{key}' not found in tuples list")
+        except Exception as e:
+            print(f"Error in _get_value_from_tuples: {e}")
+            raise
 
 
     def _get_fixed_size_fields_pre(self) -> List[Tuple]:
@@ -126,32 +130,45 @@ class Metadata:
     
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
         """This is variable and treated separately."""
-        # Get the tuple for 'Number of Channels'
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
-        # Read the value from the binary file
-        self.f.seek(cumsize-dtype_size, 0)
-        self.number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        # Store Channel IDs for later
-        self._read_channel_ids(cumsize, self.number_of_channels)
-        return [('Channel IDs', 'uint32', 4 * self.number_of_channels, (4 * self.number_of_channels) + cumsize)]
+        try:
+            # Get the tuple for 'Number of Channels'
+            _, dtype, dtype_size, cumsize = self._get_value_from_tuples('Number of Channels', pre_channel_id_fields)
+            self.f.seek(cumsize-dtype_size, 0)
+            self.number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
+
+            if not isinstance(self.number_of_channels, int) or self.number_of_channels <= 0:
+                raise ValueError("Number of channels must be a positive integer")
+
+            return ('Channel IDs', 'uint32', 4 * self.number_of_channels, cumsize + (4 * self.number_of_channels))
+        except Exception as e:
+            # Handle or log the exception
+            print(f"Error in _get_channel_id_field: {e}")
+            raise
+
 
     
     def _read_l2_product_ids(self, cumsize: int, number_of_l2_products: int) -> None:
         self.f.seek(cumsize, 0)
         self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=number_of_l2_products)
-        print(np.shape(self.l2_product_IDs), number_of_l2_products, self.l2_product_IDs)
         return
         
     def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
         """This is variable and treated separately."""
-        # Get the tuple for 'Number of L2 Products'
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
-        # Read the value from the binary file
-        self.f.seek(cumsize-dtype_size, 0)
-        number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        # Store the L2 products for later
-        self._read_l2_product_ids(cumsize, number_of_l2_products)
-        return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
+        try:
+            # Get the tuple for 'Number of L2 Products'
+            _, dtype, dtype_size, cumsize = self._get_value_from_tuples('Number of L2 Products', post_channel_id_fields)
+            self.f.seek(cumsize-dtype_size, 0)
+            number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
+
+            if not isinstance(number_of_l2_products, int) or number_of_l2_products < 0:
+                raise ValueError("Number of L2 products must be a non-negative integer")
+
+            return ('L2 Product IDs', 'uint32', 4 * number_of_l2_products, cumsize + (4 * number_of_l2_products))
+        except Exception as e:
+            # Handle or log the exception
+            print(f"Error in _get_l2_product_id_field: {e}")
+            raise
+
     
 
     def _build_iasi_common_header_fields(self) -> List[Tuple]:
@@ -458,7 +475,7 @@ class Preprocessor:
         """        
         for field, dtype, dtype_size, cumsize in fields:
             # Print field extraction progress
-            print(f"Extracting: {field}")
+            print(f"Extracting: {field}", dtype, dtype_size, cumsize)
             
             # Set the file pointer to the start position of the field
             self._set_field_start_position(cumsize)
@@ -550,14 +567,6 @@ class Preprocessor:
         Stores the datetime components to a single column and drops the elements.
         """
         print("\nBuilding Datetime:")
-        # # Create 'Datetime' column
-        # self.data_record_df['Datetime'] = self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') + \
-        #                             self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') + \
-        #                             self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') + '.' + \
-        #                             self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') + \
-        #                             self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') + \
-        #                             self.data_record_df['Millisecond'].apply(lambda x: f'{int(x/10000):02d}')
-        
         self.data_record_df['Datetime'] = (self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') +
                                     self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') +
@@ -565,7 +574,6 @@ class Preprocessor:
                                     self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Millisecond'].apply(lambda x: f'{int(x/10000):02d}')
                                   )
-
 
         # Drop original time element columns
         self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Millisecond'])
