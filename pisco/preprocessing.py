@@ -377,7 +377,7 @@ class Preprocessor:
         return self.metadata.record_size + 8 - dtype_size
     
     def _set_field_start_position(self, dtype_size: int, cumsize: int) -> None:
-        self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
+        self.f.seek(self.metadata.header_size + cumsize - dtype_size, 0)
 
         print(self.metadata.header_size + 12 + cumsize)
         print(self.metadata.header_size + cumsize - dtype_size)
@@ -605,7 +605,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_l1c_product_record_fields())
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
-            self.filter_good_spectra(datetime(int(year), int(month), int(day)))
+            # self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
             print("\nL2 Record Fields:")
@@ -622,8 +622,6 @@ class Preprocessor:
 
             # Print the head of the filtered DataFrame
             print(filtered_df.head())
-
-        input()
             
         self.close_binary_file()
 
