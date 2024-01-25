@@ -135,7 +135,7 @@ class Metadata:
             _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
             self.f.seek(cumsize-dtype_size, 0)
             self.number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
-            print(self.number_of_channels)
+            print(type(self.number_of_channels))
             if not isinstance(self.number_of_channels, int) or self.number_of_channels <= 0:
                 raise ValueError("Number of channels must be a positive integer")
 
