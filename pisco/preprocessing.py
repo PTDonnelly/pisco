@@ -77,12 +77,12 @@ class Metadata:
     
     def _read_header_record_size(self, common_header_fields: List[Tuple]) -> None:
         # Read header size
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Header Size', common_header_fields)
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
         self.header_size = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
 
         # Read record size
-        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
         self.record_size = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
         return
@@ -126,7 +126,6 @@ class Metadata:
     def _read_channel_ids(self, cumsize: int) -> None:
         self.f.seek(cumsize, 0)
         self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
-        print(type(self.channel_IDs))
         return
     
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
@@ -150,12 +149,10 @@ class Metadata:
             print(f"Error in _get_channel_id_field: {e}")
             raise
 
-
     
     def _read_l2_product_ids(self, cumsize: int) -> None:
         self.f.seek(cumsize, 0)
         self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_l2_products)
-        exit()
         return
         
     def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
