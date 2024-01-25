@@ -472,8 +472,6 @@ class Preprocessor:
             
             # Read the binary data based on the valid indices
             self._read_binary_data(field, dtype, dtype_size)
-
-            input()
     
     def read_l2_product_fields(self):
         # Retrieve the individual L2 products from the configuration file
@@ -628,6 +626,8 @@ class Preprocessor:
 
             # Print the head of the filtered DataFrame
             print(filtered_df.head())
+
+        input()
             
         self.close_binary_file()
 
