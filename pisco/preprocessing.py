@@ -79,7 +79,7 @@ class Metadata:
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
         self.f.seek(cumsize-dtype_size, 0)
         record_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        record_size = None if len(record_size) == 0 else record_size[0]
+        # record_size = None if len(record_size) == 0 else record_size[0]
         return header_size, record_size
      
     def _get_field_from_tuples(self, key, tuples_list):
