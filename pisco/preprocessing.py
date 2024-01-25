@@ -82,7 +82,7 @@ class Metadata:
         record_size = None if len(record_size) == 0 else record_size[0]
         return header_size, record_size
      
-    def _get_field_from_tuples(key, tuples_list):
+    def _get_field_from_tuples(self, key, tuples_list):
         for tup in tuples_list:
             if tup[0] == key:
                 print(tup)
