@@ -374,10 +374,10 @@ class Preprocessor:
         return       
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
-        return self.metadata.record_size - dtype_size
+        return self.metadata.record_size + 8 - dtype_size
     
     def _set_field_start_position(self, cumsize: int) -> None:
-        self.f.seek(self.metadata.header_size + cumsize, 0)
+        self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
         return
     
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
@@ -423,7 +423,7 @@ class Preprocessor:
             for i in range(self.metadata.number_of_measurements):
                 
                 # Read the field for the current measurement
-                step = (byte_offset * i) + (dtype_size * (i - 1))
+                step = (byte_offset * i) + (dtype_size * i)
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
@@ -434,7 +434,7 @@ class Preprocessor:
             for i in range(self.metadata.number_of_measurements):
                 
                 # Read the value for the current measurement
-                step = (byte_offset * i) + (dtype_size * (i - 1))
+                step = (byte_offset * i) + (dtype_size * i)
                 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
