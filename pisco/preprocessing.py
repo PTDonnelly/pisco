@@ -459,7 +459,7 @@ class Preprocessor:
             print(f"Extracting: {field}", dtype, dtype_size, cumsize)
             
             # Set the file pointer to the start position of the field
-            self._set_field_start_position(dtype_size, cumsize)
+            self._set_field_start_position(cumsize)
             
             # Read the binary data based on the valid indices
             self._read_binary_data(field, dtype, dtype_size)
