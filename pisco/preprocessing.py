@@ -85,7 +85,7 @@ class Metadata:
     def _get_field_from_tuples(self, key, tuples_list):
         for tup in tuples_list:
             print(tup)
-            input
+            input()
             if tup[0] == key:
                 print(tup)
                 input()
@@ -137,7 +137,7 @@ class Metadata:
     def _build_iasi_common_header_fields(self):
         # Step 1: Get pre-channel ID fields
         pre_channel_id_fields = self._get_fixed_size_fields_pre()
-        print(type(pre_channel_id_fields))
+        
         # Step 2: Get channel ID field
         channel_id_field = self._get_channel_id_field(pre_channel_id_fields)
 
