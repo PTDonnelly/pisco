@@ -139,7 +139,7 @@ class Metadata:
             if not isinstance(self.number_of_channels, int) or self.number_of_channels <= 0:
                 raise ValueError("Number of channels must be a positive integer")
 
-            return ('Channel IDs', 'uint32', 4 * self.number_of_channels, cumsize + (4 * self.number_of_channels))
+            return [('Channel IDs', 'uint32', 4 * self.number_of_channels, cumsize + (4 * self.number_of_channels))]
         except Exception as e:
             # Handle or log the exception
             print(f"Error in _get_channel_id_field: {e}")
@@ -163,7 +163,7 @@ class Metadata:
             if not isinstance(number_of_l2_products, int) or number_of_l2_products < 0:
                 raise ValueError("Number of L2 products must be a non-negative integer")
 
-            return ('L2 Product IDs', 'uint32', 4 * number_of_l2_products, cumsize + (4 * number_of_l2_products))
+            return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, cumsize + (4 * number_of_l2_products))]
         except Exception as e:
             # Handle or log the exception
             print(f"Error in _get_l2_product_id_field: {e}")
