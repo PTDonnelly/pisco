@@ -82,13 +82,14 @@ class Metadata:
         record_size = None if len(record_size) == 0 else record_size[0]
         return header_size, record_size
      
-    def _get_field_from_tuples(key, tuples_list, default=None):
+    def _get_field_from_tuples(key, tuples_list):
         for tup in tuples_list:
             if tup[0] == key:
                 print(tup)
                 input()
                 return tup
-        return default
+            else:
+                return None
     
     def _get_fixed_size_fields_pre(self):
         "Byte table for values occuring before Channel IDs"
