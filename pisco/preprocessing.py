@@ -374,10 +374,10 @@ class Preprocessor:
         return       
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
-        return self.metadata.record_size + 8 - dtype_size
+        return self.metadata.record_size - dtype_size
     
-    def _set_field_start_position(self, dtype_size: int, cumsize: int) -> None:
-        self.f.seek(self.metadata.header_size + 8 + cumsize, 0)
+    def _set_field_start_position(self, cumsize: int) -> None:
+        self.f.seek(self.metadata.header_size + cumsize, 0)
         return
     
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
