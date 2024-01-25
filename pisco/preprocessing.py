@@ -85,6 +85,8 @@ class Metadata:
     def _get_field_from_tuples(key, tuples_list, default=None):
         for tup in tuples_list:
             if tup[0] == key:
+                print(tup)
+                input()
                 return tup
         return default
     
@@ -108,15 +110,15 @@ class Metadata:
         # Read the value from the binary file
         self.f.seek(cumsize-dtype_size, 0)
         number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        return [('Channel IDs', 'uint32', 4 * number_of_channels, cumsize + (4 * number_of_channels))]
+        return [('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)]
     
     def _get_fixed_size_fields_post(self, channel_id_field: Tuple):
         "Byte table for values occuring after Channel IDs"
         # Get the tuple for 'Channel IDs'
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Channel IDs', channel_id_field)
         post_channel_id_fields = [
-            ('AVHRR Brilliance', 'bool', 1, cumsize + 1),
-            ('Number of L2 Products', 'uint16', 2, cumsize + 3)
+            ('AVHRR Brilliance', 'bool', 1, 1 + cumsize),
+            ('Number of L2 Products', 'uint16', 2, 3 + cumsize)
         ]
         return post_channel_id_fields
     
@@ -127,7 +129,7 @@ class Metadata:
         # Read the value from the binary file
         self.f.seek(cumsize-dtype_size, 0)
         number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
-        return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, cumsize + (4 * number_of_l2_products))]
+        return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
 
     def _build_iasi_common_header_fields(self):
         # Step 1: Get pre-channel ID fields
