@@ -423,7 +423,7 @@ class Preprocessor:
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
-        if not field == "Spectrum":
+        if not "Spectrum" in field:
             
             # Prepare an NaN array to store the data of the current field
             data = np.full(self.metadata.number_of_measurements, np.nan, dtype="float32")
@@ -436,7 +436,7 @@ class Preprocessor:
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[i] = value[0] if len(value) != 0 else data[i]
 
-        elif field == "Spectrum":
+        else:
             
             # Prepare an NaN array to store the data of the spectrum field
             data = np.full((self.metadata.number_of_channels, self.metadata.number_of_measurements), np.nan, dtype="float32")
