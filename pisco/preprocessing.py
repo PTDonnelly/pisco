@@ -553,7 +553,12 @@ class Preprocessor:
             
         self.close_binary_file()
 
-        print(self.data_record_df.head())
+        # Filter columns
+        filtered_columns = [col for col in self.data_record_df.columns if "Cloud Phase" in col]
+        filtered_df = self.data_record_df[filtered_columns]
+
+        # Print the head of the filtered DataFrame
+        print(filtered_df.head())
 
 
         # Construct Local Time column
