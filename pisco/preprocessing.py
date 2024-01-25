@@ -377,10 +377,7 @@ class Preprocessor:
         return self.metadata.record_size + 8 - dtype_size
     
     def _set_field_start_position(self, dtype_size: int, cumsize: int) -> None:
-        self.f.seek(self.metadata.header_size + cumsize - dtype_size, 0)
-
-        print(self.metadata.header_size + 12 + cumsize)
-        print(self.metadata.header_size + cumsize - dtype_size)
+        self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
         return
     
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
@@ -395,6 +392,7 @@ class Preprocessor:
 
             # Concatenate this new DataFrame with the existing one
             self.data_record_df = pd.concat([self.data_record_df, spectrum_df], axis=1)
+        print(self.data_record_df[field].head())
         return
 
     def _read_binary_data(self, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
