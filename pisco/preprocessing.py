@@ -28,46 +28,15 @@ class Metadata:
     """
     def __init__(self, file: BinaryIO):
         self.f: BinaryIO = file
-        self.header_size: int = None
-        self.byte_order: int = None
-        self.format_version: int = None
-        self.satellite_identifier: int = None
-        self.record_header_size: int = None
-        self.brightness_temperature_brilliance: bool = None
         self.number_of_channels: int = None
-        self.channel_IDs: np.array = None
-        self.AVHRR_brilliance: bool = None
         self.number_of_l2_products: int = None
-        self.l2_product_IDs: int = None
-        self.record_size: int = None
-        self.number_of_measurements: int = None
     
-    def _print_metadata(self) -> None:
-        print(f"Header  : {self.header_size} bytes")
-        print(f"Record  : {self.record_size} bytes")
-        print(f"Data    : {self.number_of_measurements} measurements")
+    def _print_metadata(self, header_size: int, record_size: int, number_of_measurements: int) -> None:
+        print(f"Header  : {header_size} bytes")
+        print(f"Record  : {record_size} bytes")
+        print(f"Data    : {number_of_measurements} measurements")
         return
 
-    def _count_measurements(self) -> int:
-        """
-        Calculate the number of measurements in the binary file based on its size, 
-        header size and record size.
-
-        Returns:
-        int: The number of measurements.
-        """
-        # Get the total size of the file
-        file_size = self.f.seek(0, 2)
-        # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
-        self.number_of_measurements = ((file_size - self.header_size - 8) // (self.record_size + 8)) - 1
-        return
-    
-    def _read_record_size(self) -> int:
-        self.f.seek(self.header_size + 8, 0)
-        record_size = np.fromfile(self.f, dtype='uint32', count=1)
-        self.record_size = None if len(record_size) == 0 else record_size[0]
-        return
-    
     def _verify_header(self) -> None:
         """
         Verifies the header size by comparing it with the header size at the end of the header.
@@ -87,33 +56,98 @@ class Metadata:
         # Check if header sizes match
         assert self.header_size == header_size_check, "Header size mismatch"
 
-    def _read_iasi_common_header_metadata(self) -> None:
+    def _count_measurements(self, header_size: int, record_size: int) -> int:
         """
-        Reads the header of the binary file to obtain the header size and number of channels.
+        Calculate the number of measurements in the binary file based on its size, 
+        header size and record size.
+
+        Returns:
+        int: The number of measurements.
         """
-        # Read header entries
-        self.header_size = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        self.byte_order = np.fromfile(self.f, dtype='uint8', count=1)[0]
-        self.format_version = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        self.satellite_identifier = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        self.record_header_size = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        self.brightness_temperature_brilliance = np.fromfile(self.f, dtype='bool', count=1)[0]
-        self.number_of_channels = np.fromfile(self.f, dtype='uint32', count=1)[0]
-        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
-        self.AVHRR_brilliance = np.fromfile(self.f, dtype='bool', count=1)[0]
-        self.number_of_l2_products = np.fromfile(self.f, dtype='uint16', count=1)[0]
-        if self.number_of_l2_products:
-            self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_l2_products)
-        
-        # Read header size at the end of the header, check for a match
-        self._verify_header()       
-        return
+        # Get the total size of the file
+        file_size = self.f.seek(0, 2)
+        # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
+        return ((file_size - header_size - 8) // (record_size + 8)) - 1
+    
+    def _read_header_record_size(self, common_header_fields: List[Tuple]) -> [int, int]:
+        # Read header size
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Header Size', common_header_fields)
+        self.f.seek(cumsize-dtype_size, 0)
+        header_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
+
+        # Read record size
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
+        self.f.seek(cumsize-dtype_size, 0)
+        record_size = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        record_size = None if len(record_size) == 0 else record_size[0]
+        return header_size, record_size
+     
+    def _get_field_from_tuples(key, tuples_list, default=None):
+        for tup in tuples_list:
+            if tup[0] == key:
+                return tup
+        return default
+    
+    def _get_fixed_size_fields_pre(self):
+        "Byte table for values occuring before Channel IDs"
+        pre_channel_id_fields = [
+            ('Header Size', 'uint32', 4, 4),
+            ('Byte Order', 'uint8', 1, 5),
+            ('Format Version', 'uint32', 4, 9),
+            ('Satellite Identifier', 'uint32', 4, 13),
+            ('Record Header Size', 'uint32', 4, 17),
+            ('Brightness Temperature Brilliance', 'bool', 1, 18),
+            ('Number of Channels', 'uint32', 4, 22)
+        ]
+        return pre_channel_id_fields
+
+    def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
+        """This is variable and treated separately."""
+        # Get the tuple for 'Number of Channels'
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
+        # Read the value from the binary file
+        self.f.seek(cumsize-dtype_size, 0)
+        number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        return [('Channel IDs', 'uint32', 4 * number_of_channels, cumsize + (4 * number_of_channels))]
+    
+    def _get_fixed_size_fields_post(self, channel_id_field: Tuple):
+        "Byte table for values occuring after Channel IDs"
+        # Get the tuple for 'Channel IDs'
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Channel IDs', channel_id_field)
+        post_channel_id_fields = [
+            ('AVHRR Brilliance', 'bool', 1, cumsize + 1),
+            ('Number of L2 Products', 'uint16', 2, cumsize + 3)
+        ]
+        return post_channel_id_fields
+    
+    def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
+        """This is variable and treated separately."""
+        # Get the tuple for 'Number of L2 Products'
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
+        # Read the value from the binary file
+        self.f.seek(cumsize-dtype_size, 0)
+        number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, cumsize + (4 * number_of_l2_products))]
+
+    def _build_iasi_common_header_fields(self):
+        # Step 1: Get pre-channel ID fields
+        pre_channel_id_fields = self._get_fixed_size_fields_pre()
+
+        # Step 2: Get channel ID field
+        channel_id_field = self._get_channel_id_field(pre_channel_id_fields)
+
+        # Step 3: Get post-channel ID fields
+        post_channel_id_fields = self._get_fixed_size_fields_post(channel_id_field)
+
+        # Step 4: Get L2 product ID field
+        l2_product_id_field = self._get_l2_product_id_field(post_channel_id_fields)
+        return pre_channel_id_fields + channel_id_field + post_channel_id_fields + l2_product_id_field
     
     def get_iasi_common_header(self) -> None:
-        self._read_iasi_common_header_metadata()
-        self._read_record_size()
-        self._count_measurements()
-        self._print_metadata()
+        common_header_fields = self._build_iasi_common_header_fields()
+        header_size, record_size = self._read_header_record_size(common_header_fields)
+        number_of_measurements = self._count_measurements(header_size, record_size)
+        self._print_metadata(number_of_measurements)
         return
 
     def _get_iasi_common_record_fields(self) -> List[tuple]:
@@ -551,15 +585,14 @@ class Preprocessor:
             # Read L2 retrieved products
             self.read_l2_product_fields()
             
+            # Filter columns
+            filtered_columns = [col for col in self.data_record_df.columns if "Cloud Phase" in col]
+            filtered_df = self.data_record_df[filtered_columns]
+
+            # Print the head of the filtered DataFrame
+            print(filtered_df.head())
+            
         self.close_binary_file()
-
-        # Filter columns
-        filtered_columns = [col for col in self.data_record_df.columns if "Cloud Phase" in col]
-        filtered_df = self.data_record_df[filtered_columns]
-
-        # Print the head of the filtered DataFrame
-        print(filtered_df.head())
-
 
         # Construct Local Time column
         self.build_local_time()
