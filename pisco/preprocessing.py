@@ -383,6 +383,7 @@ class Preprocessor:
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
         if not field == "Spectrum":
             self.data_record_df[field] = data
+            print(self.data_record_df[field].head())
         else:
             # Prepare new columns for the spectrum data
             spectrum_columns = {f'Spectrum {channel_ID}': data[i, :] for i, channel_ID in enumerate(self.metadata.channel_IDs)}
@@ -392,7 +393,6 @@ class Preprocessor:
 
             # Concatenate this new DataFrame with the existing one
             self.data_record_df = pd.concat([self.data_record_df, spectrum_df], axis=1)
-        print(self.data_record_df[field].head())
         return
 
     def _read_binary_data(self, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
@@ -409,14 +409,12 @@ class Preprocessor:
         # Calculate the byte offset to the next measurement
         byte_offset = self._calculate_byte_offset(dtype_size)
 
-        print(self.f.tell())
+        # print(self.f.tell())
         
         # Calculate byte location to start pointer (skipping invalid indices)
         byte_start = (byte_offset + dtype_size)
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
-
-        print(self.f.tell())
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
