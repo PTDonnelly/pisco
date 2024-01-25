@@ -374,7 +374,7 @@ class Preprocessor:
         return       
 
     def _calculate_byte_offset(self, dtype_size: int) -> int:
-        return self.metadata.record_size + 8# - dtype_size
+        return self.metadata.record_size + 8 - dtype_size
     
     def _set_field_start_position(self, cumsize: int) -> None:
         self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
@@ -383,7 +383,6 @@ class Preprocessor:
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
         if not field == "Spectrum":
             self.data_record_df[field] = data
-            print(self.data_record_df[field].head())
         else:
             # Prepare new columns for the spectrum data
             spectrum_columns = {f'Spectrum {channel_ID}': data[i, :] for i, channel_ID in enumerate(self.metadata.channel_IDs)}
@@ -413,7 +412,6 @@ class Preprocessor:
         byte_start = (byte_offset + dtype_size)
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
-        print(byte_offset, dtype_size, self.f.tell())
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
@@ -423,7 +421,7 @@ class Preprocessor:
             for i in range(self.metadata.number_of_measurements):
                 
                 # Read the field for the current measurement
-                step = (byte_offset * i) + (dtype_size * i)
+                step = (byte_offset * i) + (dtype_size * (i - 1))
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
@@ -434,7 +432,7 @@ class Preprocessor:
             for i in range(self.metadata.number_of_measurements):
                 
                 # Read the value for the current measurement
-                step = (byte_offset * i) + (dtype_size * i)
+                step = (byte_offset * i) + (dtype_size * (i - 1))
                 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
