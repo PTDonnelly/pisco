@@ -408,13 +408,12 @@ class Preprocessor:
         """
         # Calculate the byte offset to the next measurement
         byte_offset = self._calculate_byte_offset(dtype_size)
-
-        # print(self.f.tell())
         
         # Calculate byte location to start pointer (skipping invalid indices)
         byte_start = (byte_offset + dtype_size)
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
+        print(self.f.tell())
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
