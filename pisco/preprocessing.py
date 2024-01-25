@@ -14,15 +14,9 @@ class Metadata:
     Attributes:
         f (BinaryIO): The binary file object.
         header_size (int): The size of the header in bytes.
-        byte_order (int): The byte order of the binary data.
-        format_version (int): The version of the data format.
-        satellite_identifier (int): The identifier of the satellite.
         record_header_size (int): The size of the record header.
-        brightness_temperature_brilliance (bool): The brightness temperature brilliance.
         number_of_channels (int): The number of channels.
         channel_IDs (np.array): The IDs of the channels.
-        AVHRR_brilliance (bool): The AVHRR brilliance.
-        number_of_L2_sections (int): The number of Level 2 sections.
         record_size (int): The size of each record in bytes.
         number_of_measurements (int): The number of measurements.
     """
@@ -386,8 +380,6 @@ class Preprocessor:
     
     def _set_field_start_position(self, cumsize: int) -> None:
         self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
-        print(cumsize, self.metadata.header_size + 12 + cumsize, self.f.tell())
-        input()
         return
     
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
@@ -415,13 +407,19 @@ class Preprocessor:
         Returns:
             np.ndarray: 1-D array of field data.
         """
+        print(self.f.tell())
+
         # Calculate the byte offset to the next measurement
         byte_offset = self._calculate_byte_offset(dtype_size)
+
+        print(self.f.tell())
         
         # Calculate byte location to start pointer (skipping invalid indices)
         byte_start = (byte_offset + dtype_size)
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
+
+        print(self.f.tell())
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
@@ -474,6 +472,8 @@ class Preprocessor:
             
             # Read the binary data based on the valid indices
             self._read_binary_data(field, dtype, dtype_size)
+
+            input()
     
     def read_l2_product_fields(self):
         # Retrieve the individual L2 products from the configuration file
