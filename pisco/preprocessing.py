@@ -413,7 +413,7 @@ class Preprocessor:
         byte_start = (byte_offset + dtype_size)
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
-        print(self.f.tell())
+        print(byte_offset, dtype_size, self.f.tell())
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
@@ -423,7 +423,7 @@ class Preprocessor:
             for i in range(self.metadata.number_of_measurements):
                 
                 # Read the field for the current measurement
-                step = (byte_offset * i) + (dtype_size * i)
+                step = (byte_offset * i)# + (dtype_size * i)
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
