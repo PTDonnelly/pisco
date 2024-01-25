@@ -116,7 +116,6 @@ class Metadata:
         self._print_metadata()
         return
 
-
     def _get_iasi_common_record_fields(self) -> List[tuple]:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         common_fields = [
@@ -137,7 +136,8 @@ class Metadata:
                         ('Scan Line Number', 'uint32', 4, 46),
                         ('Height of Station', 'float32', 4, 50)]
         return common_fields
-    
+
+
     def _get_iasi_l1c_record_fields(self) -> List[tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         last_field_end = self._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
@@ -357,8 +357,8 @@ class Preprocessor:
         if not field == "Spectrum":
             
             # Prepare an NaN array to store the data of the current field
-            data = np.full(self.number_of_measurements, np.nan, dtype="float32")
-            for i in range(self.number_of_measurements):
+            data = np.full(self.metadata.number_of_measurements, np.nan, dtype="float32")
+            for i in range(self.metadata.number_of_measurements):
                 
                 # Read the value for the current measurement
                 step = (byte_offset * i) + (dtype_size * (i - 1))
@@ -370,8 +370,8 @@ class Preprocessor:
         elif field == "Spectrum":
             
             # Prepare an NaN array to store the data of the spectrum field
-            data = np.full((self.metadata.number_of_channels, self.number_of_measurements), np.nan, dtype="float32")
-            for i in range(self.number_of_measurements):
+            data = np.full((self.metadata.number_of_channels, self.metadata.number_of_measurements), np.nan, dtype="float32")
+            for i in range(self.metadata.number_of_measurements):
                 
                 # Read the value for the current measurement
                 step = (byte_offset * i) + (dtype_size * (i - 1))
