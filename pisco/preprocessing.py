@@ -178,8 +178,6 @@ class Metadata:
 
 
     def _get_iasi_common_record_fields(self) -> List[Tuple]:
-        # common_header_fields = self._build_iasi_common_header_fields()
-        
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         common_fields = [
                         ('Year', 'uint16', 2, 2),
@@ -378,12 +376,15 @@ class Preprocessor:
     def _calculate_byte_offset(self, dtype_size: int) -> int:
         return self.metadata.record_size + 8 - dtype_size
     
-    def _set_field_start_position(self, cumsize: int) -> None:
+    def _set_field_start_position(self, dtype_size: int, cumsize: int) -> None:
         self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
+
+        print(self.metadata.header_size + 12 + cumsize)
+        print(self.metadata.header_size + cumsize - dtype_size)
         return
     
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
-        if field != "Spectrum":
+        if not field == "Spectrum":
             self.data_record_df[field] = data
         else:
             # Prepare new columns for the spectrum data
@@ -407,8 +408,6 @@ class Preprocessor:
         Returns:
             np.ndarray: 1-D array of field data.
         """
-        print(self.f.tell())
-
         # Calculate the byte offset to the next measurement
         byte_offset = self._calculate_byte_offset(dtype_size)
 
@@ -424,7 +423,6 @@ class Preprocessor:
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
         if not field == "Spectrum":
-            
             # Prepare an NaN array to store the data of the current field
             data = np.full(self.metadata.number_of_measurements, np.nan, dtype="float32")
             for i in range(self.metadata.number_of_measurements):
@@ -435,9 +433,7 @@ class Preprocessor:
 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[i] = value[0] if len(value) != 0 else data[i]
-
         else:
-            
             # Prepare an NaN array to store the data of the spectrum field
             data = np.full((self.metadata.number_of_channels, self.metadata.number_of_measurements), np.nan, dtype="float32")
             for i in range(self.metadata.number_of_measurements):
@@ -468,7 +464,7 @@ class Preprocessor:
             print(f"Extracting: {field}", dtype, dtype_size, cumsize)
             
             # Set the file pointer to the start position of the field
-            self._set_field_start_position(cumsize)
+            self._set_field_start_position(dtype_size, cumsize)
             
             # Read the binary data based on the valid indices
             self._read_binary_data(field, dtype, dtype_size)
