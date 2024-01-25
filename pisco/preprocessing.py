@@ -130,10 +130,10 @@ class Metadata:
         field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
         # Read the value from the binary file
         self.f.seek(cumsize-dtype_size, 0)
-        number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
+        self.number_of_channels = np.fromfile(self.f, dtype=dtype, count=1)[0]
         # Store Channel IDs for later
-        self._read_channel_ids(cumsize, number_of_channels)
-        return [('Channel IDs', 'uint32', 4 * number_of_channels, (4 * number_of_channels) + cumsize)]
+        self._read_channel_ids(cumsize, self.number_of_channels)
+        return [('Channel IDs', 'uint32', 4 * self.number_of_channels, (4 * self.number_of_channels) + cumsize)]
 
     
     def _read_l2_product_ids(self, cumsize: int, number_of_l2_products: int) -> None:
@@ -150,7 +150,6 @@ class Metadata:
         self.f.seek(cumsize-dtype_size, 0)
         number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
         # Store the L2 products for later
-        print(field, dtype, dtype_size, cumsize)
         self._read_l2_product_ids(cumsize, number_of_l2_products)
         return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
     
