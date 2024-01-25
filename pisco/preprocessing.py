@@ -550,13 +550,22 @@ class Preprocessor:
         Stores the datetime components to a single column and drops the elements.
         """
         print("\nBuilding Datetime:")
-        # Create 'Datetime' column
-        self.data_record_df['Datetime'] = self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') + \
-                                    self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') + \
-                                    self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') + '.' + \
-                                    self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') + \
-                                    self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') + \
+        # # Create 'Datetime' column
+        # self.data_record_df['Datetime'] = self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') + \
+        #                             self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') + \
+        #                             self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') + '.' + \
+        #                             self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') + \
+        #                             self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') + \
+        #                             self.data_record_df['Millisecond'].apply(lambda x: f'{int(x/10000):02d}')
+        
+        self.data_record_df['Datetime'] = (self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') +
+                                    self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') +
+                                    self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') +
+                                    self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') +
+                                    self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Millisecond'].apply(lambda x: f'{int(x/10000):02d}')
+                                  )
+
 
         # Drop original time element columns
         self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Millisecond'])
