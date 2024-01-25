@@ -312,7 +312,13 @@ class Preprocessor:
         self.f.close()
         return       
 
-
+    def _calculate_byte_offset(self, dtype_size: int) -> int:
+        return self.metadata.record_size + 8 - dtype_size
+    
+    def _set_field_start_position(self, cumsize: int) -> None:
+        self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
+        return
+    
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
         if field != "Spectrum":
             self.data_record_df[field] = data
