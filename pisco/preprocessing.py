@@ -84,6 +84,8 @@ class Metadata:
      
     def _get_field_from_tuples(self, key, tuples_list):
         for tup in tuples_list:
+            print(tup)
+            input
             if tup[0] == key:
                 print(tup)
                 input()
@@ -146,7 +148,7 @@ class Metadata:
         l2_product_id_field = self._get_l2_product_id_field(post_channel_id_fields)
         return pre_channel_id_fields + channel_id_field + post_channel_id_fields + l2_product_id_field
     
-    def get_iasi_common_header(self) -> None:
+    def check_iasi_common_header(self) -> None:
         common_header_fields = self._build_iasi_common_header_fields()
         header_size, record_size = self._read_header_record_size(common_header_fields)
         number_of_measurements = self._count_measurements(header_size, record_size)
@@ -154,6 +156,8 @@ class Metadata:
         return
 
     def _get_iasi_common_record_fields(self) -> List[tuple]:
+        # common_header_fields = self._build_iasi_common_header_fields()
+        
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         common_fields = [
                         ('Year', 'uint16', 2, 2),
@@ -342,7 +346,7 @@ class Preprocessor:
         
         # Get structure of file header and data record
         self.metadata = Metadata(self.f)
-        self.metadata.get_iasi_common_header()
+        self.metadata.check_iasi_common_header()
         return
 
     def close_binary_file(self):
