@@ -121,7 +121,8 @@ class Metadata:
 
     def _read_channel_ids(self, dtype_size: int, cumsize: int, number_of_channels: int) -> None:
         self.f.seek(cumsize-dtype_size, 0)
-        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_channels)[0]
+        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_channels)
+        print(np.shape(self.channel_IDs), self.channel_IDs)
         return
     
     def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
@@ -138,7 +139,8 @@ class Metadata:
     
     def _read_l2_product_ids(self, dtype_size: int, cumsize: int, number_of_l2_products: int) -> None:
         self.f.seek(cumsize-dtype_size, 0)
-        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_l2_products)[0]
+        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=4 * number_of_l2_products)
+        print(np.shape(self.l2_product_IDs), self.l2_product_IDs)
         return
         
     def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
@@ -153,7 +155,7 @@ class Metadata:
         return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
     
 
-    def _build_iasi_common_header_fields(self):
+    def _build_iasi_common_header_fields(self) -> List[Tuple]:
         # Step 1: Get pre-channel ID fields
         pre_channel_id_fields = self._get_fixed_size_fields_pre()
         
@@ -175,7 +177,7 @@ class Metadata:
         return
 
 
-    def _get_iasi_common_record_fields(self) -> List[tuple]:
+    def _get_iasi_common_record_fields(self) -> List[Tuple]:
         # common_header_fields = self._build_iasi_common_header_fields()
         
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
@@ -199,7 +201,7 @@ class Metadata:
         return common_fields
 
 
-    def _get_iasi_l1c_record_fields(self) -> List[tuple]:
+    def _get_iasi_l1c_record_fields(self) -> List[Tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         last_field_end = self._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
 
@@ -220,7 +222,7 @@ class Metadata:
                     ('Surface Type', 'uint8', 1, 43 + last_field_end)]
         return l1c_fields
     
-    def _get_l1c_product_record_fields(self) -> List[tuple]:
+    def _get_l1c_product_record_fields(self) -> List[Tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         last_field_end =  self._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
         
@@ -229,7 +231,7 @@ class Metadata:
         return fields
 
 
-    def _get_iasi_l2_record_fields(self) -> List[tuple]:
+    def _get_iasi_l2_record_fields(self) -> List[Tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         last_field_end = self._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
 
@@ -249,7 +251,7 @@ class Metadata:
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 32 + last_field_end)]
         return l2_fields
     
-    def _get_l2_product_record_fields(self, product_index: int, product_ID: int) -> List[tuple]:
+    def _get_l2_product_record_fields(self, product_index: int, product_ID: int) -> List[Tuple]:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         last_field_end =  self._get_iasi_l2_record_fields()[-1][-1]  # End of the Satellite Manoeuvre Indicator field
         # Shift cumsizes by offset equal to number of other L2 products already read
@@ -332,11 +334,11 @@ class Preprocessor:
         Opens the binary file and extracts the metadata.
     close_binary_file()
         Closes the currently open binary file.
-    flag_observations_to_keep(fields: List[tuple])
+    flag_observations_to_keep(fields: List[Tuple])
         Creates a List of indices to sub-sample the main data set.
-    read_record_fields(fields: List[tuple])
+    read_record_fields(fields: List[Tuple])
         Reads the specified fields from the binary file and stores them in the DataFrame.
-    read_spectral_radiance(fields: List[tuple])
+    read_spectral_radiance(fields: List[Tuple])
         Reads the spectral radiance data from the binary file and stores them in the DataFrame.
     build_local_time()
         Calculates and stores the local time at each point in the DataFrame.
@@ -445,12 +447,12 @@ class Preprocessor:
         self._store_data_in_df(field, data)
         return
           
-    def read_record_fields(self, fields: List[tuple]) -> None:
+    def read_record_fields(self, fields: List[Tuple]) -> None:
         """
         Reads the data of each field from the binary file and stores it in a pandas DataFrame.
 
         Args:
-            fields (List[tuple]): List of field tuples containing field information.
+            fields (List[Tuple]): List of field tuples containing field information.
 
         Returns:
             None
