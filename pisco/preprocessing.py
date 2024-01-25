@@ -88,7 +88,7 @@ class Metadata:
         return
 
 
-    def _get_field_from_tuples(self, key, tuples_list) -> Optional[Tuple, None]:
+    def _get_field_from_tuples(self, key, tuples_list) -> Optional[Tuple]:
         for tup in tuples_list:
             if tup[0] == key:
                 return tup
