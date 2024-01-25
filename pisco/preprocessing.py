@@ -152,6 +152,7 @@ class Metadata:
         self.f.seek(cumsize-dtype_size, 0)
         number_of_l2_products = np.fromfile(self.f, dtype=dtype, count=1)[0]
         # Store the L2 products for later
+        print(field, dtype, dtype_size, cumsize)
         self._read_l2_product_ids(cumsize, number_of_l2_products)
         return [('L2 Product IDs', 'uint32', 4 * number_of_l2_products, (4 * number_of_l2_products) + cumsize)]
     
