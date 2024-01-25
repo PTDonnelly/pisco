@@ -35,9 +35,9 @@
     // days_in_months: List[int], Number of calendar days in each month
     "days_in_months": [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 
-    // latitude_range: Tuple[int], The spatial range for binning latitudes
+    // latitude_range: List[int], The spatial range for binning latitudes [min, max]
     "latitude_range": [30, 60],
 
-    // longitude_range: Tuple[int], The spatial range for binning longitudes
+    // longitude_range: List[int], The spatial range for binning longitudes [min, max]
     "longitude_range": [-60, 0]
 }

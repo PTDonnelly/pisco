@@ -310,94 +310,7 @@ class Preprocessor:
 
     def close_binary_file(self):
         self.f.close()
-        return
-    
-
-    def _get_indices(self, field: str, dtype: Any, byte_offset: int) -> np.array:
-        """
-        Read and check the indices of measurements based on the latitude or longitude values.
-
-        Args:
-            field (str): Field name, either 'Latitude' or 'Longitude'.
-            dtype (Any): Data type of the field.
-            byte_offset (int): Byte offset to the next measurement.
-
-        Returns:
-            np.array: List of indices of measurements that fall within the specified range.
-        """
-        # Initialize an array to store measurement values
-        values = np.empty(self.metadata.number_of_measurements)
-
-        # Loop through each measurement in the data
-        for measurement in range(self.metadata.number_of_measurements):
-            # Read and store the value of the field from the file
-            values[measurement] = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=byte_offset)
-
-        # Given the field, filter the indices based on the specified range
-        if field == 'Latitude':
-            valid_indices = np.where((self.latitude_range[0] <= values) & (values <= self.latitude_range[1]))[0]
-        # If the field is 'Longitude', filter the indices based on the longitude range
-        elif field == 'Longitude':
-            valid_indices = np.where((self.longitude_range[0] <= values) & (values <= self.longitude_range[1]))[0]
-
-        # Return the indices that fall within the specified range for the given field
-        return valid_indices
-
-    def _calculate_byte_offset(self, dtype_size: int) -> int:
-        return self.metadata.record_size + 8 - dtype_size
-    
-    def _set_field_start_position(self, cumsize: int) -> None:
-        self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
-        return
-    
-    def _check_spatial_range(self):
-        return True if (self.latitude_range == [-90, 90]) & (self.longitude_range == [-180, 180]) else False
-    
-    def flag_observations_to_keep(self, fields: List[tuple]) -> np.array:
-        """
-        Go through the latitude and longitude fields to find and store indices of measurements 
-        where latitude and longitude fall inside the specified range.
-
-        If the latitude and longitude cover the full globe, return a set of all indices.
-
-        If the latitude and longitude do not cover the full globe, find the valid indices 
-        based on the specified range and return the intersection of valid latitude and longitude indices.
-
-        Args:
-            fields (List[tuple]): List of field tuples containing field information.
-
-        Returns:
-            np.array: List of indices of measurements to be processed in the main loop.
-        """
-        # Check if the latitude and longitude cover the full globe
-        full_globe = self._check_spatial_range()
-
-        if full_globe:
-            # If the latitude and longitude cover the full globe, return all indices
-            valid_indices = [i for i in range(self.metadata.number_of_measurements)]
-        else:
-            print(f"\nFlagging observations to keep:")
-
-            for field, dtype, dtype_size, cumsize in fields:
-                if field not in ['Latitude', 'Longitude']:
-                    # Skip all other fields for now
-                    continue
-
-                # List the starting position of the field and calculate the byte offset
-                self._set_field_start_position(cumsize)
-                byte_offset = self._calculate_byte_offset(dtype_size)
-
-                # Read and store the valid indices for the field
-                valid_indices = self._get_indices(field, dtype, byte_offset)
-                if field == 'Latitude':
-                    valid_indices_lat = valid_indices
-                elif field == 'Longitude':
-                    valid_indices_lon = valid_indices
-
-            # Return the intersection of valid latitude and longitude indices
-            valid_indices = np.intersect1d(valid_indices_lat, valid_indices_lon)
-        print(f"Full Globe == {full_globe}, {len(valid_indices)} measurements flagged out of {self.metadata.number_of_measurements}.")
-        return valid_indices                  
+        return       
 
 
     def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
@@ -414,12 +327,11 @@ class Preprocessor:
             self.data_record_df = pd.concat([self.data_record_df, spectrum_df], axis=1)
         return
 
-    def _read_binary_data(self, valid_indices: np.array, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
+    def _read_binary_data(self, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
         """
         Reads the data of each measurement based on the valid indices.
 
         Args:
-            valid_indices (np.array): List of valid measurement indices.
             dtype (Any): Data type of the field.
             dtype_size (int): Data type size in Bytes.
 
@@ -430,39 +342,33 @@ class Preprocessor:
         byte_offset = self._calculate_byte_offset(dtype_size)
         
         # Calculate byte location to start pointer (skipping invalid indices)
-        byte_start = (byte_offset + dtype_size) * valid_indices[0]
+        byte_start = (byte_offset + dtype_size)
         # Move file pointer to first valid index
         self.f.seek(byte_start, 1)
-        
-        # calculate the gaps between valid indices
-        valid_indices_increments = np.insert(np.diff(valid_indices), 0, 1)
 
         # Iterate over field elements and extract values from binary file.
         # Split conditions to avoid evaluting if statements at each iteration.
         if not field == "Spectrum":
             
             # Prepare an NaN array to store the data of the current field
-            data = np.full(len(valid_indices_increments), np.nan, dtype="float32")
-            for i, increment in enumerate(valid_indices_increments):
+            data = np.full(self.number_of_measurements, np.nan, dtype="float32")
+            for i in range(self.number_of_measurements):
                 
                 # Read the value for the current measurement
-                step = (byte_offset * increment) + (dtype_size * (increment - 1))
+                step = (byte_offset * i) + (dtype_size * (i - 1))
                 value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
 
-                if "Cloud Phase" in field:
-                    print(field, byte_offset, increment, dtype_size, step, value)
-                
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 data[i] = value[0] if len(value) != 0 else data[i]
-            input()
+
         elif field == "Spectrum":
             
             # Prepare an NaN array to store the data of the spectrum field
-            data = np.full((self.metadata.number_of_channels, len(valid_indices_increments)), np.nan, dtype="float32")
-            for i, increment in enumerate(valid_indices_increments):
+            data = np.full((self.metadata.number_of_channels, self.number_of_measurements), np.nan, dtype="float32")
+            for i in range(self.number_of_measurements):
                 
                 # Read the value for the current measurement
-                step = (byte_offset * increment) + (dtype_size * (increment - 1))
+                step = (byte_offset * i) + (dtype_size * (i - 1))
                 
                 # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
                 spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
@@ -472,13 +378,12 @@ class Preprocessor:
         self._store_data_in_df(field, data)
         return
           
-    def read_record_fields(self, fields: List[tuple], valid_indices: np.array) -> None:
+    def read_record_fields(self, fields: List[tuple]) -> None:
         """
         Reads the data of each field from the binary file and stores it in a pandas DataFrame.
 
         Args:
             fields (List[tuple]): List of field tuples containing field information.
-            valid_indices (np.array): List of valid indices to process.
 
         Returns:
             None
@@ -491,12 +396,12 @@ class Preprocessor:
             self._set_field_start_position(cumsize)
             
             # Read the binary data based on the valid indices
-            self._read_binary_data(valid_indices, field, dtype, dtype_size)
+            self._read_binary_data(field, dtype, dtype_size)
     
-    def read_l2_product_fields(self, valid_indices):
+    def read_l2_product_fields(self):
         # Retrieve the individual L2 products from the configuration file
         for product_index, product_ID in enumerate(self.metadata.l2_product_IDs):
-            self.read_record_fields(self.metadata._get_l2_product_record_fields(product_index, product_ID), valid_indices)
+            self.read_record_fields(self.metadata._get_l2_product_record_fields(product_index, product_ID))
 
 
     def filter_good_spectra(self, date: object) -> None:
@@ -611,22 +516,22 @@ class Preprocessor:
         return
     
 
-    def preprocess_files(self, year: str, month: str, day: str, valid_indices: np.array) -> None:
+    def preprocess_files(self, year: str, month: str, day: str) -> None:
         # Open binary file and extract metadata
         self.open_binary_file()
 
         # Read common IASI record fields and store to pandas DataFrame
-        print(f"\nCommon Record Fields: {len(valid_indices)} flagged measurements")
-        self.read_record_fields(self.metadata._get_iasi_common_record_fields(), valid_indices)
+        print(f"\nCommon Record Fields:")
+        self.read_record_fields(self.metadata._get_iasi_common_record_fields())
         
         if self.data_level == "l1c":
             print("\nL1C Record Fields:")
             
             # Read general L1C-specific record fields and add to DataFrame
-            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields(), valid_indices)
+            self.read_record_fields(self.metadata._get_iasi_l1c_record_fields())
 
             # Read L1C radiance spectrum field and add to DataFrame
-            self.read_record_fields(self.metadata._get_l1c_product_record_fields(), valid_indices)
+            self.read_record_fields(self.metadata._get_l1c_product_record_fields())
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
             self.filter_good_spectra(datetime(int(year), int(month), int(day)))
@@ -635,15 +540,12 @@ class Preprocessor:
             print("\nL2 Record Fields:")
             
             # Read general L2-specific record fields and add to DataFrame
-            self.read_record_fields(self.metadata._get_iasi_l2_record_fields(), valid_indices)
+            self.read_record_fields(self.metadata._get_iasi_l2_record_fields())
             
             # Read L2 retrieved products
-            self.read_l2_product_fields(valid_indices)
+            self.read_l2_product_fields()
             
         self.close_binary_file()
-
-        cloud_phase_columns = [col for col in self.data_record_df.columns if "Cloud Phase" in col]
-        print(self.data_record_df[cloud_phase_columns].head(50))
 
         # Construct Local Time column
         self.build_local_time()

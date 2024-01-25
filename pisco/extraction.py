@@ -107,6 +107,10 @@ class Extractor:
             list_of_parameters = [
                 f"-d {self.datapath_in}", # l1c data directory
                 f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",  # first and last day
+                f"-mila {self.config.latitude_range[0]} ", # min_latitude
+                f"-mala {self.config.latitude_range[1]} ", # max_latitude
+                f"-milo {self.config.longitude_range[0]} ", # min_longitude
+                f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
                 f"-of bin"  # output file format
             ]
@@ -114,6 +118,10 @@ class Extractor:
             list_of_parameters = [
                 f"-d2 {self.datapath_in}", # l2 data directory
                 f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}", # first and last day
+                f"-mila {self.config.latitude_range[0]} ", # min_latitude
+                f"-mala {self.config.latitude_range[1]} ", # max_latitude
+                f"-milo {self.config.longitude_range[0]} ", # min_longitude
+                f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-t2 {self.config.products}", # l2 products
                 f"-of bin"  # output file format
             ]
