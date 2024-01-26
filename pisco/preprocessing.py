@@ -185,7 +185,7 @@ class Metadata:
                         ('Day', 'uint8', 1, 4),
                         ('Hour', 'uint8', 1, 5),
                         ('Minute', 'uint8', 1, 6),
-                        ('Millisecond', 'uint32', 4, 10),
+                        ('Milliseconds', 'uint32', 4, 10),
                         ('Latitude', 'float32', 4, 14),
                         ('Longitude', 'float32', 4, 18),
                         ('Satellite Zenith Angle', 'float32', 4, 22),
@@ -376,6 +376,7 @@ class Preprocessor:
         self.f.close()
         return       
 
+
     def _calculate_byte_offset(self, dtype_size: int) -> int:
         return self.metadata.record_size + 8 - dtype_size
     
@@ -471,29 +472,6 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_l2_product_record_fields(product_index, product_ID))
 
 
-    def filter_good_spectra(self, date: object) -> None:
-            """
-            Filters bad spectra based on IASI L1C data quality flags and date. Overwrites existing DataFrame.
-            """
-            print("\nFiltering spectra:")
-            if date <= datetime(2012, 2, 8):
-                # Treat data differently if before February 8 2012 (due to a change in IASI data reduction)
-                check_quality_flag = self.data_record_df['Quality Flag'] == 0
-                check_data = self.data_record_df.drop(['Quality Flag', 'Date Column'], axis=1).sum(axis=1) > 0
-                good_flag = check_quality_flag & check_data
-            else:
-                check_quality_flags = (self.data_record_df['Quality Flag 1'] == 0) & (self.data_record_df['Quality Flag 2'] == 0) & (self.data_record_df['Quality Flag 3'] == 0)
-                good_flag = check_quality_flags
-            
-            # Print the fraction of good measurements
-            good_ratio = np.round((len(self.data_record_df[good_flag]) / len(self.data_record_df)) * 100, 2)
-            print(f"{good_ratio} % good data of {len(self.data_record_df)} spectra")
-            
-            # Throw away bad data, keep the good, re-assigning and over-writing the existing class attribute
-            self.data_record_df = self.data_record_df[good_flag]
-            return
-
-
     def _calculate_local_time(self) -> None:
         """
         Calculate the local time (in hours, UTC) that determines whether it is day or night at a specific longitude.
@@ -503,7 +481,7 @@ class Preprocessor:
         """
 
         # Retrieve the necessary field data
-        hour, minute, millisecond, longitude = self.data_record_df['Hour'], self.data_record_df['Minute'], self.data_record_df['Millisecond'], self.data_record_df['Longitude']
+        hour, minute, millisecond, longitude = self.data_record_df['Hour'], self.data_record_df['Minute'], self.data_record_df['Milliseconds'], self.data_record_df['Longitude']
 
         # Calculate the total time in hours, minutes, and milliseconds
         total_time = (hour * 1e4) + (minute * 1e2) + (millisecond / 1e3)
@@ -554,15 +532,15 @@ class Preprocessor:
                                     self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') +
-                                    self.data_record_df['Millisecond'].apply(lambda x: f'{int(x/10000):02d}')
+                                    self.data_record_df['Milliseconds'].apply(lambda x: f'{int(x/10000):02d}')
                                   )
 
         # Drop original time element columns
-        self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Millisecond'])
+        self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'])
         return  
     
 
-    def _delete_intermediate_binary_file(self) -> None:
+    def _delete_intermediate_file(self) -> None:
         os.remove(self.intermediate_file)
         return
 
@@ -579,11 +557,11 @@ class Preprocessor:
         self.data_record_df.to_csv(f"{outfile}.csv", index=False, mode='w')
         
         # Delete intermediate OBR output file
-        self._delete_intermediate_binary_file()
+        self._delete_intermediate_file()
         return
     
 
-    def preprocess_binary_files(self, year: str, month: str, day: str) -> None:
+    def preprocess_binary_files(self) -> None:
         # Open binary file and extract metadata
         self.open_binary_file()
 
@@ -599,9 +577,6 @@ class Preprocessor:
 
             # Read L1C radiance spectrum field and add to DataFrame
             self.read_record_fields(self.metadata._get_l1c_product_record_fields())
-            
-            # # Remove observations (DataFrame rows) based on IASI quality_flags
-            # self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
             print("\nL2 Record Fields:")
