@@ -6,8 +6,9 @@ from typing import List, Optional
 import numpy as np
 
 class Processor:
-    def __init__(self, datapath_out: str, year: str, month: str, day: str, cloud_phase: int):
+    def __init__(self, datapath_out: str, year: str, month: str, day: str, cloud_phase: int, output_format: str):
         self.cloud_phase: int = cloud_phase
+        self.output_format: str = output_format
         self.datapath_l1c = f"{datapath_out}l1c/{year}/{month}/{day}/"
         self.datapath_l2 = f"{datapath_out}l2/{year}/{month}/{day}/"
         self.datapath_merged = f"{datapath_out}merged/{year}/{month}/{day}/"
@@ -18,8 +19,8 @@ class Processor:
         """
         Defines the paths to the intermediate analysis data files.
         """
-        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.txt"
-        self.datafile_l2 = f"{self.datapath_l2}cloud_products.txt"
+        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.{self.output_format}"
+        self.datafile_l2 = f"{self.datapath_l2}cloud_products.{self.output_format}"
     
     def check_l1c_l2_data_exist(self):
         
@@ -46,6 +47,8 @@ class Processor:
         # Open csv files
         print("\nLoading L1C spectra and L2 cloud products:")
         self.df_l1c, self.df_l2 = pd.read_csv(self.datafile_l1c), pd.read_csv(self.datafile_l2)
+        print(self.df_l1c.head())
+        print(self.df_l2.head())
         return
     
 
