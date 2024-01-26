@@ -153,7 +153,7 @@ class Extractor:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
 
-    def run_command(self) -> Optional[bool]:
+    def run_command(self) -> object:
         """
         Executes and monitors the command to extract IASI data.
         """
