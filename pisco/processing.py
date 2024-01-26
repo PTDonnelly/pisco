@@ -18,8 +18,8 @@ class Processor:
         """
         Defines the paths to the intermediate analysis data files.
         """
-        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.csv"
-        self.datafile_l2 = f"{self.datapath_l2}cloud_products.csv"
+        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.txt"
+        self.datafile_l2 = f"{self.datapath_l2}cloud_products.txt"
     
     def check_l1c_l2_data_exist(self):
         

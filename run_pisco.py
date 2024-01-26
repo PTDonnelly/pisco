@@ -81,7 +81,7 @@ def process_iasi(ex: Extractor):
     
     Result:
         A CSV file containing all spectra at those locations and times.
-    """  
+    """
     # Instantiate a Processor class 
     pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
 
@@ -89,6 +89,27 @@ def process_iasi(ex: Extractor):
     if pro.check_l1c_l2_data_exist():
         # Merge data sets
         pro.merge_spectra_and_cloud_products()
+    return
+
+
+def process_iasi_txt(ex: Extractor, data_level: str):
+    
+    # Use OBR to extract IASI data from raw binary files
+    if data_level == "l1c":
+        ex.config.channels = ex.config.set_channels("range")
+    ex.data_level = data_level
+    ex.get_datapaths()
+    ex.extract_files()
+
+    # If IASI data was successfully extracted
+    if ex.intermediate_file_check:
+        # Instantiate a Processor class 
+        pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
+
+        # Check that both L1C and L2 data exist
+        if pro.check_l1c_l2_data_exist():
+            # Merge data sets
+            pro.merge_spectra_and_cloud_products()
     return
 
 
@@ -125,9 +146,11 @@ def run_pisco(metop, year, month, day, config):
 
     # The Logging context manager (in this location in run_pisco.py) is not needed here due to SLURM's built-in logging functionality 
     if ex.config.L1C:
-        preprocess_iasi(ex, data_level="l1c")
+        # preprocess_iasi(ex, data_level="l1c")
+        process_iasi_txt(ex, data_level="l1c")
     if ex.config.L2:
-        preprocess_iasi(ex, data_level="l2")
+        # preprocess_iasi(ex, data_level="l2")
+        process_iasi_txt(ex, data_level="l2")
     if ex.config.process:
         process_iasi(ex)
     

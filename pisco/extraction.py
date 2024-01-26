@@ -82,10 +82,9 @@ class Extractor:
         """
         if self.data_level == 'l1c':
             # Get the output file name from the input file name
-            self.datafile_out = "extracted_spectra.bin"
+            self.datafile_out = f"extracted_spectra.{self.config.output_format}"
         elif self.data_level == 'l2':
-            self.datafile_out = "cloud_products.bin"
-            # self.datafile_out = self.datafile_in.split(",")[2]
+            self.datafile_out = f"cloud_products.{self.config.output_format}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -113,7 +112,7 @@ class Extractor:
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
                 f"-qlt yyy",
-                f"-of bin"  # output file format
+                f"-of {self.config.output_format}"  # output file format
             ]
         elif (self.data_level == 'l2'):
             list_of_parameters = [
@@ -124,7 +123,7 @@ class Extractor:
                 f"-milo {self.config.longitude_range[0]} ", # min_longitude
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-t2 {self.config.products}", # l2 products
-                f"-of bin"  # output file format
+                f"-of {self.config.output_format}"  # output file format
             ]
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
