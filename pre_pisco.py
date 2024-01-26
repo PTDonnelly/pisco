@@ -11,7 +11,7 @@ def generate_slurm_script(metop, year, month, day, config_file):
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
 #SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
-#SBATCH --time=05:00:00
+#SBATCH --time=01:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem=8GB
 
@@ -57,7 +57,7 @@ def main():
                 subprocess.run(["chmod", "+x", script])
 
                 # Submit the batch script to SLURM using sbatch
-                # subprocess.run(["sbatch", script])
+                subprocess.run(["sbatch", script])
 
 if __name__ == "__main__":
     main()

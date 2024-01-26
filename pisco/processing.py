@@ -9,7 +9,7 @@ class Processor:
         self.cloud_phase: int = ex.config.cloud_phase
         self.datapath_l1c = f"{ex.config.datapath}{ex.config.satellite_identifier}/l1c/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_l2 = f"{ex.config.datapath}{ex.config.satellite_identifier}/l2/{ex.year}/{ex.month}/{ex.day}/"
-        self.datapath_merged = f"{ex.config.datapath}{ex.config.satellite_identifier}/merged/{ex.year}/{ex.month}/{ex.day}/"
+        self.datapath_merged = f"{ex.config.datapath}{ex.config.satellite_identifier}/{ex.year}/{ex.month}/{ex.day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
 
