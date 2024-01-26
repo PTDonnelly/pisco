@@ -534,7 +534,7 @@ class Preprocessor:
                                     self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Milliseconds'].apply(lambda x: f'{int(x/10000):02d}')
                                   )
-
+        print(self.data_record_df['Milliseconds'].head())
         # Drop original time element columns
         self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'])
         return  
@@ -612,8 +612,6 @@ class Preprocessor:
         # Read OBR textfiles and store to pandas DataFrame
         print(f"\nReading OBR txtfile:")
         self.open_text_file()
-
-        print(self.data_record_df.head())
 
         # Construct Local Time column
         self.build_local_time()
