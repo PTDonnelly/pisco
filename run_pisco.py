@@ -83,7 +83,7 @@ def process_iasi(ex: Extractor):
         A CSV file containing all spectra at those locations and times.
     """
     # Instantiate a Processor class 
-    pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
+    pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase, ex.config.output_format)
 
     # Check that both L1C and L2 data exist
     if pro.check_l1c_l2_data_exist():
