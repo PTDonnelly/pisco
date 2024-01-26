@@ -9,10 +9,10 @@ def _clean_up_files(ex: Extractor, metop: str):
 
     # Define source and target paths for the .sh and .log files
     source_sh = os.path.join(ex.config.datapath, f"{output_file}.sh")
-    target_sh = os.path.join(ex.config.datapath, metop, "merged", f"{ex.year}", f"{ex.month}", f"{ex.day}", f"{output_file}.sh")
+    target_sh = os.path.join(ex.config.datapath, metop, f"{ex.year}", f"{ex.month}", f"{ex.day}", f"{output_file}.sh")
 
     source_log = os.path.join(ex.config.datapath, f"{output_file}.log")
-    target_log = os.path.join(ex.config.datapath, metop, "merged", f"{ex.year}", f"{ex.month}", f"{ex.day}", f"{output_file}.log")
+    target_log = os.path.join(ex.config.datapath, metop, f"{ex.year}", f"{ex.month}", f"{ex.day}", f"{output_file}.log")
 
     # Function to move a file
     def move_file(source, target):
