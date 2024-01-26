@@ -19,11 +19,13 @@ class Processor:
         """
         self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.csv"
         self.datafile_l2 = f"{self.datapath_l2}cloud_products.csv"
+        return
     
     def check_l1c_l2_data_exist(self):
         
         self._get_intermediate_analysis_data_paths()
-
+        
+        print(self.datafile_l1c, self.datafile_l2)
         # Check if L1C and/or L2 data files exist
         if not os.path.exists(self.datafile_l1c) and not os.path.exists(self.datafile_l2):
             print('Neither L1C nor L2 data files exist. Nothing to correlate.')
