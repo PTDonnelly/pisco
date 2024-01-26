@@ -104,7 +104,7 @@ def process_iasi_txt(ex: Extractor, data_level: str):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Instantiate a Processor class 
-        pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase)
+        pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase, ex.config.output_format)
 
         # Check that both L1C and L2 data exist
         if pro.check_l1c_l2_data_exist():
