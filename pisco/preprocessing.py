@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import Any, List, BinaryIO, Tuple, List, Optional
 
-import numpy as np
+from pisco import Extractor
 
 class Metadata:
     """
@@ -349,11 +349,12 @@ class Preprocessor:
     preprocess_files(year: str, month: str, day: str)
         Runs the entire preprocessing pipeline on the binary file.
     """
-    def __init__(self, intermediate_file: str, data_level: str, latitude_range: Tuple[float], longitude_range: Tuple[float]):
-        self.intermediate_file = intermediate_file
-        self.data_level = data_level
-        self.latitude_range = latitude_range
-        self.longitude_range = longitude_range
+    def __init__(self, ex: Extractor):
+        self.intermediate_file: str = ex.intermediate_file
+        self.data_level: str = ex.config.data_level
+        self.latitude_range: Tuple[float] = ex.config.latitude_range
+        self.longitude_range: Tuple[float] = ex.config.longitude_range
+        self.channels: List[int] = ex.channels
         self.f: BinaryIO = None
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
@@ -363,6 +364,12 @@ class Preprocessor:
         self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t")
         return
     
+    def fix_spectrum_columns(self) -> None:
+        # Rename columns based on the integer list of channel IDs
+        rename_mapping = {str(self.channels[0] + i): f"Spectrum {channel_id}" for i, channel_id in enumerate(self.channels)}
+        self.data_record_df.rename(columns=rename_mapping, inplace=True)
+        return
+
     def open_binary_file(self) -> None:
         print("\nLoading intermediate binary file:")
         self.f = open(self.intermediate_file, 'rb')
@@ -607,11 +614,12 @@ class Preprocessor:
         print(self.data_record_df)
 
 
-    def preprocess_text_files(self, year: str, month: str, day: str) -> None:
-        
+    def preprocess_text_files(self) -> None:
         # Read OBR textfiles and store to pandas DataFrame
         print(f"\nReading OBR txtfile:")
         self.open_text_file()
+
+        self.fix_spectrum_columns()
 
         # Construct Local Time column
         self.build_local_time()

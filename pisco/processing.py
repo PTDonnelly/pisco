@@ -1,17 +1,14 @@
-import glob
 import os
 import pandas as pd
-from typing import List, Optional
-
-import numpy as np
+from typing import List
 
 class Processor:
-    def __init__(self, datapath_out: str, year: str, month: str, day: str, cloud_phase: int, output_format: str):
-        self.cloud_phase: int = cloud_phase
-        self.output_format: str = output_format
-        self.datapath_l1c = f"{datapath_out}l1c/{year}/{month}/{day}/"
-        self.datapath_l2 = f"{datapath_out}l2/{year}/{month}/{day}/"
-        self.datapath_merged = f"{datapath_out}merged/{year}/{month}/{day}/"
+    def __init__(self, ex: Extractor):
+        self.cloud_phase: int = ex.config.cloud_phase
+        self.output_format: str = ex.config.output_format
+        self.datapath_l1c = f"{ex.datapath_out}l1c/{ex.year}/{ex.month}/{ex.day}/"
+        self.datapath_l2 = f"{ex.datapath_out}l2/{ex.year}/{ex.month}/{ex.day}/"
+        self.datapath_merged = f"{ex.datapath_out}merged/{ex.year}/{ex.month}/{ex.day}/"
         self.df_l1c: object = None
         self.df_l2: object = None
 

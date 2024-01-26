@@ -55,12 +55,12 @@ def preprocess_iasi(ex: Extractor, data_level: str):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
-        pre = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
+        pre = Preprocessor(ex)
         
         if ex.config.output_format == "bin":
-            pre.preprocess_binary_files(ex.year, ex.month, ex.day)
+            pre.preprocess_binary_files()
         elif ex.config.output_format == "txt":
-            pre.preprocess_text_files(ex.year, ex.month, ex.day)
+            pre.preprocess_text_files()
         return
 
 
@@ -80,7 +80,7 @@ def process_iasi(ex: Extractor):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Instantiate a Processor class 
-        pro = Processor(ex.config.datapath_out, ex.year, ex.month, ex.day, ex.config.cloud_phase, ex.config.output_format)
+        pro = Processor(ex)
 
         # Check that both L1C and L2 data exist
         if pro.check_l1c_l2_data_exist():

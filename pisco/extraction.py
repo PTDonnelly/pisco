@@ -1,6 +1,6 @@
 import os
 import subprocess
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from .configuration import Configurer
 
@@ -15,6 +15,7 @@ class Extractor:
         # Instantiate the Config class and set_parameters() for analysis
         self.config = Configurer(path_to_config_file)
         self.runpath: str = os.getcwd()
+        self.channels: List[int] = None
         self.data_level: str = None
         self.year: str = None
         self.month: str = None
@@ -104,7 +105,7 @@ class Extractor:
         # Define the parameters for the command
         if (self.data_level == 'l1c'):
             # Set range of spectral channels to use
-            channels = self.config.set_channels("range")
+            self.channels = self.config.set_channels("range")
             
             list_of_parameters = [
                 f"-d {self.datapath_in}", # l1c data directory
@@ -113,7 +114,7 @@ class Extractor:
                 f"-mala {self.config.latitude_range[1]} ", # max_latitude
                 f"-milo {self.config.longitude_range[0]} ", # min_longitude
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
-                f"-c {channels[0]}-{channels[-1]}",  # spectral channels
+                f"-c {self.channels[0]}-{self.channels[-1]}",  # spectral channels
                 f"-qlt {self.config.quality_flags}",
                 f"-of {self.config.output_format}"  # output file format
             ]
