@@ -108,7 +108,7 @@ class Processor:
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
         
         # Save observations
-        self._save_merged_products(reduced_df, delete_obr_files=False)
+        self._save_merged_products(reduced_df, delete_obr_files=True)
     
     
     def merge_spectra_and_cloud_products(self):
