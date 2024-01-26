@@ -351,7 +351,7 @@ class Preprocessor:
     """
     def __init__(self, ex: Extractor):
         self.intermediate_file: str = ex.intermediate_file
-        self.data_level: str = ex.config.data_level
+        self.data_level: str = ex.data_level
         self.latitude_range: Tuple[float] = ex.config.latitude_range
         self.longitude_range: Tuple[float] = ex.config.longitude_range
         self.channels: List[int] = ex.channels
