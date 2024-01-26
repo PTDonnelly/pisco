@@ -380,16 +380,8 @@ def plot_phase_distribution_with_time(plotter: object):
         # Convert the 'Datetime' column to pandas Datetime objects
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d.%H%M%S')
 
-        # Filter rows where 'Cloud Phase 1' is less than or equal to 7
-        df = df[df['Cloud Phase 1'] <= 7]
-
         # # Group data by datetime and count the number of occurrences for each phase
         # phase_counts = df.groupby(['Datetime', 'Cloud Phase 1']).size().unstack(fill_value=0)
-
-        # print(phase_counts.head())
-
-        # print(phase_counts['Cloud Phase 1'])
-
 
         # Pivot the DataFrame to create separate columns for Cloud Phase types
         pivot_df = df.pivot(index='Datetime', columns='Cloud Phase 1', values='Counts')
@@ -400,13 +392,13 @@ def plot_phase_distribution_with_time(plotter: object):
         # Rename the columns to include the Cloud Phase labels
         pivot_df.columns = ['Datetime', 'Cloud Phase 1', 'Cloud Phase 2', 'Cloud Phase 3']
 
-
+        print(pivot_df.head())
 
         # # Calculate the ratio of ice to clear data
         # ice_clear_ratio = phase_counts[1] / phase_counts[2]
 
         # # Create a plot for the ratio over time
-        # plt.plot(phase_counts['Datetime'], ice_clear_ratio.values, label='ice', color='red')
+        # plt.plot(df['Datetime'], df['Cloud Phase 1'].values, label='ice', color='red')
         # # plt.plot(clear_data.index, clear_data.values, label='clear', color='blue')
 
         # # Customize the plot

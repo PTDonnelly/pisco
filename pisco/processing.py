@@ -64,7 +64,7 @@ class Processor:
         # Check that latitude, longitude, datetime, and local time are present in both file headers 
         self._check_headers()
 
-        # Latitude and longitude values are rounded to 2 decimal places.
+        # Latitude and longitude values are rounded to 4 decimal places.
         decimal_places = 4
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(decimal_places)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(decimal_places)
@@ -79,12 +79,14 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
-    def _save_merged_products(self, merged_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
+    def _save_merged_products(self, reduced_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_merged, exist_ok=True)
 
         print(f"Saving spectra to {self.datapath_merged}")
-        merged_df.to_csv(f"{self.datapath_merged}spectra_and_cloud_products.csv", index=False, mode='w')
+        reduced_df.to_csv(f"{self.datapath_merged}spectra_and_cloud_products.csv", index=False, mode='w')
+
+        print(reduced_df.head())
 
         if delete_obr_files == True:
             # Delete original csv files
