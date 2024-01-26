@@ -542,7 +542,6 @@ class Preprocessor:
                                     self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}')
-                                    # self.data_record_df['Milliseconds'].apply(lambda x: f'{int(x):05d}')
                                     )
         
         # Drop original time element columns
