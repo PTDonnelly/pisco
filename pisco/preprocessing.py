@@ -532,9 +532,9 @@ class Preprocessor:
                                     self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') +
                                     self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}') +
-                                    self.data_record_df['Milliseconds'].apply(lambda x: f'{int(x/10000):02d}')
-                                  )
-        print(self.data_record_df['Milliseconds'].head())
+                                    self.data_record_df['Milliseconds'].apply(lambda x: f'{int(x/10000):05d}')
+                                    )
+        
         # Drop original time element columns
         self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'])
         return  
