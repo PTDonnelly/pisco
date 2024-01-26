@@ -14,7 +14,6 @@ class Configurer:
             
         # Perform any necessary post-processing before executing
         self.latitude_range, self.longitude_range = tuple(self.latitude_range), tuple(self.longitude_range)
-        self.channels: List[int] = None
         self.datapath_out = f"{self.datapath}{self.satellite_identifier}/"
         os.makedirs(self.datapath_out, exist_ok=True)
     

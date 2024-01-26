@@ -103,6 +103,9 @@ class Extractor:
         """
         # Define the parameters for the command
         if (self.data_level == 'l1c'):
+            # Set range of spectral channels to use
+            channels = self.config.set_channels("range")
+            
             list_of_parameters = [
                 f"-d {self.datapath_in}", # l1c data directory
                 f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}",  # first and last day
@@ -110,7 +113,7 @@ class Extractor:
                 f"-mala {self.config.latitude_range[1]} ", # max_latitude
                 f"-milo {self.config.longitude_range[0]} ", # min_longitude
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
-                f"-c {self.config.channels[0]}-{self.config.channels[-1]}",  # spectral channels
+                f"-c {channels[0]}-{channels[-1]}",  # spectral channels
                 f"-qlt yyy",
                 f"-of {self.config.output_format}"  # output file format
             ]
