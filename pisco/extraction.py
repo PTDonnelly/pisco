@@ -114,7 +114,7 @@ class Extractor:
                 f"-milo {self.config.longitude_range[0]} ", # min_longitude
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-c {channels[0]}-{channels[-1]}",  # spectral channels
-                f"-qlt yyy",
+                f"-qlt {self.config.quality_flags}",
                 f"-of {self.config.output_format}"  # output file format
             ]
         elif (self.data_level == 'l2'):

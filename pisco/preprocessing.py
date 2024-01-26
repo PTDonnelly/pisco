@@ -360,7 +360,7 @@ class Preprocessor:
 
     def open_text_file(self) -> None:
         print("\nLoading intermediate text file:")
-        self.data_record_df = pd.read_csv(self.intermediate_file, 'rb', sep="\t")
+        self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t")
         return
     
     def open_binary_file(self) -> None:
