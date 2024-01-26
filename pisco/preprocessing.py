@@ -358,9 +358,12 @@ class Preprocessor:
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
 
-
+    def open_text_file(self) -> None:
+        print("\nLoading intermediate text file:")
+        self.data_record_df = pd.read_csv(self.intermediate_file, 'rb', sep="\t")
+        return
+    
     def open_binary_file(self) -> None:
-        # Open binary file
         print("\nLoading intermediate binary file:")
         self.f = open(self.intermediate_file, 'rb')
         
@@ -580,7 +583,7 @@ class Preprocessor:
         return
     
 
-    def preprocess_files(self, year: str, month: str, day: str) -> None:
+    def preprocess_binary_files(self, year: str, month: str, day: str) -> None:
         # Open binary file and extract metadata
         self.open_binary_file()
 
@@ -598,7 +601,7 @@ class Preprocessor:
             self.read_record_fields(self.metadata._get_l1c_product_record_fields())
             
             # Remove observations (DataFrame rows) based on IASI quality_flags
-            # self.filter_good_spectra(datetime(int(year), int(month), int(day)))
+            self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
             print("\nL2 Record Fields:")
@@ -615,13 +618,35 @@ class Preprocessor:
 
             # Print the head of the filtered DataFrame
             print(filtered_df.head())
-            
+        
         self.close_binary_file()
 
         # Construct Local Time column
         self.build_local_time()
         # Construct Datetime column and remove individual time elements
         self.build_datetime()
+        # Save filtered DataFrame to CSV/HDF5
+        self.save_observations()
+        
+        # Print the DataFrame
+        print(self.data_record_df)
+
+
+    def preprocess_binary_files(self, year: str, month: str, day: str) -> None:
+        
+        # Read OBR textfiles and store to pandas DataFrame
+        print(f"\nReading IASI data:")
+        self.open_text_file()
+
+        print(self.data_record_df.head())
+        input()
+
+        # Construct Local Time column
+        self.build_local_time()
+
+        # Construct Datetime column and remove individual time elements
+        self.build_datetime()
+
         # Save filtered DataFrame to CSV/HDF5
         self.save_observations()
         

@@ -53,11 +53,15 @@ def preprocess_iasi(ex: Extractor, data_level: str):
     ex.extract_files()
 
     # If IASI data was successfully extracted
-    if (ex.config.output_format == "bin") and (ex.intermediate_file_check):
+    if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
         pre = Preprocessor(ex.intermediate_file, ex.data_level, ex.config.latitude_range, ex.config.longitude_range)
-        pre.preprocess_files(ex.year, ex.month, ex.day)
-    return
+        
+        if ex.config.output_format == "bin":
+            pre.preprocess_binary_files(ex.year, ex.month, ex.day)
+        elif ex.config.output_format == "txt":
+            pre.preprocess_text_files(ex.year, ex.month, ex.day)
+        return
 
 
 def process_iasi(ex: Extractor):
