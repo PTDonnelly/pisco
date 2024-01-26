@@ -535,7 +535,7 @@ class Preprocessor:
         """
         print("\nBuilding Datetime:")
 
-        print(self.data_record_df['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'].head())
+        print(self.data_record_df[['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds']].head())
 
         self.data_record_df['Datetime'] = (self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') +
                                     self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') +
