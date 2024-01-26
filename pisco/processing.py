@@ -2,6 +2,8 @@ import os
 import pandas as pd
 from typing import List
 
+from pisco import Extractor
+
 class Processor:
     def __init__(self, ex: Extractor):
         self.cloud_phase: int = ex.config.cloud_phase
