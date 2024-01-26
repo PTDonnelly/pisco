@@ -610,11 +610,10 @@ class Preprocessor:
     def preprocess_text_files(self, year: str, month: str, day: str) -> None:
         
         # Read OBR textfiles and store to pandas DataFrame
-        print(f"\nReading IASI data:")
+        print(f"\nReading OBR txtfile:")
         self.open_text_file()
 
         print(self.data_record_df.head())
-        input()
 
         # Construct Local Time column
         self.build_local_time()
@@ -627,4 +626,3 @@ class Preprocessor:
         
         # Print the DataFrame
         print(self.data_record_df)
-        input()
