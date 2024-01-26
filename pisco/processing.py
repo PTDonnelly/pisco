@@ -46,7 +46,8 @@ class Processor:
         """
         # Open csv files
         print("\nLoading L1C spectra and L2 cloud products:")
-        self.df_l1c, self.df_l2 = pd.read_csv(self.datafile_l1c), pd.read_csv(self.datafile_l2)
+        self.df_l1c = pd.read_csv(self.datafile_l1c, sep="\t")
+        self.df_l2 = pd.read_csv(self.datafile_l2, sep="\t")
         print(self.df_l1c.head())
         print(self.df_l2.head())
         return
