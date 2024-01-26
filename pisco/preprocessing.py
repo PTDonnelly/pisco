@@ -616,9 +616,9 @@ class Preprocessor:
 
     def preprocess_text_files(self) -> None:
         # Read OBR textfiles and store to pandas DataFrame
-        print(f"\nReading OBR txtfile:")
         self.open_text_file()
 
+        # Rename the spectral columns to contain "Spectrum"
         self.fix_spectrum_columns()
 
         # Construct Local Time column

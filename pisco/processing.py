@@ -7,7 +7,6 @@ from pisco import Extractor
 class Processor:
     def __init__(self, ex: Extractor):
         self.cloud_phase: int = ex.config.cloud_phase
-        self.output_format: str = ex.config.output_format
         self.datapath_l1c = f"{ex.datapath_out}l1c/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_l2 = f"{ex.datapath_out}l2/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_merged = f"{ex.datapath_out}merged/{ex.year}/{ex.month}/{ex.day}/"
@@ -18,8 +17,8 @@ class Processor:
         """
         Defines the paths to the intermediate analysis data files.
         """
-        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.{self.output_format}"
-        self.datafile_l2 = f"{self.datapath_l2}cloud_products.{self.output_format}"
+        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.csv"
+        self.datafile_l2 = f"{self.datapath_l2}cloud_products.csv"
     
     def check_l1c_l2_data_exist(self):
         
