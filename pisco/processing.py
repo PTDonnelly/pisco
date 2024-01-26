@@ -25,7 +25,6 @@ class Processor:
         
         self._get_intermediate_analysis_data_paths()
         
-        print(self.datafile_l1c, self.datafile_l2)
         # Check if L1C and/or L2 data files exist
         if not os.path.exists(self.datafile_l1c) and not os.path.exists(self.datafile_l2):
             print('Neither L1C nor L2 data files exist. Nothing to correlate.')
@@ -46,8 +45,8 @@ class Processor:
         """
         # Open csv files
         print("\nLoading L1C spectra and L2 cloud products:")
-        self.df_l1c = pd.read_csv(self.datafile_l1c, sep="\t")
-        self.df_l2 = pd.read_csv(self.datafile_l2, sep="\t")
+        self.df_l1c = pd.read_csv(self.datafile_l1c)
+        self.df_l2 = pd.read_csv(self.datafile_l2)
         return
     
 
