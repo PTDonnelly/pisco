@@ -600,8 +600,8 @@ class Preprocessor:
             # Read L1C radiance spectrum field and add to DataFrame
             self.read_record_fields(self.metadata._get_l1c_product_record_fields())
             
-            # Remove observations (DataFrame rows) based on IASI quality_flags
-            self.filter_good_spectra(datetime(int(year), int(month), int(day)))
+            # # Remove observations (DataFrame rows) based on IASI quality_flags
+            # self.filter_good_spectra(datetime(int(year), int(month), int(day)))
         
         if self.data_level == "l2":
             print("\nL2 Record Fields:")
@@ -632,7 +632,7 @@ class Preprocessor:
         print(self.data_record_df)
 
 
-    def preprocess_binary_files(self, year: str, month: str, day: str) -> None:
+    def preprocess_text_files(self, year: str, month: str, day: str) -> None:
         
         # Read OBR textfiles and store to pandas DataFrame
         print(f"\nReading IASI data:")
@@ -652,3 +652,4 @@ class Preprocessor:
         
         # Print the DataFrame
         print(self.data_record_df)
+        input()
