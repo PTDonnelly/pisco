@@ -99,8 +99,7 @@ class Processor:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
-        print(merged_df.head())
-        print(merged_df.info())
+        print(merged_df[["SatelliteZenithAngle_x", "SatelliteZenithAngle_y"]].head())
 
         # Keep only columns containing variables present in reduced_fields and spectral channels
         reduced_fields = self._get_reduced_fields()
@@ -113,7 +112,7 @@ class Processor:
             print("All reduced_fields columns are present in merged_df.")
 
         print("Reduced Fields:", reduced_fields)
-        print("Spectrum Columns:", spectrum_columns)
+        # print("Spectrum Columns:", spectrum_columns)
 
 
         input()
