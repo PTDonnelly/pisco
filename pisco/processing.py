@@ -95,6 +95,10 @@ class Processor:
         return reduced_fields
     
     def reduce_fields(self) -> None:
+
+        reduced_fields = self._get_reduced_fields()
+
+        
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
