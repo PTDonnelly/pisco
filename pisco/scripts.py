@@ -1,12 +1,12 @@
-import numpy as np
-
 import os
 import pandas as pd
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import multiprocessing
 import numpy as np
 from mpl_toolkits.basemap import Basemap
 import matplotlib.gridspec as gridspec
+
 
 from pisco import Plotter, Spectrum, Geographic
 
@@ -361,6 +361,45 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
+def process_file(datafile):
+    # Your file processing logic here
+    print(datafile)
+    df = pd.read_csv(datafile, usecols=['Datetime', 'CloudPhase1'], dtype={'Datetime': str})
+    df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+    df = df[df['CloudPhase1'] != -1]
+    pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
+    total_measurements = pivot_df.sum(axis=1)
+    cloud_phase2_count = pivot_df.get(2, 0).sum()
+    total_count = total_measurements.sum()
+    date = df['Datetime'].dt.date.iloc[0]
+    return cloud_phase2_count, total_count, date
+
+def plot_phase_distribution_with_time_pool(plotter: object):
+    plotter.organize_files_by_date()
+    datafiles = plotter.select_files()
+
+    # Initialize multiprocessing Pool
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())  # Adjust number of processes based on your system
+    results = pool.map(process_file, datafiles)
+    pool.close()
+    pool.join()
+
+    # Aggregate results
+    ice_counts, total_counts, dates = zip(*results)
+    ratios = [ice / total for ice, total in zip(ice_counts, total_counts)]
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    plt.plot(dates, ratios, marker='o', linestyle='-', color='blue')
+    plt.title('Ratio of Ice Clouds to Total Measurements Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Ratio of Ice Clouds')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
 def plot_phase_distribution_with_time(plotter: object):
     # Use Plotter to organize files
     plotter.organize_files_by_date()
@@ -368,54 +407,48 @@ def plot_phase_distribution_with_time(plotter: object):
     # Select files in time range
     datafiles = plotter.select_files()
 
-    for ifile, datafile in enumerate(datafiles):
-        # Initialize a new figure for the plot with one subplot
-        fig = plt.figure(figsize=(10, 8), dpi=plotter.dpi)
-        axes = gridspec.GridSpec(1, 1, figure=fig).subplots()
-        fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=plotter.fontsize+5, y=0.95)
+    # Initialize lists to store the data for plotting
+    ice_counts = []
+    total_counts = []
+    dates = []
 
+    for ifile, datafile in enumerate(datafiles):
+        print(ifile, datafile)
         # Get current file and load data
         df = pd.read_csv(datafile, usecols=['Datetime', 'CloudPhase1'], dtype={'Datetime': str})
 
         # Convert the 'Datetime' column to pandas Datetime objects
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-        
-        print(df.head(50))
+
+        # Remove missing data
+        df = df[df['CloudPhase1'] != -1]
+
         # Group data by datetime and count the number of occurrences for each phase
-        phase_counts = df.groupby(['Datetime', 'CloudPhase1']).size().unstack(fill_value=0)
-        
-        print(phase_counts.head())
+        pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
 
-        exit()
-        # # Pivot the DataFrame to create separate columns for Cloud Phase types
-        # pivot_df = df.pivot(index='Datetime', columns='CloudPhase1', values='Counts')
+        # Sum across each row gives the total measurements for each time
+        total_measurements = pivot_df.sum(axis=1)
+        # Count of CloudPhase2 occurrences
+        cloud_phase2_count = pivot_df.get(2, 0)  # Using .get() to handle cases where CloudPhase2 might not exist
 
-        # # Reset the index to have "Datetime" as a separate column header
-        # pivot_df.reset_index(inplace=True)
+        # Append the counts to the lists
+        ice_counts.append(cloud_phase2_count.sum())
+        total_counts.append(total_measurements.sum())
+        dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
 
-        # # Rename the columns to include the Cloud Phase labels
-        # pivot_df.columns = ['Datetime', 'CloudPhase1', 'Cloud Phase 2', 'Cloud Phase 3']
+    # Calculate the ratio of CloudPhase2 to total measurements for each file/date
+    ratios = [phase2 / total for phase2, total in zip(ice_counts, total_counts)]
 
-        # print(pivot_df.head())
-
-        # # Calculate the ratio of ice to clear data
-        # ice_clear_ratio = phase_counts[1] / phase_counts[2]
-
-        # # Create a plot for the ratio over time
-        # plt.plot(df['Datetime'], df['CloudPhase1'].values, label='ice', color='red')
-        # # plt.plot(clear_data.index, clear_data.values, label='clear', color='blue')
-
-        # # Customize the plot
-        # plt.xlabel('Datetime')
-        # plt.ylabel('NUmber')
-        # plt.title('Ratio of Ice to Clear Spectra Over Time')
-        # plt.legend()
-        # plt.grid(True)
-
-        # # Show the plot
-        # plt.show()
-
-        exit()
+    # Plot the ratio of CloudPhase2 to total measurements over time
+    plt.figure(figsize=(10, 6))
+    plt.plot(dates, ratios, marker='o', linestyle='-', color='blue')
+    plt.title('Ratio of CloudPhase2 to Total Measurements Over Time')
+    plt.xlabel('Date')
+    plt.ylabel('Ratio of CloudPhase2')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
 
 
 
@@ -439,7 +472,7 @@ def plot_pisco():
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
     
     # Plot data
-    plot_phase_distribution_with_time(plotter)
+    plot_phase_distribution_with_time_pool(plotter)
 
 if __name__ == "__main__":
     plot_pisco()

@@ -1,6 +1,9 @@
+import gzip
 import os
 import pandas as pd
 from typing import List
+
+import pickle
 
 from pisco import Extractor
 
@@ -82,12 +85,18 @@ class Processor:
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_merged, exist_ok=True)
 
-        print(f"Saving spectra to {self.datapath_merged}")
-        reduced_df.to_csv(f"{self.datapath_merged}spectra_and_cloud_products.csv", index=False, mode='w')
+        output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
+
+        print(f"Saving compressed spectra to {output_path}")
+        
+        # Compress and save using gzip
+        with gzip.open(output_path, 'wb') as f:
+            pickle.dump(reduced_df, f)
 
         if delete_obr_files == True:
             # Delete original csv files
             self._delete_intermediate_analysis_data()
+
     
     @staticmethod
     def _get_reduced_fields() -> List[str]:
@@ -106,7 +115,7 @@ class Processor:
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
 
         # Save observations
-        self._save_merged_products(reduced_df, delete_obr_files=False)
+        self._save_merged_products(reduced_df, delete_obr_files=True)
     
     
     def merge_spectra_and_cloud_products(self):
