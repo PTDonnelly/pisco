@@ -1,9 +1,11 @@
+import gzip
 import os
 from collections import defaultdict
 from typing import List, Dict, Tuple, Optional, Union
 import imageio
 import numpy as np
 import pandas as pd
+import pickle
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
@@ -12,7 +14,7 @@ class Plotter:
     """
     Class to contain useful plotting functions for the IASI dataset
     """
-    def __init__(self, datapath: str, target_year: str, target_month: str, target_days: List[str], fontsize: float, dpi: int):
+    def __init__(self, datapath: str, target_years: list, target_months: list, target_days: list, fontsize: float, dpi: int):
         """
         Initializes the Plotter class with a given data path.
 
@@ -20,14 +22,15 @@ class Plotter:
             datapath (str): The path to the data directory.
         """
         self.datapath = datapath
-        self.target_year = target_year
-        self.target_month = target_month
+        self.target_years = target_years
+        self.target_months = target_months
         self.target_days = target_days
         self.fontsize = fontsize
         self.dpi = dpi
         self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
         self.day_night_dictionary = {"night": 0, "day": 1, "twilight": 2}
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
+
 
     # IASI-specific methods
     def _get_iasi_spectral_grid(self):
@@ -45,10 +48,20 @@ class Plotter:
         extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
         return extracted_wavenumbers
 
+
     # File I/O methods
+    def _format_filepath_from_target_date_range(self) -> None:
+        # Format years as 'YYYY'
+        self.target_years = [str(year) for year in self.target_years]
+        # Format months as 'mm' with leading zero if necessary
+        self.target_months = [f"{month:02d}" for month in self.target_months]
+        # Format days as 'dd' with leading zero if necessary
+        self.target_days = [f"{day:02d}" for day in self.target_days]
+        return
+    
     def organize_files_by_date(self) -> None:
         """
-        Organizes .csv files in the data directory by date.
+        Organizes .pkl.gz files in the data directory by date.
 
         The date is inferred from the directory structure: year/month/day.
         The result is stored in self.files_by_date, which is a dictionary
@@ -56,9 +69,11 @@ class Plotter:
 
         This creates a dictionary with keys as dates (year, month, day) and values as lists of files.
         """
+        self._format_filepath_from_target_date_range()
+
         for root, dirs, files in os.walk(self.datapath):
             for file in files:
-                if ".csv" in file:
+                if ".pkl.gz" in file:
                     # Split the root directory path and get year, month and day
                     dir_structure = os.path.normpath(root).split(os.sep)
                     year, month, day = dir_structure[-3], dir_structure[-2], dir_structure[-1]
@@ -72,8 +87,8 @@ class Plotter:
         based on a target year, month, days and file name part.
 
         Args:
-            target_year (str): The target year as a string.
-            target_month (str): The target month as a string.
+            target_years (str): The target year as a string.
+            target_months (str): The target month as a string.
             target_days (List[str]): The target days as a list of strings.
             target_file_part (Optional[str]): The target part of the file name to select (defaults to None, the file containing all measurements)
 
@@ -85,14 +100,19 @@ class Plotter:
         # Iterate through dictionary keys
         for (year, month, day), files in self.files_by_date.items():
             # Check if the year, month and day match your conditions
-            if year == self.target_year and month == self.target_month and day in self.target_days:
+            if (year in self.target_years) and (month in self.target_months) and (day in self.target_days):
                 # Iterate through the files for this date
                 for file in files:
                     # Select file containing all measurements
                     selected_files.append(file)
-
         return selected_files
     
+    @staticmethod
+    def unpickle(file):
+        with gzip.open(file, 'rb') as f:
+            df = pickle.load(f)
+        return df
+
     # DataFrame manipulation methods
     @staticmethod
     def check_df(datafile: str, sub_df: pd.DataFrame, local_time: Optional[str] = None, phase: Optional[str] = None) -> bool:

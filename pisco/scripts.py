@@ -361,28 +361,32 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
-def process_file(datafile):
-    # Your file processing logic here
+def process_file(datafile: str):
     print(datafile)
-    df = pd.read_csv(datafile, usecols=['Datetime', 'CloudPhase1'], dtype={'Datetime': str})
+    
+    # Open compressed file
+    df = Plotter.unpickle(datafile)
+    df = df[['Datetime', 'CloudPhase1']]
     df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
     df = df[df['CloudPhase1'] != -1]
+    
+    # Extract daily count with time
     pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
     total_measurements = pivot_df.sum(axis=1)
-    cloud_phase2_count = pivot_df.get(2, 0).sum()
+    ice_count = pivot_df.get(2, 0).sum()
     total_count = total_measurements.sum()
     date = df['Datetime'].dt.date.iloc[0]
-    return cloud_phase2_count, total_count, date
+
+    return ice_count, total_count, date
 
 def plot_phase_distribution_with_time_pool(plotter: object):
     plotter.organize_files_by_date()
     datafiles = plotter.select_files()
 
     # Initialize multiprocessing Pool
-    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())  # Adjust number of processes based on your system
-    results = pool.map(process_file, datafiles)
-    pool.close()
-    pool.join()
+    num_processes = multiprocessing.cpu_count()  # Adjust the number of processes based on your system
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        results = pool.map(process_file, datafiles)
 
     # Aggregate results
     ice_counts, total_counts, dates = zip(*results)
@@ -394,6 +398,7 @@ def plot_phase_distribution_with_time_pool(plotter: object):
     plt.title('Ratio of Ice Clouds to Total Measurements Over Time')
     plt.xlabel('Date')
     plt.ylabel('Ratio of Ice Clouds')
+    plt.ylim([0, 1])
     plt.grid(True)
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -413,42 +418,46 @@ def plot_phase_distribution_with_time(plotter: object):
     dates = []
 
     for ifile, datafile in enumerate(datafiles):
-        print(ifile, datafile)
-        # Get current file and load data
-        df = pd.read_csv(datafile, usecols=['Datetime', 'CloudPhase1'], dtype={'Datetime': str})
+        # Open compressed file and load data
+        df = Plotter.unpickle(datafile)
+        df = df[['Datetime', 'CloudPhase1']]
 
         # Convert the 'Datetime' column to pandas Datetime objects
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-
         # Remove missing data
         df = df[df['CloudPhase1'] != -1]
 
         # Group data by datetime and count the number of occurrences for each phase
         pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
-
         # Sum across each row gives the total measurements for each time
         total_measurements = pivot_df.sum(axis=1)
         # Count of CloudPhase2 occurrences
-        cloud_phase2_count = pivot_df.get(2, 0)  # Using .get() to handle cases where CloudPhase2 might not exist
+        ice_count = pivot_df.get(2, 0).sum() # Using .get() to handle cases where CloudPhase1=2 might not exist
 
         # Append the counts to the lists
-        ice_counts.append(cloud_phase2_count.sum())
+        ice_counts.append(ice_count.sum())
         total_counts.append(total_measurements.sum())
         dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
 
     # Calculate the ratio of CloudPhase2 to total measurements for each file/date
-    ratios = [phase2 / total for phase2, total in zip(ice_counts, total_counts)]
+    ratios = [ice / total for ice, total in zip(ice_counts, total_counts)]
+    # Convert dates to strings for saving
+    date_strs = [date.strftime('%Y-%m-%d') for date in dates]
+    # Prepare the data to be saved
+    data_to_save = np.array(list(zip(date_strs, ratios)), dtype=object)
+    # Save the data
+    np.save(f"{plotter.datapath}daily_ice_phase_counts.npy", data_to_save)
 
     # Plot the ratio of CloudPhase2 to total measurements over time
     plt.figure(figsize=(10, 6))
-    plt.plot(dates, ratios, marker='o', linestyle='-', color='blue')
-    plt.title('Ratio of CloudPhase2 to Total Measurements Over Time')
+    plt.plot(dates, ratios, linestyle='-', color='black')
+    plt.title('Ratio of Ice Phase to Total Measurements Over Time')
     plt.xlabel('Date')
-    plt.ylabel('Ratio of CloudPhase2')
-    plt.grid(True)
+    plt.ylabel('Ratio of Ice Phase')
+    # plt.grid(True)
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f"{plotter.datapath}daily_ice_phase_counts.png")
 
 
 
@@ -457,12 +466,13 @@ def plot_pisco():
     """
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    datapath = "D:\\Data\\iasi"
+    # datapath = "D:\\Data\\iasi"
+    datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
-    target_year = '2016'
-    target_month = '03'
-    target_days = [str(day).zfill(2) for day in range(1, 32)] # Search all days in each month
+    target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_month = [3, 4, 5]
+    target_days = [day for day in range(1, 32)] # Search all days in each month
 
     # Define plotting parameters
     fontsize = 8
@@ -472,7 +482,7 @@ def plot_pisco():
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
     
     # Plot data
-    plot_phase_distribution_with_time_pool(plotter)
+    plot_phase_distribution_with_time(plotter)
 
 if __name__ == "__main__":
     plot_pisco()
