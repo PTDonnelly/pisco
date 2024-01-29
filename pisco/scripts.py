@@ -375,24 +375,27 @@ def plot_phase_distribution_with_time(plotter: object):
         fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=plotter.fontsize+5, y=0.95)
 
         # Get current file and load data
-        df = pd.read_csv(datafile, usecols=['Datetime', 'Cloud Phase 1'], dtype={'Datetime': str})
+        df = pd.read_csv(datafile)
+        print(df.head())
 
+        exit()
         # Convert the 'Datetime' column to pandas Datetime objects
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d.%H%M%S')
 
-        # # Group data by datetime and count the number of occurrences for each phase
-        # phase_counts = df.groupby(['Datetime', 'Cloud Phase 1']).size().unstack(fill_value=0)
+        # Group data by datetime and count the number of occurrences for each phase
+        phase_counts = df.groupby(['Datetime', 'Cloud Phase 1']).size().unstack(fill_value=0)
+        
+        print(phase_counts.head())
+        # # Pivot the DataFrame to create separate columns for Cloud Phase types
+        # pivot_df = df.pivot(index='Datetime', columns='Cloud Phase 1', values='Counts')
 
-        # Pivot the DataFrame to create separate columns for Cloud Phase types
-        pivot_df = df.pivot(index='Datetime', columns='Cloud Phase 1', values='Counts')
+        # # Reset the index to have "Datetime" as a separate column header
+        # pivot_df.reset_index(inplace=True)
 
-        # Reset the index to have "Datetime" as a separate column header
-        pivot_df.reset_index(inplace=True)
+        # # Rename the columns to include the Cloud Phase labels
+        # pivot_df.columns = ['Datetime', 'Cloud Phase 1', 'Cloud Phase 2', 'Cloud Phase 3']
 
-        # Rename the columns to include the Cloud Phase labels
-        pivot_df.columns = ['Datetime', 'Cloud Phase 1', 'Cloud Phase 2', 'Cloud Phase 3']
-
-        print(pivot_df.head())
+        # print(pivot_df.head())
 
         # # Calculate the ratio of ice to clear data
         # ice_clear_ratio = phase_counts[1] / phase_counts[2]
@@ -419,12 +422,13 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
+    # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
+    datapath = "D:\\Data\\iasi"
 
     # Define temporal range to plot
     target_year = '2016'
     target_month = '03'
-    target_days = [str(day).zfill(2) for day in range(1, 32)]
+    target_days = [str(day).zfill(2) for day in range(1, 32)] # Search all days in each month
 
     # Define plotting parameters
     fontsize = 8
@@ -432,7 +436,7 @@ def plot_pisco():
 
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
-
+    
     # Plot data
     plot_phase_distribution_with_time(plotter)
 
