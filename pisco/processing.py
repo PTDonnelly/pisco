@@ -103,34 +103,10 @@ class Processor:
         # Keep only columns containing variables present in reduced_fields and spectral channels
         reduced_fields = self._get_reduced_fields()
         spectrum_columns = [col for col in merged_df if "Spectrum" in col]
-
-        missing_columns = [col for col in reduced_fields if col not in merged_df.columns]
-        if missing_columns:
-            print("Missing columns in merged_df after merge:", missing_columns)
-        else:
-            print("All reduced_fields columns are present in merged_df.")
-
-        print("Reduced Fields:", reduced_fields)
-        # print("Spectrum Columns:", spectrum_columns)
-
-
-        input()
-
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
         print(reduced_df.head())
         print(reduced_df.info())
-
-        # # Combine reduced_fields and spectrum_columns, ensuring uniqueness
-        # columns_to_select = reduced_fields + [col for col in spectrum_columns if col not in reduced_fields]
-
-        # # Select columns explicitly
-        # reduced_df = merged_df[columns_to_select]
-
-        # print(reduced_df.head())
-        # print(reduced_df.info())
-
-
-
+        
         # Save observations
         self._save_merged_products(reduced_df, delete_obr_files=True)
     
