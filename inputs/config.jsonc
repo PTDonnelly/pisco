@@ -27,13 +27,13 @@
     "datapath": "/data/pdonnelly/iasi/",
 
     // year_list: List[int], List of years for extraction
-    "year_list": [2013, 2014, 2015, 2016, 2017, 2018, 2019],
+    "year_list": [2016],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [3, 4, 5],
+    "month_list": [3],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
-    "day_list": "all",
+    "day_list": [1],
 
     // months_in_year: List[int], Calendar months in each year
     "months_in_year": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
