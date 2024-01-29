@@ -617,8 +617,9 @@ class Preprocessor:
         # Read OBR textfiles and store to pandas DataFrame
         self.open_text_file()
 
-        # Rename the spectral columns to contain "Spectrum"
-        self.fix_spectrum_columns()
+        if self.data_level == "l1c":
+            # Rename the spectral columns to contain "Spectrum"
+            self.fix_spectrum_columns()
 
         # Construct Local Time column
         self.build_local_time()

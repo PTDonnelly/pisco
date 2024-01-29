@@ -91,7 +91,7 @@ class Processor:
     
     @staticmethod
     def _get_reduced_fields() -> List[str]:
-        reduced_fields = ["Datetime", "Latitude", 'Longitude', "Satellite Zenith Angle", "Day Night Qualifier", "Cloud Phase 1"]
+        reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1"]
         return reduced_fields
     
     def reduce_fields(self) -> None:
@@ -101,7 +101,6 @@ class Processor:
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
         print(merged_df.head())
         print(merged_df.info())
-        print("Merged DataFrame columns:", merged_df.columns.tolist())
 
         # Keep only columns containing variables present in reduced_fields and spectral channels
         reduced_fields = self._get_reduced_fields()
