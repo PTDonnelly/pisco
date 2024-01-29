@@ -104,9 +104,7 @@ class Processor:
         reduced_fields = self._get_reduced_fields()
         spectrum_columns = [col for col in merged_df if "Spectrum" in col]
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
-        print(reduced_df.head())
-        print(reduced_df.info())
-        
+
         # Save observations
         self._save_merged_products(reduced_df, delete_obr_files=True)
     
