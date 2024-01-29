@@ -13,7 +13,7 @@ def generate_slurm_script(metop, year, month, day, config_file):
 #SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
 #SBATCH --time=01:00:00
 #SBATCH --ntasks=1
-#SBATCH --mem=8GB
+#SBATCH --mem=4GB
 
 # Purge all modules to prevent conflict with current environnement
 module purge

@@ -114,7 +114,7 @@ def plot_spatial_distribution_2Dhist(plotter: object):
         fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
         
         # Get current file and load data
-        df = pd.read_csv(datafile, usecols=['Longitude', 'Latitude', 'Cloud Phase 1', 'Day Night Qualifier'])
+        df = pd.read_csv(datafile, usecols=['Longitude', 'Latitude', 'CloudPhase1', 'Day Night Qualifier'])
 
         for iax, (ax, (group, attrs)) in enumerate(zip(axes.flat, plot_params.items())):
             local_time = attrs["local_time"]
@@ -157,13 +157,13 @@ def plot_spatial_distribution_unity(datapath: str):
         df_all_grouped = []
         for file in files:
             # Get current file and load data
-            df = pd.read_csv(file[ifile], usecols=['Longitude', 'Latitude', 'Cloud Phase 1'])
+            df = pd.read_csv(file[ifile], usecols=['Longitude', 'Latitude', 'CloudPhase1'])
 
             # Truncate latitude and longitude values onto a 10-degree grid
             df['Longitude_truncated'] = (df['Longitude'] // 10 * 10).astype(int)  # Group longitudes into 10 degree bins
             df['Latitude_truncated'] = (df['Latitude'] // 10 * 10).astype(int)  # Group latitudes into 10 degree bins
 
-            df_grouped = df.groupby(['Longitude_truncated', 'Latitude_truncated', 'Cloud Phase 1']).size().reset_index(name='Counts')
+            df_grouped = df.groupby(['Longitude_truncated', 'Latitude_truncated', 'CloudPhase1']).size().reset_index(name='Counts')
 
             # Append the grouped dataframe to the overall dataframe
             df_all_grouped.append(df_grouped)
@@ -184,7 +184,7 @@ def plot_spatial_distribution_unity(datapath: str):
             # Create a bar plot for each cloud phase within the group
             for phase in [1, 2, 3]:
                 # Get the count for the current cloud phase
-                count = df_sub.loc[df_sub['Cloud Phase 1'] == phase, 'Counts'] / df_sub['Counts'].sum()
+                count = df_sub.loc[df_sub['CloudPhase1'] == phase, 'Counts'] / df_sub['Counts'].sum()
                 count = count.values[0] if not count.empty else 0  # default count to 0 if phase not present
                 
                 # Create the bar plot
@@ -375,25 +375,26 @@ def plot_phase_distribution_with_time(plotter: object):
         fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=plotter.fontsize+5, y=0.95)
 
         # Get current file and load data
-        df = pd.read_csv(datafile)
-        print(df.head())
+        df = pd.read_csv(datafile, usecols=['Datetime', 'CloudPhase1'], dtype={'Datetime': str})
 
-        exit()
         # Convert the 'Datetime' column to pandas Datetime objects
-        df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d.%H%M%S')
-
+        df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+        
+        print(df.head(50))
         # Group data by datetime and count the number of occurrences for each phase
-        phase_counts = df.groupby(['Datetime', 'Cloud Phase 1']).size().unstack(fill_value=0)
+        phase_counts = df.groupby(['Datetime', 'CloudPhase1']).size().unstack(fill_value=0)
         
         print(phase_counts.head())
+
+        exit()
         # # Pivot the DataFrame to create separate columns for Cloud Phase types
-        # pivot_df = df.pivot(index='Datetime', columns='Cloud Phase 1', values='Counts')
+        # pivot_df = df.pivot(index='Datetime', columns='CloudPhase1', values='Counts')
 
         # # Reset the index to have "Datetime" as a separate column header
         # pivot_df.reset_index(inplace=True)
 
         # # Rename the columns to include the Cloud Phase labels
-        # pivot_df.columns = ['Datetime', 'Cloud Phase 1', 'Cloud Phase 2', 'Cloud Phase 3']
+        # pivot_df.columns = ['Datetime', 'CloudPhase1', 'Cloud Phase 2', 'Cloud Phase 3']
 
         # print(pivot_df.head())
 
@@ -401,7 +402,7 @@ def plot_phase_distribution_with_time(plotter: object):
         # ice_clear_ratio = phase_counts[1] / phase_counts[2]
 
         # # Create a plot for the ratio over time
-        # plt.plot(df['Datetime'], df['Cloud Phase 1'].values, label='ice', color='red')
+        # plt.plot(df['Datetime'], df['CloudPhase1'].values, label='ice', color='red')
         # # plt.plot(clear_data.index, clear_data.values, label='clear', color='blue')
 
         # # Customize the plot
