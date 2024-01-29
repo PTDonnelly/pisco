@@ -100,18 +100,46 @@ class Processor:
     def reduce_fields(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
-        print(self.df_l1c.head(), self.df_l2.head())
         print(self.df_l1c[['Latitude', 'Longitude', 'Datetime']].head(15))
-        input()
         print(self.df_l2[['Latitude', 'Longitude', 'Datetime']].head(15))
-        exit()
+        input()
+
+        print("1/5: Inspect Column Names and Types:")
+        print(self.df_l1c[['Latitude', 'Longitude', 'Datetime']].dtypes)
+        print(self.df_l2[['Latitude', 'Longitude', 'Datetime']].dtypes)
+        input()
+
+        print("2/5: Check for Precision Issues (for 'Latitude' and 'Longitude'):")
+        self.df_l1c['Latitude'] = self.df_l1c['Latitude'].round(6)  # Adjust the precision as needed
+        self.df_l2['Latitude'] = self.df_l2['Latitude'].round(6)
+        self.df_l1c['Longitude'] = self.df_l1c['Longitude'].round(6)
+        self.df_l2['Longitude'] = self.df_l2['Longitude'].round(6)
+        input()
+
+        print("3/5: Ensure Datetime Consistency:")
+        print("If 'Datetime' is a string, check the format. If it's a datetime object, ensure consistency:")
+        self.df_l1c['Datetime'] = pd.to_datetime(self.df_l1c['Datetime'])
+        self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
+        input()
+
+        print("4/5: Check for Missing Values:")
+        print(self.df_l1c[['Latitude', 'Longitude', 'Datetime']].isnull().sum())
+        print(self.df_l2[['Latitude', 'Longitude', 'Datetime']].isnull().sum())
+        input()
+
+        print("5/5: Look for Duplicates:")
+        print(self.df_l1c.duplicated(subset=['Latitude', 'Longitude', 'Datetime']).sum())
+        print(self.df_l2.duplicated(subset=['Latitude', 'Longitude', 'Datetime']).sum())
+        input()
+
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
         
         # Keep only columns containing variables present in reduced_fields and spectral channels
         reduced_fields = self._get_reduced_fields()
         spectrum_columns = [col for col in merged_df if "Spectrum " in col]
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
-        
+        print(reduced_df.head())
+
         # Save observations
         self._save_merged_products(reduced_df, delete_obr_files=True)
     
