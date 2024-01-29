@@ -418,6 +418,7 @@ def plot_phase_distribution_with_time(plotter: object):
     dates = []
 
     for ifile, datafile in enumerate(datafiles):
+        print(ifile, datafile)
         # Open compressed file and load data
         df = Plotter.unpickle(datafile)
         df = df[['Datetime', 'CloudPhase1']]

@@ -12,5 +12,4 @@ module purge
 module load python/meso-3.8
 
 python /data/pdonnelly/github/pisco/pisco/scripts.py
-
 """
