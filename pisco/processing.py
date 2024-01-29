@@ -95,9 +95,6 @@ class Processor:
         return reduced_fields
     
     def reduce_fields(self) -> None:
-
-        reduced_fields = self._get_reduced_fields()
-
         
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
@@ -105,6 +102,10 @@ class Processor:
         print(merged_df.head())
         print(merged_df.info())
         print("Merged DataFrame columns:", merged_df.columns.tolist())
+
+        # Keep only columns containing variables present in reduced_fields and spectral channels
+        reduced_fields = self._get_reduced_fields()
+        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
 
         missing_columns = [col for col in reduced_fields if col not in merged_df.columns]
         if missing_columns:
@@ -117,9 +118,7 @@ class Processor:
 
 
         input()
-        # Keep only columns containing variables present in reduced_fields and spectral channels
-        reduced_fields = self._get_reduced_fields()
-        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
+
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
         print(reduced_df.head())
         print(reduced_df.info())
