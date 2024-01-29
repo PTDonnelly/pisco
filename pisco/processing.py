@@ -101,9 +101,9 @@ class Processor:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
         print(self.df_l1c.head(), self.df_l2.head())
-        print(self.df_l1c[[['Latitude', 'Longitude', 'Datetime']]].head(15))
+        print(self.df_l1c[['Latitude', 'Longitude', 'Datetime']].head(15))
         input()
-        print(self.df_l2[[['Latitude', 'Longitude', 'Datetime']]].head(15))
+        print(self.df_l2[['Latitude', 'Longitude', 'Datetime']].head(15))
         exit()
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=['Latitude', 'Longitude', 'Datetime'], how='inner')
         
