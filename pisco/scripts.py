@@ -558,6 +558,7 @@ def plot_pisco():
     """
     """
     print(os.getcwd())
+    print(os.path.join("data","pdonnelly","github","pisco"))
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
     if os.getcwd() == "C:\\Users\\padra\\Documents\\Research\\github\\pisco\\":
