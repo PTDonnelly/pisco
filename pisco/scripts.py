@@ -561,7 +561,7 @@ def plot_pisco():
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
     if os.getcwd() == "C:\\Users\\padra\\Documents\\Research\\github\\pisco\\":
         datapath = "D:\\Data\\iasi\\"
-    if os.getcwd() == "/data/pdonnelly/github/pisco/":
+    if os.getcwd() == "/data/pdonnelly/github/pisco":
         datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
