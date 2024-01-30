@@ -7,6 +7,7 @@ import numpy as np
 from mpl_toolkits.basemap import Basemap
 import matplotlib.gridspec as gridspec
 
+import seaborn as sns
 
 from pisco import Plotter, Spectrum, Geographic
 
@@ -77,7 +78,6 @@ def plot_spatial_distribution_scatter(datapath: str):
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{datapath}/spatial_distribution.gif", png_files)
 
-
 def plot_spatial_distribution_2Dhist(plotter: object):        
     # Use Plotter to organise files
     plotter.organize_files_by_date()
@@ -138,7 +138,6 @@ def plot_spatial_distribution_2Dhist(plotter: object):
 
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
-
 
 def plot_spatial_distribution_unity(datapath: str):    
     def group_data_by_cloud_phase(files: List[str], ifile: int) -> dict:
@@ -283,7 +282,6 @@ def plot_spatial_distribution_unity(datapath: str):
     # Convert all individual pngs to animated gif
     plotter.png_to_gif(f"{datapath}/unity.gif", png_files)
 
-
 def plot_spectral_distributon(plotter: object):
     # Use Plotter to organise files
     plotter.organize_files_by_date()
@@ -379,7 +377,7 @@ def process_file(datafile: str):
 
     return ice_count, total_count, date
 
-def plot_phase_distribution_with_time_pool(plotter: object):
+def gather_ice_phase_ratio_pool(plotter: object):
     plotter.organize_files_by_date()
     datafiles = plotter.select_files()
 
@@ -404,8 +402,7 @@ def plot_phase_distribution_with_time_pool(plotter: object):
     plt.tight_layout()
     plt.show()
 
-
-def plot_phase_distribution_with_time(plotter: object):
+def gather_ice_phase_ratio(plotter: object):
     # Use Plotter to organize files
     plotter.organize_files_by_date()
 
@@ -421,7 +418,8 @@ def plot_phase_distribution_with_time(plotter: object):
         print(ifile, datafile)
         # Open compressed file and load data
         df = Plotter.unpickle(datafile)
-        if 'CloudPhase1' in df.columns:
+        # Check if DataFrame contains information
+        if not plotter.check_df(datafile, df):
             df = df[['Datetime', 'CloudPhase1']]
 
             # Convert the 'Datetime' column to pandas Datetime objects
@@ -440,8 +438,7 @@ def plot_phase_distribution_with_time(plotter: object):
             ice_counts.append(ice_count.sum())
             total_counts.append(total_measurements.sum())
             dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
-        else:
-            pass
+
     # Calculate the ratio of CloudPhase2 to total measurements for each file/date
     ratios = [ice / total for ice, total in zip(ice_counts, total_counts)]
     # Convert dates to strings for saving
@@ -451,17 +448,110 @@ def plot_phase_distribution_with_time(plotter: object):
     # Save the data
     np.save(f"{plotter.datapath}daily_ice_phase_counts.npy", data_to_save)
 
-    # Plot the ratio of CloudPhase2 to total measurements over time
-    plt.figure(figsize=(10, 6))
-    plt.plot(dates, ratios, linestyle='-', color='black')
-    plt.title('Ratio of Ice Phase to Total Measurements Over Time')
-    plt.xlabel('Date')
-    plt.ylabel('Ratio of Ice Phase')
-    # plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(f"{plotter.datapath}daily_ice_phase_counts.png")
+def gather_olr(plotter: object):
+    # Use Plotter to organize files
+    plotter.organize_files_by_date()
 
+    # Select files in time range
+    datafiles = plotter.select_files()
+
+    # Initialize lists to store the data for plotting
+    outgoing_longwave_radiation = []
+    dates = []
+
+    for ifile, datafile in enumerate(datafiles):
+        print(ifile, datafile)
+        # Open compressed file and load data
+        df = Plotter.unpickle(datafile)
+        
+        # Check if DataFrame contains information
+        if not plotter.check_df(datafile, df):
+            # Convert the 'Datetime' column to pandas Datetime objects
+            df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+            # Remove missing data
+            df = df[df['CloudPhase1'] != -1]
+            # Retrieve IASI spectral grid and radiance form the DataFrame
+            wavenumbers = plotter.get_dataframe_spectral_grid(df)
+            radiance = df[[col for col in df.columns if 'Spectrum' in col]]
+            
+            # Convert wavenumbers to wavelengths in meters
+            wavelengths = 1e-2 / wavenumbers  # Conversion from cm^-1 to m
+            # Convert radiance to SI units: W/m^2/sr/m
+            radiance_si = radiance * 1e-3  # Convert from mW to W
+
+            # Use numpy.trapz to integrate the radiance over the wavelength
+            olr = np.trapz(radiance_si, wavelengths)
+
+            # Append the OLR and dates to the lists
+            outgoing_longwave_radiation.append(olr)
+            dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
+
+    # Convert dates to strings for saving
+    date_strs = [date.strftime('%Y-%m-%d') for date in dates]
+    # Prepare the data to be saved
+    data_to_save = np.array(list(zip(date_strs, outgoing_longwave_radiation)), dtype=object)
+    # Save the data
+    np.save(f"{plotter.datapath}daily_olr.npy", data_to_save)
+
+
+def load_and_sort_daily_ratios(file_path):
+    # Load the data
+    data = np.load(file_path, allow_pickle=True)
+    # Convert the numpy array to a pandas DataFrame
+    df = pd.DataFrame(data, columns=['Date', 'Ratio'])
+    # Convert the 'Date' column to datetime objects
+    df['Date'] = pd.to_datetime(df['Date'])
+    # Sort the DataFrame by the 'Date' column in ascending order
+    df_sorted = df.sort_values(by='Date')
+    return df_sorted
+
+def add_grey_box(ax, df_spring_months):
+    unique_years = sorted(df_spring_months['Year'].unique())
+    for i, year in enumerate(unique_years):
+        if i % 2 == 0:
+            ax.axvspan(i-0.5, i+0.5, color='grey', alpha=0.2)
+
+def plot_ice_counts(plotter):
+    # Load, sort, and return the sorted DataFrame
+    df = load_and_sort_daily_ratios(f"{plotter.datapath}daily_ice_phase_counts.npy")
+
+    if 'Date' in df.columns:
+        df.set_index('Date', inplace=True)
+
+    # Filter for only March, April, and May
+    df_spring_months = df[df.index.month.isin([3, 4, 5])]
+    df_spring_months['Year'] = df_spring_months.index.year
+    df_spring_months['Month'] = df_spring_months.index.month_name().str[:3]
+    df_spring_months['Year-Month'] = df_spring_months.index.strftime('%Y-%m')
+
+    # Create a subplot layout: 2 rows, 1 column
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    # Violin Plot with Colors
+    sns.violinplot(x='Year', y='Ratio', hue='Month', data=df_spring_months, ax=ax, palette="muted", split=False, density_norm="count")
+    # Strip Plot
+    sns.stripplot(x='Year', y='Ratio', hue='Month', data=df_spring_months, ax=ax, palette='dark:k', size=3, jitter=False, dodge=True)
+
+    # Add grey box for every other year
+    add_grey_box(ax, df_spring_months)
+
+    # Customizing the plot
+    ax.set_title('Springtime Ice Phase Counts')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Ice/Total Ratio')
+    ax.set_ylim([0, 1])
+    ax.grid(axis='y', linestyle=':', color='k')
+    ax.tick_params(axis='both', labelsize=plotter.fontsize)
+
+    # Handling the legend
+    handles, labels = ax.get_legend_handles_labels()
+    # Only show one entry per month
+    ax.legend(handles[:3], labels[:3], title='Month')
+
+    # Finish and close
+    plt.tight_layout()
+    plt.savefig(f"{plotter.datapath}daily_ice_phase_counts.png", dpi=300)
+    plt.close()
 
 
 def plot_pisco():
@@ -469,8 +559,8 @@ def plot_pisco():
     """
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    # datapath = "D:\\Data\\iasi"
-    datapath = "/data/pdonnelly/iasi/metopb/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
@@ -478,14 +568,16 @@ def plot_pisco():
     target_days = [day for day in range(1, 32)] # Search all days in each month
 
     # Define plotting parameters
-    fontsize = 8
-    dpi = 150
+    fontsize = 10
+    dpi = 300
 
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
     
     # Plot data
-    plot_phase_distribution_with_time(plotter)
+    # plot_phase_distribution_with_time(plotter)
+    # plot_ice_counts(plotter)
+    gather_olr(plotter)
 
 if __name__ == "__main__":
     plot_pisco()
