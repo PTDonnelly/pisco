@@ -559,7 +559,7 @@ def plot_pisco():
     """
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    if os.getcwd() == "C:\\Users\\padra\\Documents\\Research\\github\\pisco\\"
+    if os.getcwd() == "C:\\Users\\padra\\Documents\\Research\\github\\pisco\\":
         datapath = "D:\\Data\\iasi\\"
     if os.getcwd() == "/data/pdonnelly/github/pisco/":
         datapath = "/data/pdonnelly/iasi/metopb/"
