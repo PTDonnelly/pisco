@@ -43,7 +43,8 @@ class Plotter:
         # Get the full IASI spectral grid
         wavenumber_grid = self._get_iasi_spectral_grid()
         # Extract the numbers from the column names
-        channel_positions = df.columns.str.split().str[-1].astype(int)
+        spectral_channels = df[[col for col in df.columns if 'Spectrum' in col]]
+        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
         # Extract the wavenumbers corresponding to the channel positions
         extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
         return extracted_wavenumbers
