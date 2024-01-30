@@ -557,14 +557,10 @@ def plot_ice_counts(plotter):
 def plot_pisco():
     """
     """
-    print(os.getcwd())
-    print(os.path.join("/","data","pdonnelly","github","pisco"))
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    if os.getcwd() == "C:\\Users\\padra\\Documents\\Research\\github\\pisco\\":
-        datapath = "D:\\Data\\iasi\\"
-    elif os.getcwd() == os.path.join("data","pdonnelly","github","pisco"):
-        datapath = os.path.join("data","pdonnelly","iasi","metopb")
+    # datapath = "D:\\Data\\iasi\\"
+    datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
