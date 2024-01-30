@@ -472,12 +472,12 @@ def gather_olr(plotter: object):
             df = df[df['CloudPhase1'] != -1]
             # Retrieve IASI spectral grid and radiance form the DataFrame
             wavenumbers = plotter.get_dataframe_spectral_grid(df)
-            radiance = df[[col for col in df.columns if 'Spectrum' in col]]
+            radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
             
             # Convert wavenumbers to wavelengths in meters
-            wavelengths = 1e-2 / wavenumbers  # Conversion from cm^-1 to m
+            wavelengths = [1e-2 / w for w in wavenumbers]  # Conversion from cm^-1 to m
             # Convert radiance to SI units: W/m^2/sr/m
-            radiance_si = radiance * 1e-3  # Convert from mW to W
+            radiance_si = [r * 1e-3 for r in radiance]  # Convert from mW to W
 
             # Use numpy.trapz to integrate the radiance over the wavelength
             olr = np.trapz(radiance_si, wavelengths)
