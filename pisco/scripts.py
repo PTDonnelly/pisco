@@ -420,24 +420,25 @@ def gather_ice_phase_ratio(plotter: object):
         df = Plotter.unpickle(datafile)
         # Check if DataFrame contains information
         if not plotter.check_df(datafile, df):
-            df = df[['Datetime', 'CloudPhase1']]
+            if 'CloudPhase1' in df.columns:
+                df = df[['Datetime', 'CloudPhase1']]
 
-            # Convert the 'Datetime' column to pandas Datetime objects
-            df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-            # Remove missing data
-            df = df[df['CloudPhase1'] != -1]
+                # Convert the 'Datetime' column to pandas Datetime objects
+                df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+                # Remove missing data
+                df = df[df['CloudPhase1'] != -1]
 
-            # Group data by datetime and count the number of occurrences for each phase
-            pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
-            # Sum across each row gives the total measurements for each time
-            total_measurements = pivot_df.sum(axis=1)
-            # Count of CloudPhase2 occurrences
-            ice_count = pivot_df.get(2, 0).sum() # Using .get() to handle cases where CloudPhase1=2 might not exist
+                # Group data by datetime and count the number of occurrences for each phase
+                pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
+                # Sum across each row gives the total measurements for each time
+                total_measurements = pivot_df.sum(axis=1)
+                # Count of CloudPhase2 occurrences
+                ice_count = pivot_df.get(2, 0).sum() # Using .get() to handle cases where CloudPhase1=2 might not exist
 
-            # Append the counts to the lists
-            ice_counts.append(ice_count.sum())
-            total_counts.append(total_measurements.sum())
-            dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
+                # Append the counts to the listsz
+                ice_counts.append(ice_count.sum())
+                total_counts.append(total_measurements.sum())
+                dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
 
     # Calculate the ratio of CloudPhase2 to total measurements for each file/date
     ratios = [ice / total for ice, total in zip(ice_counts, total_counts)]
