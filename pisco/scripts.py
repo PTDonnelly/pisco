@@ -449,6 +449,7 @@ def gather_ice_phase_ratio(plotter: object):
     # Save the data
     np.save(f"{plotter.datapath}daily_ice_phase_counts.npy", data_to_save)
 
+
 def prepare_dataframe(df):
     """
     Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
@@ -501,15 +502,13 @@ def gather_olr(plotter: object):
             wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
             # Convert radiance to SI units: W/m^2/sr/m
             radiance_si = radiance * 1e-3  # Convert from mW to W
-            # Integrate the radiance over the wavelength
-            olr = np.trapz(radiance_si, wavelengths, axis=1)
-            print(type(olr))
-            print(np.shape(olr))
-            exit()
+            # Integrate the radiance over the wavelength and sum integral elements
+            olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
+            olr_total = np.sum(olr_integrals)
 
             # Append the OLR and dates to the lists
-            outgoing_longwave_radiation.extend(olr)
-            dates.extend(df['Datetime'].dt.date.iloc[0])
+            outgoing_longwave_radiation.append(olr_total)
+            dates.append(df['Datetime'].dt.date.iloc[0])
 
     # Prepare the data to be saved
     data_to_save = np.array(list(zip(dates, outgoing_longwave_radiation)), dtype=object)
@@ -517,19 +516,19 @@ def gather_olr(plotter: object):
     np.save(f"{plotter.datapath}daily_olr.npy", data_to_save)
 
 
-def load_and_sort_data(file_path, value_column_name='Value'):
+def load_and_sort_data(file_path, column_name='Value'):
     """
     Loads and sorts data from a .npy file.
 
     Parameters:
     - file_path (str): Path to the .npy file.
-    - value_column_name (str): Name of the column for the data values (default is 'Value').
+    - column_name (str): Name of the column for the data values (default is 'Value').
 
     Returns:
     - df_sorted (pd.DataFrame): DataFrame with sorted data by date.
     """
     data = np.load(file_path, allow_pickle=True)
-    df = pd.DataFrame(data, columns=['Date', value_column_name])
+    df = pd.DataFrame(data, columns=['Date', column_name])
     df['Date'] = pd.to_datetime(df['Date'])
     df_sorted = df.sort_values(by='Date')
     return df_sorted
@@ -547,46 +546,63 @@ def add_grey_box(ax, df):
         if i % 2 == 0:
             ax.axvspan(i-0.5, i+0.5, color='grey', alpha=0.2)
 
-def plot_ice_counts(plotter):
-    # Load, sort, and return the sorted DataFrame
-    df = load_and_sort_daily_ratios(f"{plotter.datapath}daily_ice_phase_counts.npy")
+def plot_data(plotter, column_name='Value'):
+    """
+    Loads data from a .npy file, filters for spring months (March, April, May),
+    and generates a violin plot with strip plot overlay for each year.
 
+    Parameters:
+    - plotter (object): An instance with methods for data handling and plotting configurations.
+    - file_path (str): Path to the .npy file containing the data.
+    - column_name (str): Name of the column for the data values, defaulting to 'Value'.
+    - plot_title (str): Title for the plot.
+    """
+    # Load, sort, and return the sorted DataFrame
+    if column_name == 'Ice Fraction':
+        file_path = f"{plotter.datapath}daily_ice_phase_counts.npy"
+        ylim = [0, 1]
+    if column_name == 'OLR':
+        file_path = f"{plotter.datapath}daily_olr.npy"
+        ylim = [0, 100]
+    df = load_and_sort_data(file_path, column_name)
+
+    # Ensure 'Date' is set as the DataFrame index
     if 'Date' in df.columns:
         df.set_index('Date', inplace=True)
 
-    # Filter for only March, April, and May
+    # Filter for only March, April, and May and add 'Year', 'Month', and 'Year-Month' columns
+    df['Year'] = df.index.year
+    df['Month'] = df.index.month_name().str[:3]
+    df['Year-Month'] = df.index.strftime('%Y-%m')
     df_spring_months = df[df.index.month.isin([3, 4, 5])]
-    df_spring_months['Year'] = df_spring_months.index.year
-    df_spring_months['Month'] = df_spring_months.index.month_name().str[:3]
-    df_spring_months['Year-Month'] = df_spring_months.index.strftime('%Y-%m')
 
-    # Create a subplot layout: 2 rows, 1 column
+    # Create a subplot layout
     fig, ax = plt.subplots(figsize=(12, 6))
 
-    # Violin Plot with Colors
-    sns.violinplot(x='Year', y='Ratio', hue='Month', data=df_spring_months, ax=ax, palette="muted", split=False, density_norm="count")
-    # Strip Plot
-    sns.stripplot(x='Year', y='Ratio', hue='Month', data=df_spring_months, ax=ax, palette='dark:k', size=3, jitter=False, dodge=True)
+    # Violin Plot with Colors: visualizes the distribution of data values for each spring month across years
+    sns.violinplot(x='Year', y=column_name, hue='Month', data=df_spring_months, ax=ax, palette="muted", split=False)
 
-    # Add grey box for every other year
+    # Strip Plot: adds individual data points to the violin plot for detailed data visualization
+    sns.stripplot(x='Year', y=column_name, hue='Month', data=df_spring_months, ax=ax, palette='dark:k', size=3, jitter=False, dodge=True)
+
+    # Add grey box for visual separation of every other year for enhanced readability
     add_grey_box(ax, df_spring_months)
 
-    # Customizing the plot
-    ax.set_title('Springtime Ice Phase Counts')
+    # Customizing the plot with titles and labels
+    ax.set_title(f"MAM Average {column_name}")
     ax.set_xlabel('Year')
-    ax.set_ylabel('Ice/Total Ratio')
-    ax.set_ylim([0, 1])
+    ax.set_ylabel(column_name)
+    ax.set_ylim(ylim)
     ax.grid(axis='y', linestyle=':', color='k')
     ax.tick_params(axis='both', labelsize=plotter.fontsize)
 
-    # Handling the legend
+    # Handling the legend to ensure clarity in distinguishing between different months
     handles, labels = ax.get_legend_handles_labels()
-    # Only show one entry per month
     ax.legend(handles[:3], labels[:3], title='Month')
 
-    # Finish and close
+    # Save the plot to a file and close the plotting context to free up memory
     plt.tight_layout()
-    plt.savefig(f"{plotter.datapath}daily_ice_phase_counts.png", dpi=300)
+    plt.savefig(f"{file_path.replace('.npy', '.png').lower()}", dpi=300)
     plt.close()
 
 
@@ -611,9 +627,8 @@ def plot_pisco():
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
     
     # Plot data
-    # plot_phase_distribution_with_time(plotter)
-    # plot_ice_counts(plotter)
-    gather_olr(plotter)
+    plot_data(plotter, column_name='OLR')
+    # gather_olr(plotter)
 
 if __name__ == "__main__":
     plot_pisco()
