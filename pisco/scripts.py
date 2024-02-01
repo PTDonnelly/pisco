@@ -596,8 +596,8 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    datapath = "D:\\Data\\iasi\\"
-    # datapath = "/data/pdonnelly/iasi/metopb_window/"
+    # datapath = "D:\\Data\\iasi\\"
+    datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
