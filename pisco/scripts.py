@@ -545,7 +545,7 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
             file_path = f"{plotter.datapath}daily_ice_fraction.csv"
             ylabel = "Ice / Total"
             ylim = [0, 1]
-        df = load_and_sort_data(file_path, var)
+        df = load_data(file_path, var)
 
         # Ensure 'Date' is set as the DataFrame index
         if 'Date' in df.columns:
@@ -594,8 +594,8 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    datapath = "D:\\Data\\iasi\\"
-    # datapath = "/data/pdonnelly/iasi/metopb_window/"
+    # datapath = "D:\\Data\\iasi\\"
+    datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
