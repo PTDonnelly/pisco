@@ -6,6 +6,7 @@ import multiprocessing
 import numpy as np
 from mpl_toolkits.basemap import Basemap
 import matplotlib.gridspec as gridspec
+from typing import List
 
 import seaborn as sns
 
@@ -359,104 +360,14 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
-def process_file(datafile: str):
-    print(datafile)
-    
-    # Open compressed file
-    df = Plotter.unpickle(datafile)
-    df = df[['Datetime', 'CloudPhase1']]
-    df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-    df = df[df['CloudPhase1'] != -1]
-    
-    # Extract daily count with time
-    pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
-    total_measurements = pivot_df.sum(axis=1)
-    ice_count = pivot_df.get(2, 0).sum()
-    total_count = total_measurements.sum()
-    date = df['Datetime'].dt.date.iloc[0]
-
-    return ice_count, total_count, date
-
-def gather_ice_phase_ratio_pool(plotter: object):
-    plotter.organize_files_by_date()
-    datafiles = plotter.select_files()
-
-    # Initialize multiprocessing Pool
-    num_processes = multiprocessing.cpu_count()  # Adjust the number of processes based on your system
-    with multiprocessing.Pool(processes=num_processes) as pool:
-        results = pool.map(process_file, datafiles)
-
-    # Aggregate results
-    ice_counts, total_counts, dates = zip(*results)
-    ratios = [ice / total for ice, total in zip(ice_counts, total_counts)]
-
-    # Plotting
-    plt.figure(figsize=(10, 6))
-    plt.plot(dates, ratios, marker='o', linestyle='-', color='blue')
-    plt.title('Ratio of Ice Clouds to Total Measurements Over Time')
-    plt.xlabel('Date')
-    plt.ylabel('Ratio of Ice Clouds')
-    plt.ylim([0, 1])
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
-
-def gather_ice_phase_ratio(plotter: object):
-    # Use Plotter to organize files
-    plotter.organize_files_by_date()
-
-    # Select files in time range
-    datafiles = plotter.select_files()
-
-    # Initialize lists to store the data for plotting
-    ice_counts = []
-    total_counts = []
-    dates = []
-
-    for ifile, datafile in enumerate(datafiles):
-        print(ifile, datafile)
-        # Open compressed file and load data
-        df = Plotter.unpickle(datafile)
-        # Check if DataFrame contains information
-        if not plotter.check_df(datafile, df):
-            if 'CloudPhase1' in df.columns:
-                df = df[['Datetime', 'CloudPhase1']]
-
-                # Convert the 'Datetime' column to pandas Datetime objects
-                df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-                # Remove missing data
-                df = df[df['CloudPhase1'] != -1]
-
-                # Group data by datetime and count the number of occurrences for each phase
-                pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
-                # Sum across each row gives the total measurements for each time
-                total_measurements = pivot_df.sum(axis=1)
-                # Count of CloudPhase2 occurrences
-                ice_count = pivot_df.get(2, 0).sum() # Using .get() to handle cases where CloudPhase1=2 might not exist
-
-                # Append the counts to the listsz
-                ice_counts.append(ice_count.sum())
-                total_counts.append(total_measurements.sum())
-                dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
-
-    # Calculate the ratio of CloudPhase2 to total measurements for each file/date
-    ratios = [ice / total for ice, total in zip(ice_counts, total_counts)]
-    # Convert dates to strings for saving
-    date_strs = [date.strftime('%Y-%m-%d') for date in dates]
-    # Prepare the data to be saved
-    data_to_save = np.array(list(zip(date_strs, ratios)), dtype=object)
-    # Save the data
-    np.save(f"{plotter.datapath}daily_ice_phase_counts.npy", data_to_save)
-
-
-def prepare_dataframe(df):
+def prepare_dataframe(df, maximum_zenith_angle=5):
     """
     Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
     removing missing data, and filtering for SatelliteZenithAngle less than 5 degrees.
     
     Parameters:
     df (pd.DataFrame): Input DataFrame containing satellite data.
+    maximum_zenith_angle (int): Maximum satellite zenith angle considered (<5 degrees is considered nadir-viewing)
 
     Returns:
     pd.DataFrame: Filtered and processed DataFrame.
@@ -466,54 +377,67 @@ def prepare_dataframe(df):
     
     df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
     df = df[df['CloudPhase1'] != -1]
-    df = df[df['SatelliteZenithAngle'] < 5]
+    df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
     return df
 
-def gather_olr(plotter: object):
+def get_outgoing_longwave_radiation(plotter, df):
+    # Retrieve IASI spectral grid and radiance form the DataFrame
+    wavenumbers = plotter.get_dataframe_spectral_grid(df)
+    radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
+    # Convert wavenumbers to wavelengths in meters
+    wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
+    # Convert radiance to SI units: W/m^2/sr/m
+    radiance_si = radiance * 1e-3  # Convert from mW to W
+    # Integrate the radiance over the wavelength and sum integral elements
+    olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
+    olr_total = np.sum(olr_integrals)
+    return olr_total
+
+def get_ice_fraction(df):
+    pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
+    total_measurements = pivot_df.sum(axis=1)
+    ice_count = pivot_df.get(2, 0).sum()
+    return ice_count
+
+def gather_data(plotter: object, target_variables: List[str]):
     """
-    Calculates Outgoing Longwave Radiation (OLR) data from a series of data files,
-    processes the data, and saves the results.
+    Processes data from a series of data files for specified target variables, such as OLR or Ice Fraction,
+    and saves the results in separate .npy files named after each target variable.
 
     Parameters:
     plotter (object): An instance of the Plotter class with methods for data handling.
+    target_variables (list): List of target variables to process, e.g., ['OLR', 'Ice Fraction'].
     """
-    # Use Plotter to organize files
     plotter.organize_files_by_date()
-    # Select files in time range
     datafiles = plotter.select_files()
 
-    # Initialize lists to store the data for plotting
-    outgoing_longwave_radiation = []
+    # Initialize a dictionary to store the data for each target variable
+    data_dict = {var: [] for var in target_variables}
     dates = []
+
     for ifile, datafile in enumerate(datafiles):
         print(ifile, datafile)
-        # Open compressed file and load data
         df = Plotter.unpickle(datafile)
-        
-        # Check if DataFrame contains information
+
         if not plotter.check_df(datafile, df):
-            # Flag and reduce the dataframe
             df = prepare_dataframe(df)
 
-            # Retrieve IASI spectral grid and radiance form the DataFrame
-            wavenumbers = plotter.get_dataframe_spectral_grid(df)
-            radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
-            # Convert wavenumbers to wavelengths in meters
-            wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
-            # Convert radiance to SI units: W/m^2/sr/m
-            radiance_si = radiance * 1e-3  # Convert from mW to W
-            # Integrate the radiance over the wavelength and sum integral elements
-            olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
-            olr_total = np.sum(olr_integrals)
+            # Process data for each target variable
+            for var in target_variables:
+                if var == 'OLR':
+                    result = get_outgoing_longwave_radiation(plotter, df)
+                    data_dict[var].append(result)
+                elif var == 'Ice Fraction':
+                    result = get_ice_fraction(df)
+                    data_dict[var].append(result)
 
-            # Append the OLR and dates to the lists
-            outgoing_longwave_radiation.append(olr_total)
+            # Append the date for this file to the dates list
             dates.append(df['Datetime'].dt.date.iloc[0])
 
-    # Prepare the data to be saved
-    data_to_save = np.array(list(zip(dates, outgoing_longwave_radiation)), dtype=object)
-    # Save the data
-    np.save(f"{plotter.datapath}daily_olr.npy", data_to_save)
+    # Prepare and save the data for each target variable
+    for var, results in data_dict.items():
+        data_to_save = np.array(list(zip(dates, results)), dtype=object)
+        np.save(f"{plotter.datapath}daily_{var.lower().replace(' ', '_')}.npy", data_to_save)
 
 
 def load_and_sort_data(file_path, column_name='Value'):
@@ -546,7 +470,7 @@ def add_grey_box(ax, df):
         if i % 2 == 0:
             ax.axvspan(i-0.5, i+0.5, color='grey', alpha=0.2)
 
-def plot_data(plotter, column_name='Value'):
+def plot_data(plotter, target_variables: List[str]):
     """
     Loads data from a .npy file, filters for spring months (March, April, May),
     and generates a violin plot with strip plot overlay for each year.
@@ -557,53 +481,54 @@ def plot_data(plotter, column_name='Value'):
     - column_name (str): Name of the column for the data values, defaulting to 'Value'.
     - plot_title (str): Title for the plot.
     """
-    # Load, sort, and return the sorted DataFrame
-    if column_name == 'Ice Fraction':
-        file_path = f"{plotter.datapath}daily_ice_phase_counts.npy"
-        ylim = [0, 1]
-    if column_name == 'OLR':
-        file_path = f"{plotter.datapath}daily_olr.npy"
-        ylim = [0, 100]
-    df = load_and_sort_data(file_path, column_name)
+    # Load, sort, and return the sorted DataFrame for each target variable
+    for var in target_variables:
+        if var == 'OLR':
+            file_path = f"{plotter.datapath}daily_olr.npy"
+            ylim = [0, 100]
+        elif var == 'Ice Fraction':
+            file_path = f"{plotter.datapath}daily_ice_fraction.npy"
+            ylim = [0, 1]
+        df = load_and_sort_data(file_path, var)
 
-    # Ensure 'Date' is set as the DataFrame index
-    if 'Date' in df.columns:
-        df.set_index('Date', inplace=True)
+        # Ensure 'Date' is set as the DataFrame index
+        if 'Date' in df.columns:
+            df.set_index('Date', inplace=True)
 
-    # Filter for only March, April, and May and add 'Year', 'Month', and 'Year-Month' columns
-    df['Year'] = df.index.year
-    df['Month'] = df.index.month_name().str[:3]
-    df['Year-Month'] = df.index.strftime('%Y-%m')
-    df_spring_months = df[df.index.month.isin([3, 4, 5])]
+        # Filter for only March, April, and May and add 'Year', 'Month', and 'Year-Month' columns
+        df['Year'] = df.index.year
+        df['Month'] = df.index.month_name().str[:3]
+        df['Year-Month'] = df.index.strftime('%Y-%m')
+        df_spring_months = df[df.index.month.isin([3, 4, 5])]
 
-    # Create a subplot layout
-    fig, ax = plt.subplots(figsize=(12, 6))
+        # Create a subplot layout
+        fig, ax = plt.subplots(figsize=(12, 6))
 
-    # Violin Plot with Colors: visualizes the distribution of data values for each spring month across years
-    sns.violinplot(x='Year', y=column_name, hue='Month', data=df_spring_months, ax=ax, palette="muted", split=False)
+        # Violin Plot with Colors: visualizes the distribution of data values for each spring month across years
+        sns.violinplot(x='Year', y=var, hue='Month', data=df_spring_months, ax=ax, palette="muted", split=False)
 
-    # Strip Plot: adds individual data points to the violin plot for detailed data visualization
-    sns.stripplot(x='Year', y=column_name, hue='Month', data=df_spring_months, ax=ax, palette='dark:k', size=3, jitter=False, dodge=True)
+        # Strip Plot: adds individual data points to the violin plot for detailed data visualization
+        sns.stripplot(x='Year', y=var, hue='Month', data=df_spring_months, ax=ax, palette='dark:k', size=3, jitter=False, dodge=True)
 
-    # Add grey box for visual separation of every other year for enhanced readability
-    add_grey_box(ax, df_spring_months)
+        # Add grey box for visual separation of every other year for enhanced readability
+        add_grey_box(ax, df_spring_months)
 
-    # Customizing the plot with titles and labels
-    ax.set_title(f"MAM Average {column_name}")
-    ax.set_xlabel('Year')
-    ax.set_ylabel(column_name)
-    ax.set_ylim(ylim)
-    ax.grid(axis='y', linestyle=':', color='k')
-    ax.tick_params(axis='both', labelsize=plotter.fontsize)
+        # Customizing the plot with titles and labels
+        ax.set_title(f"MAM Average {var}")
+        ax.set_xlabel('Year')
+        ax.set_ylabel(var)
+        ax.set_ylim(ylim)
+        ax.grid(axis='y', linestyle=':', color='k')
+        ax.tick_params(axis='both', labelsize=plotter.fontsize)
 
-    # Handling the legend to ensure clarity in distinguishing between different months
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[:3], labels[:3], title='Month')
+        # Handling the legend to ensure clarity in distinguishing between different months
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[:3], labels[:3], title='Month')
 
-    # Save the plot to a file and close the plotting context to free up memory
-    plt.tight_layout()
-    plt.savefig(f"{file_path.replace('.npy', '.png').lower()}", dpi=300)
-    plt.close()
+        # Save the plot to a file and close the plotting context to free up memory
+        plt.tight_layout()
+        plt.savefig(f"{plotter.datapath}daily_{var.lower().replace(' ', '_')}.png", dpi=300)
+        plt.close()
 
 
 def plot_pisco():
@@ -611,8 +536,8 @@ def plot_pisco():
     """
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    datapath = "D:\\Data\\iasi\\"
-    # datapath = "/data/pdonnelly/iasi/metopb/"
+    # datapath = "D:\\Data\\iasi\\"
+    datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
@@ -626,9 +551,12 @@ def plot_pisco():
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
     
+    # Define target variables to calculate and plot
+    target_variables=['OLR', 'Ice Fraction']
+
     # Plot data
-    plot_data(plotter, column_name='OLR')
-    # gather_olr(plotter)
+    gather_data(plotter, target_variables)
+    plot_data(plotter, target_variables)
 
 if __name__ == "__main__":
     plot_pisco()
