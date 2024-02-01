@@ -421,6 +421,8 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
     plotter.organise_files_by_date()
     datafiles = plotter.select_files()
 
+    # print(datafiles)
+
     # Initialise a dictionary to store the data for each target variable
     data_dict = {var: [] for var in target_variables}
     dates = []
@@ -565,7 +567,7 @@ def plot_pisco():
 
     # Define temporal range to plot
     target_year = [2013]#, 2014, 2015, 2016, 2017, 2018, 2019]
-    target_month = [3, 4, 5]
+    target_month = [3]#, 4, 5]
     target_days = [day for day in range(1, 32)] # Search all days in each month
 
     # Define plotting parameters
