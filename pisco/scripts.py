@@ -429,19 +429,18 @@ def get_outgoing_longwave_radiation(plotter, df):
     
     # Integrate the radiance over the wavelength and sum integral elements
     olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
-    olr_total = np.sum(olr_integrals)
-    return olr_total
+    return np.sum(olr_integrals)
 
 def get_ice_fraction(df):
     # Re-format DataFrame to get the individual counts of each Cloud Phase per Datetime
     pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
     
     # Calculate total number of measurements for the entire day
-    total_measurements = pivot_df.sum(axis=1)
+    total_measurements = pivot_df.sum(axis=1).values
+    
     # Calculate proportion of measurements for the entire day flagged as "icy"
-    print(pivot_df.head())
     ice_count = pivot_df.get(2, 0).sum()
-    return ice_count / total_measurements
+    return np.round(ice_count / total_measurements, 3)
 
 def gather_daily_statistics(plotter: object, target_variables: List[str]):
     """
@@ -486,17 +485,17 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
 
     # Prepare and save the data for each target variable
     for var, results in data_dict.items():
+        # Convert any array-like entries in results to scalars
+        processed_results = [result[0] if isinstance(result, (list, np.ndarray)) and len(result) == 1 else result for result in results]
+
         # Create a DataFrame from the results and dates
-        df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates), var: results})
-        
-        # # Ensure results are numeric, converting non-numeric to NaN
-        # df_to_save[var] = pd.to_numeric(df_to_save[var], errors='coerce')
+        df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates), var: processed_results})
         
         # Save the DataFrame as a CSV for easier handling (you could also use .to_pickle for binary format)
         df_to_save.to_csv(f"{plotter.datapath}daily_{var.lower().replace(' ', '_')}.csv", index=False)
 
 
-def load_and_sort_data(file_path, var):
+def load_data(file_path, var):
     """
     Loads and sorts data from a .npy file.
 
@@ -505,13 +504,12 @@ def load_and_sort_data(file_path, var):
     - column_name (str): Name of the column for the data values (default is 'Value').
 
     Returns:
-    - df_sorted (pd.DataFrame): DataFrame with sorted data by date.
+    - df (pd.DataFrame): DataFrame containing Date and data entries
     """
     data = pd.read_csv(file_path)
     df = pd.DataFrame(data, columns=['Date', var])
     df['Date'] = pd.to_datetime(df['Date'])
-    df_sorted = df.sort_values(by='Date')
-    return df_sorted
+    return df
 
 def add_grey_box(ax, df):
     """
@@ -596,8 +594,8 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb_window/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
@@ -616,7 +614,7 @@ def plot_pisco():
 
     # Plot data
     gather_daily_statistics(plotter, target_variables)
-    # plot_statistical_timeseries(plotter, target_variables)
+    plot_statistical_timeseries(plotter, target_variables)
 
 if __name__ == "__main__":
     plot_pisco()
