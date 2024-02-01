@@ -401,7 +401,7 @@ def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
     pd.DataFrame: Filtered and processed DataFrame.
     """
     required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
-    if Plotter.check_df(df, required_columns):
+    if Plotter.check_df(datafile, df, required_columns):
         # Proceed with DataFrame manipulations if all required columns are present
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
         df = df[df['CloudPhase1'] != -1]
@@ -539,11 +539,13 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
             ylabel = fr"{var} W m$^{-2}$"
-            ylim = [1e-10, 1e-8]
+            ylim = [-1e-7, 1e-7]
+            yscale = "symlog"
         elif var == 'Ice Fraction':
             file_path = f"{plotter.datapath}daily_ice_fraction.csv"
             ylabel = "Ice / Total"
             ylim = [0, 1]
+            yscale = "linear"
         df = load_data(file_path, var)
 
         # Ensure 'Date' is set as the DataFrame index
@@ -576,6 +578,7 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
         ax.set_xlabel('Year')
         ax.set_ylabel(ylabel)
         ax.set_ylim(ylim)
+        ax.set_yscale(yscale)
         ax.grid(axis='y', linestyle=':', color='k')
         ax.tick_params(axis='both', labelsize=plotter.fontsize)
 
