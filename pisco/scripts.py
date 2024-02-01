@@ -440,13 +440,14 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
                     result = get_ice_fraction(df)
                 # Append to dictionary
                 data_dict[var].append(result)
+            # Append the date for this file to the dates list
+            dates.append(df['Datetime'].dt.date.iloc[0])
         else:
-            # If DataFrame is empty, append a Nan value
+            # If DataFrame is empty, append NaN values
             for var in target_variables:
                 data_dict[var].append(np.nan)
-
-        # Append the date for this file to the dates list
-        dates.append(df['Datetime'].dt.date.iloc[0])
+            # Append the date for this file to the dates list
+            dates.append(np.nan)
 
     # Prepare and save the data for each target variable
     for var, results in data_dict.items():
@@ -563,7 +564,7 @@ def plot_pisco():
     datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
-    target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_year = [2013]#, 2014, 2015, 2016, 2017, 2018, 2019]
     target_month = [3, 4, 5]
     target_days = [day for day in range(1, 32)] # Search all days in each month
 
