@@ -105,7 +105,7 @@ class Extractor:
         # Define the parameters for the command
         if (self.data_level == 'l1c'):
             # Set range of spectral channels to use
-            self.channels = self.config.set_channels("range")
+            self.channels = self.config.set_channels(self.config.channels_mode)
             
             list_of_parameters = [
                 f"-d {self.datapath_in}", # l1c data directory

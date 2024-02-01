@@ -8,6 +8,9 @@
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": true,
 
+    // channels: str, Specifies which mode of selection for IASI spectral channels
+    "channels_mode": "all_reduced",
+
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",
 

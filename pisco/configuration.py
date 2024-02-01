@@ -1,4 +1,3 @@
-from typing import List
 import commentjson
 import os
 
@@ -23,6 +22,10 @@ class Configurer:
         if mode == "all":
             # Extract all 8461 IASI L1C spectral channels
             return [(i + 1) for i in range(8461)]
+        elif mode == "all_reduced":
+            # Extract every second channel of the 8461 IASI L1C spectral channels
+            channels = [(i + 1) for i in range(8461)]
+            return channels[::2]
         elif mode == "range":
             # Specify a subset of channels
             start_channel = 220
