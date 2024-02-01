@@ -120,7 +120,7 @@ class Plotter:
     def check_df(df: pd.DataFrame, local_time: Optional[str] = None, phase: Optional[str] = None, required_columns: Optional[List[str]] = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
-            print(f"\DataFrame empty")
+            print(f"DataFrame empty")
             # if local_time:
             #     print(f"\n    No data available for time: {local_time}")
             # elif phase:

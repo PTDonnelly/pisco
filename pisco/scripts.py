@@ -408,7 +408,7 @@ def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
         df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
         return True, df
     else:
-        print(f"\Skipping DataFrame: {datafile}")
+        print(f"\nSkipping DataFrame: {datafile}")
         return False, None
 
 def get_outgoing_longwave_radiation(plotter, df):
@@ -592,8 +592,8 @@ def plot_pisco():
     datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
-    target_year = [2013]#, 2014, 2015, 2016, 2017, 2018, 2019]
-    target_month = [3]#, 4, 5]
+    target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_month = [3, 4, 5]
     target_days = [day for day in range(1, 32)] # Search all days in each month
 
     # Define plotting parameters
