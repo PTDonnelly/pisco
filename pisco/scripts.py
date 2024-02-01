@@ -467,25 +467,26 @@ def gather_olr(plotter: object):
         
         # Check if DataFrame contains information
         if not plotter.check_df(datafile, df):
-            # Convert the 'Datetime' column to pandas Datetime objects
-            df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-            # Remove missing data
-            df = df[df['CloudPhase1'] != -1]
-            # Retrieve IASI spectral grid and radiance form the DataFrame
-            wavenumbers = plotter.get_dataframe_spectral_grid(df)
-            radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
-            
-            # Convert wavenumbers to wavelengths in meters
-            wavelengths = [1e-2 / w for w in wavenumbers]  # Conversion from cm^-1 to m
-            # Convert radiance to SI units: W/m^2/sr/m
-            radiance_si = [r * 1e-3 for r in radiance]  # Convert from mW to W
+            if 'CloudPhase1' in df.columns:
+                # Convert the 'Datetime' column to pandas Datetime objects
+                df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+                # Remove missing data
+                df = df[df['CloudPhase1'] != -1]
+                # Retrieve IASI spectral grid and radiance form the DataFrame
+                wavenumbers = plotter.get_dataframe_spectral_grid(df)
+                radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
+                
+                # Convert wavenumbers to wavelengths in meters
+                wavelengths = [1e-2 / w for w in wavenumbers]  # Conversion from cm^-1 to m
+                # Convert radiance to SI units: W/m^2/sr/m
+                radiance_si = [r * 1e-3 for r in radiance]  # Convert from mW to W
 
-            # Use numpy.trapz to integrate the radiance over the wavelength
-            olr = np.trapz(radiance_si, wavelengths)
+                # Use numpy.trapz to integrate the radiance over the wavelength
+                olr = np.trapz(radiance_si, wavelengths)
 
-            # Append the OLR and dates to the lists
-            outgoing_longwave_radiation.append(olr)
-            dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
+                # Append the OLR and dates to the lists
+                outgoing_longwave_radiation.append(olr)
+                dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
 
     # Convert dates to strings for saving
     date_strs = [date.strftime('%Y-%m-%d') for date in dates]
