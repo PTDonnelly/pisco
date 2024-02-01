@@ -106,7 +106,7 @@ class Plotter:
                 for file in files:
                     # Select file containing all measurements
                     selected_files.append(file)
-        return selected_files
+        return selected_files.sort()
     
     @staticmethod
     def unpickle(file):

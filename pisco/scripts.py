@@ -421,8 +421,6 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
     plotter.organise_files_by_date()
     datafiles = plotter.select_files()
 
-    # print(datafiles)
-
     # Initialise a dictionary to store the data for each target variable
     data_dict = {var: [] for var in target_variables}
     dates = []
@@ -562,8 +560,8 @@ def plot_pisco():
     """
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
     target_year = [2013]#, 2014, 2015, 2016, 2017, 2018, 2019]
