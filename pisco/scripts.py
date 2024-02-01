@@ -470,9 +470,9 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
             # Append the date for this file to the dates list
             dates.append(df['Datetime'].dt.date.iloc[0])
         else:
-            # If DataFrame is empty, append NaN values
+            # If DataFrame is empty, append bad value (-1)
             for var in target_variables:
-                data_dict[var].append(np.nan)
+                data_dict[var].append(-1)
             # Append the date for this file to the dates list
             empty_date = extract_date_from_filepath(datafile)
             dates.append(empty_date)
