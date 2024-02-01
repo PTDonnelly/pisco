@@ -403,7 +403,6 @@ def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
     required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
     if Plotter.check_df(df, required_columns):
         # Proceed with DataFrame manipulations if all required columns are present
-        print(df.head())
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
         df = df[df['CloudPhase1'] != -1]
         df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
@@ -412,8 +411,7 @@ def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
         if not df.empty:
             return True, df
         else:
-            print(f"No data remains after filtering")
-            print(f"Skipping DataFrame: {datafile}")
+            print(f"No data remains after filtering: {datafile}")
             return False, None
     else:
         print(f"Skipping DataFrame: {datafile}")
@@ -479,7 +477,7 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
             # Append the date for this file to the dates list
             dates.append(df['Datetime'].dt.date.iloc[0])
         else:
-            # If DataFrame is empty, append bad value (-1)
+            # If DataFrame is empty, skip and append bad value (-1)
             for var in target_variables:
                 data_dict[var].append(-1)
             # Append the date for this file to the dates list

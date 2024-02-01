@@ -126,9 +126,9 @@ class Plotter:
             # elif phase:
             #     print(f"\n    No data available for phase: {phase}")       
             return False     
-            
+
+        # Check for the presence of all required columns 
         if required_columns:
-            # Check for the presence of all required columns
             missing_columns = [col for col in required_columns if col not in df.columns]
             if missing_columns:
                 print(f"Missing column(s) in DataFrame: {', '.join(missing_columns)}")
