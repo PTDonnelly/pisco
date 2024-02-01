@@ -388,20 +388,26 @@ def get_outgoing_longwave_radiation(plotter, df):
     # Retrieve IASI spectral grid and radiance form the DataFrame
     wavenumbers = plotter.get_dataframe_spectral_grid(df)
     radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
+    
     # Convert wavenumbers to wavelengths in meters
     wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
     # Convert radiance to SI units: W/m^2/sr/m
     radiance_si = radiance * 1e-3  # Convert from mW to W
+    
     # Integrate the radiance over the wavelength and sum integral elements
     olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
     olr_total = np.sum(olr_integrals)
     return olr_total
 
 def get_ice_fraction(df):
+    # Re-format DataFrame to get the individual counts of each Cloud Phase per Datetime
     pivot_df = df.groupby([df['Datetime'].dt.date, 'CloudPhase1']).size().unstack(fill_value=0)
+    
+    # Calculate total number of measurements for the entire day
     total_measurements = pivot_df.sum(axis=1)
+    # Calculate proportion of measurements for the entire day flagged as "icy"
     ice_count = pivot_df.get(2, 0).sum()
-    return ice_count
+    return ice_count / total_measurements
 
 def gather_daily_statistics(plotter: object, target_variables: List[str]):
     """
@@ -568,7 +574,7 @@ def plot_pisco():
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
     
-    # Define target variables to calculate and plot
+    # Define second-order target variables to calculate and plot
     target_variables=['OLR', 'Ice Fraction']
 
     # Plot data
