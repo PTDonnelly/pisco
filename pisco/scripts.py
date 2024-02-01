@@ -449,17 +449,41 @@ def gather_ice_phase_ratio(plotter: object):
     # Save the data
     np.save(f"{plotter.datapath}daily_ice_phase_counts.npy", data_to_save)
 
+def prepare_dataframe(df):
+    """
+    Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
+    removing missing data, and filtering for SatelliteZenithAngle less than 5 degrees.
+    
+    Parameters:
+    df (pd.DataFrame): Input DataFrame containing satellite data.
+
+    Returns:
+    pd.DataFrame: Filtered and processed DataFrame.
+    """
+    if 'CloudPhase1' not in df.columns:
+        raise ValueError("Column 'CloudPhase1' not found in DataFrame.")
+    
+    df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+    df = df[df['CloudPhase1'] != -1]
+    df = df[df['SatelliteZenithAngle'] < 5]
+    return df
+
 def gather_olr(plotter: object):
+    """
+    Calculates Outgoing Longwave Radiation (OLR) data from a series of data files,
+    processes the data, and saves the results.
+
+    Parameters:
+    plotter (object): An instance of the Plotter class with methods for data handling.
+    """
     # Use Plotter to organize files
     plotter.organize_files_by_date()
-
     # Select files in time range
     datafiles = plotter.select_files()
 
     # Initialize lists to store the data for plotting
     outgoing_longwave_radiation = []
     dates = []
-
     for ifile, datafile in enumerate(datafiles):
         print(ifile, datafile)
         # Open compressed file and load data
@@ -467,48 +491,58 @@ def gather_olr(plotter: object):
         
         # Check if DataFrame contains information
         if not plotter.check_df(datafile, df):
-            if 'CloudPhase1' in df.columns:
-                # Convert the 'Datetime' column to pandas Datetime objects
-                df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-                # Remove missing data
-                df = df[df['CloudPhase1'] != -1]
-                # Retrieve IASI spectral grid and radiance form the DataFrame
-                wavenumbers = plotter.get_dataframe_spectral_grid(df)
-                radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
-                
-                # Convert wavenumbers to wavelengths in meters
-                wavelengths = [1e-2 / w for w in wavenumbers]  # Conversion from cm^-1 to m
-                # Convert radiance to SI units: W/m^2/sr/m
-                radiance_si = [r * 1e-3 for r in radiance]  # Convert from mW to W
+            # Flag and reduce the dataframe
+            df = prepare_dataframe(df)
 
-                # Use numpy.trapz to integrate the radiance over the wavelength
-                olr = np.trapz(radiance_si, wavelengths)
+            # Retrieve IASI spectral grid and radiance form the DataFrame
+            wavenumbers = plotter.get_dataframe_spectral_grid(df)
+            radiance = df[[col for col in df.columns if 'Spectrum' in col]].values
+            # Convert wavenumbers to wavelengths in meters
+            wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
+            # Convert radiance to SI units: W/m^2/sr/m
+            radiance_si = radiance * 1e-3  # Convert from mW to W
+            # Integrate the radiance over the wavelength
+            olr = np.trapz(radiance_si, wavelengths, axis=1)
+            print(type(olr))
+            print(np.shape(olr))
+            exit()
 
-                # Append the OLR and dates to the lists
-                outgoing_longwave_radiation.append(olr)
-                dates.append(df['Datetime'].dt.date.iloc[0])  # Assuming all rows in a file share the same date
+            # Append the OLR and dates to the lists
+            outgoing_longwave_radiation.extend(olr)
+            dates.extend(df['Datetime'].dt.date.iloc[0])
 
-    # Convert dates to strings for saving
-    date_strs = [date.strftime('%Y-%m-%d') for date in dates]
     # Prepare the data to be saved
-    data_to_save = np.array(list(zip(date_strs, outgoing_longwave_radiation)), dtype=object)
+    data_to_save = np.array(list(zip(dates, outgoing_longwave_radiation)), dtype=object)
     # Save the data
     np.save(f"{plotter.datapath}daily_olr.npy", data_to_save)
 
 
-def load_and_sort_daily_ratios(file_path):
-    # Load the data
+def load_and_sort_data(file_path, value_column_name='Value'):
+    """
+    Loads and sorts data from a .npy file.
+
+    Parameters:
+    - file_path (str): Path to the .npy file.
+    - value_column_name (str): Name of the column for the data values (default is 'Value').
+
+    Returns:
+    - df_sorted (pd.DataFrame): DataFrame with sorted data by date.
+    """
     data = np.load(file_path, allow_pickle=True)
-    # Convert the numpy array to a pandas DataFrame
-    df = pd.DataFrame(data, columns=['Date', 'Ratio'])
-    # Convert the 'Date' column to datetime objects
+    df = pd.DataFrame(data, columns=['Date', value_column_name])
     df['Date'] = pd.to_datetime(df['Date'])
-    # Sort the DataFrame by the 'Date' column in ascending order
     df_sorted = df.sort_values(by='Date')
     return df_sorted
 
-def add_grey_box(ax, df_spring_months):
-    unique_years = sorted(df_spring_months['Year'].unique())
+def add_grey_box(ax, df):
+    """
+    Adds grey boxes to the plot for every other year.
+
+    Parameters:
+    - ax (matplotlib.axes.Axes): The axes object to add the grey boxes to.
+    - df (pd.DataFrame): DataFrame with 'Year' column.
+    """
+    unique_years = sorted(df['Year'].unique())
     for i, year in enumerate(unique_years):
         if i % 2 == 0:
             ax.axvspan(i-0.5, i+0.5, color='grey', alpha=0.2)
@@ -561,8 +595,8 @@ def plot_pisco():
     """
     # The path to the directory that contains the data files
     # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
