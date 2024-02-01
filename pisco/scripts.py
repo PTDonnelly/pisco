@@ -414,7 +414,6 @@ def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
             print(f"No data remains after filtering: {datafile}")
             return False, None
     else:
-        print(f"Skipping DataFrame: {datafile}")
         return False, None
 
 def get_outgoing_longwave_radiation(plotter, df):
