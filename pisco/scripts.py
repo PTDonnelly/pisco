@@ -1,21 +1,22 @@
-import os
-import pandas as pd
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-import multiprocessing
-import numpy as np
-from mpl_toolkits.basemap import Basemap
-import matplotlib.gridspec as gridspec
+# Standard library imports
 from typing import List
 
+# Third-party library imports
+import numpy as np
+import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+from mpl_toolkits.basemap import Basemap
 
+# Local application/library specific imports
 from pisco import Plotter, Spectrum, Geographic
+
 
 def plot_spatial_distribution_scatter(datapath: str):
     # Instantiate the Plotter and organise files
     plotter = Plotter(datapath)
-    plotter.organize_files_by_date()
+    plotter.organise_files_by_date()
 
     # Define temporal range to plot
     target_year = '2019'
@@ -41,7 +42,7 @@ def plot_spatial_distribution_scatter(datapath: str):
         all_data = pd.read_csv(all_file, usecols=['Longitude', 'Latitude'])
         day_icy_data = pd.read_csv(day_icy_file, usecols=['Longitude', 'Latitude'])
 
-        # Initialize a new figure for the plot
+        # Initialise a new figure for the plot
         plt.figure(figsize=(7, 7), dpi=dpi)
         # Create a basemap of the world
         m = Basemap(projection='cyl', resolution="l", llcrnrlon=lon_range[0], llcrnrlat=lat_range[0], urcrnrlon=lon_range[1]+0.1, urcrnrlat=lat_range[1])
@@ -81,7 +82,7 @@ def plot_spatial_distribution_scatter(datapath: str):
 
 def plot_spatial_distribution_2Dhist(plotter: object):        
     # Use Plotter to organise files
-    plotter.organize_files_by_date()
+    plotter.organise_files_by_date()
 
     # Select files in time range
     datafiles = plotter.select_files()
@@ -109,7 +110,7 @@ def plot_spatial_distribution_2Dhist(plotter: object):
     }
 
     for ifile, datafile in enumerate(datafiles):
-        # Initialize a new figure for the plot with three subplots
+        # Initialise a new figure for the plot with three subplots
         fig = plt.figure(figsize=(10, 8), dpi=dpi)
         axes = gridspec.GridSpec(3, 2, figure=fig).subplots()
         fig.suptitle(f"IASI Spectra in the North Atlantic: {plotter.target_year}-{plotter.target_month}-{plotter.target_days[ifile]}", fontsize=fontsize+5, y=0.95)
@@ -173,10 +174,10 @@ def plot_spatial_distribution_unity(datapath: str):
         # Iterate over unique combinations of Latitude and Longitude
         for (lat, lon), df_sub in df_all_grouped.groupby(['Latitude_truncated', 'Longitude_truncated']):
 
-            # Compute normalized coordinates for the subplot within the main figure (note: this depends on your actual lat-lon ranges)
+            # Compute normalised coordinates for the subplot within the main figure (note: this depends on your actual lat-lon ranges)
             # Assuming the longitude ranges from -180 to 180 and the latitude from -90 to 90
-            normalized_lon = (lon + 60) / 60
-            normalized_lat = (lat - 30) / 30
+            normalised_lon = (lon + 60) / 60
+            normalised_lat = (lat - 30) / 30
             
             # Create an inset_axes object that corresponds to a subplot within the grid cell
             ax_sub = ax.inset_axes([normalized_lon, normalized_lat, 1/6, 1/3])
@@ -360,7 +361,7 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
-def prepare_dataframe(df, maximum_zenith_angle=5):
+def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
     """
     Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
     removing missing data, and filtering for SatelliteZenithAngle less than 5 degrees.
@@ -372,13 +373,16 @@ def prepare_dataframe(df, maximum_zenith_angle=5):
     Returns:
     pd.DataFrame: Filtered and processed DataFrame.
     """
-    if 'CloudPhase1' not in df.columns:
-        raise ValueError("Column 'CloudPhase1' not found in DataFrame.")
-    
-    df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
-    df = df[df['CloudPhase1'] != -1]
-    df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
-    return df
+    required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
+    if Plotter.check_df(df, required_columns):
+        # Proceed with DataFrame manipulations if all required columns are present
+        df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
+        df = df[df['CloudPhase1'] != -1]
+        df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
+        return True, df
+    else:
+        print(f"\Skipping DataFrame: {datafile}")
+        return False, None
 
 def get_outgoing_longwave_radiation(plotter, df):
     # Retrieve IASI spectral grid and radiance form the DataFrame
@@ -399,7 +403,7 @@ def get_ice_fraction(df):
     ice_count = pivot_df.get(2, 0).sum()
     return ice_count
 
-def gather_data(plotter: object, target_variables: List[str]):
+def gather_daily_statistics(plotter: object, target_variables: List[str]):
     """
     Processes data from a series of data files for specified target variables, such as OLR or Ice Fraction,
     and saves the results in separate .npy files named after each target variable.
@@ -408,39 +412,49 @@ def gather_data(plotter: object, target_variables: List[str]):
     plotter (object): An instance of the Plotter class with methods for data handling.
     target_variables (list): List of target variables to process, e.g., ['OLR', 'Ice Fraction'].
     """
-    plotter.organize_files_by_date()
+    plotter.organise_files_by_date()
     datafiles = plotter.select_files()
 
-    # Initialize a dictionary to store the data for each target variable
+    # Initialise a dictionary to store the data for each target variable
     data_dict = {var: [] for var in target_variables}
     dates = []
 
-    for ifile, datafile in enumerate(datafiles):
-        print(ifile, datafile)
+    for datafile in datafiles:
+        # Read data into a pd.Dataframe
         df = Plotter.unpickle(datafile)
 
-        if not plotter.check_df(datafile, df):
-            df = prepare_dataframe(df)
-
+        # If Dataframe contains data prepare for calculations
+        check, df = prepare_dataframe(datafile, df)
+        if check:
             # Process data for each target variable
             for var in target_variables:
                 if var == 'OLR':
                     result = get_outgoing_longwave_radiation(plotter, df)
-                    data_dict[var].append(result)
                 elif var == 'Ice Fraction':
                     result = get_ice_fraction(df)
-                    data_dict[var].append(result)
+                # Append to dictionary
+                data_dict[var].append(result)
+        else:
+            # If DataFrame is empty, append a Nan value
+            for var in target_variables:
+                data_dict[var].append(np.nan)
 
-            # Append the date for this file to the dates list
-            dates.append(df['Datetime'].dt.date.iloc[0])
+        # Append the date for this file to the dates list
+        dates.append(df['Datetime'].dt.date.iloc[0])
 
     # Prepare and save the data for each target variable
     for var, results in data_dict.items():
-        data_to_save = np.array(list(zip(dates, results)), dtype=object)
-        np.save(f"{plotter.datapath}daily_{var.lower().replace(' ', '_')}.npy", data_to_save)
+        # Create a DataFrame from the results and dates
+        df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates), var: results})
+        
+        # Ensure results are numeric, converting non-numeric to NaN
+        df_to_save[var] = pd.to_numeric(df_to_save[var], errors='coerce')
+        
+        # Save the DataFrame as a CSV for easier handling (you could also use .to_pickle for binary format)
+        df_to_save.to_csv(f"{plotter.datapath}daily_{var.lower().replace(' ', '_')}.csv", index=False)
 
 
-def load_and_sort_data(file_path, column_name='Value'):
+def load_and_sort_data(file_path, var):
     """
     Loads and sorts data from a .npy file.
 
@@ -451,8 +465,8 @@ def load_and_sort_data(file_path, column_name='Value'):
     Returns:
     - df_sorted (pd.DataFrame): DataFrame with sorted data by date.
     """
-    data = np.load(file_path, allow_pickle=True)
-    df = pd.DataFrame(data, columns=['Date', column_name])
+    data = pd.read_csv(file_path)
+    df = pd.DataFrame(data, columns=['Date', var])
     df['Date'] = pd.to_datetime(df['Date'])
     df_sorted = df.sort_values(by='Date')
     return df_sorted
@@ -470,30 +484,33 @@ def add_grey_box(ax, df):
         if i % 2 == 0:
             ax.axvspan(i-0.5, i+0.5, color='grey', alpha=0.2)
 
-def plot_data(plotter, target_variables: List[str]):
+def plot_statistical_timeseries(plotter, target_variables: List[str]):
     """
-    Loads data from a .npy file, filters for spring months (March, April, May),
+    Loads data from a .csv file, filters for spring months (March, April, May),
     and generates a violin plot with strip plot overlay for each year.
 
     Parameters:
     - plotter (object): An instance with methods for data handling and plotting configurations.
-    - file_path (str): Path to the .npy file containing the data.
+    - file_path (str): Path to the .csv file containing the data.
     - column_name (str): Name of the column for the data values, defaulting to 'Value'.
     - plot_title (str): Title for the plot.
     """
     # Load, sort, and return the sorted DataFrame for each target variable
     for var in target_variables:
         if var == 'OLR':
-            file_path = f"{plotter.datapath}daily_olr.npy"
+            file_path = f"{plotter.datapath}daily_olr.csv"
             ylim = [0, 100]
         elif var == 'Ice Fraction':
-            file_path = f"{plotter.datapath}daily_ice_fraction.npy"
+            file_path = f"{plotter.datapath}daily_ice_fraction.csv"
             ylim = [0, 1]
         df = load_and_sort_data(file_path, var)
 
         # Ensure 'Date' is set as the DataFrame index
         if 'Date' in df.columns:
             df.set_index('Date', inplace=True)
+        
+        # Drop NaN values for plotting
+        df = df.dropna(subset=[var])
 
         # Filter for only March, April, and May and add 'Year', 'Month', and 'Year-Month' columns
         df['Year'] = df.index.year
@@ -504,7 +521,7 @@ def plot_data(plotter, target_variables: List[str]):
         # Create a subplot layout
         fig, ax = plt.subplots(figsize=(12, 6))
 
-        # Violin Plot with Colors: visualizes the distribution of data values for each spring month across years
+        # Violin Plot with Colors: visualises the distribution of data values for each spring month across years
         sns.violinplot(x='Year', y=var, hue='Month', data=df_spring_months, ax=ax, palette="muted", split=False)
 
         # Strip Plot: adds individual data points to the violin plot for detailed data visualization
@@ -555,8 +572,8 @@ def plot_pisco():
     target_variables=['OLR', 'Ice Fraction']
 
     # Plot data
-    gather_data(plotter, target_variables)
-    plot_data(plotter, target_variables)
+    gather_daily_statistics(plotter, target_variables)
+    plot_statistical_timeseries(plotter, target_variables)
 
 if __name__ == "__main__":
     plot_pisco()
