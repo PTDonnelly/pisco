@@ -482,8 +482,8 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
         # Create a DataFrame from the results and dates
         df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates), var: results})
         
-        # Ensure results are numeric, converting non-numeric to NaN
-        df_to_save[var] = pd.to_numeric(df_to_save[var], errors='coerce')
+        # # Ensure results are numeric, converting non-numeric to NaN
+        # df_to_save[var] = pd.to_numeric(df_to_save[var], errors='coerce')
         
         # Save the DataFrame as a CSV for easier handling (you could also use .to_pickle for binary format)
         df_to_save.to_csv(f"{plotter.datapath}daily_{var.lower().replace(' ', '_')}.csv", index=False)
