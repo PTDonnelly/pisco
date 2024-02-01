@@ -539,7 +539,7 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
             ylabel = fr"{var} W m$^{-2}$"
-            ylim = [-1e-7, 1e-7]
+            ylim = [-1e-8, 1e-8]
             yscale = "symlog"
         elif var == 'Ice Fraction':
             file_path = f"{plotter.datapath}daily_ice_fraction.csv"
@@ -596,8 +596,8 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb_window/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
