@@ -1,4 +1,7 @@
 # Standard library imports
+import datetime
+import os
+import re
 from typing import List
 
 # Third-party library imports
@@ -361,6 +364,30 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
+def extract_date_from_filepath(filepath):
+    """
+    Extracts the date from the file path and constructs a datetime.date object.
+
+    Parameters:
+    filepath (str): The file path containing the date in 'YYYY/MM/DD' format.
+
+    Returns:
+    datetime.date: The date extracted from the file path.
+    """
+    # Normalize the file path to have consistent path separators
+    normalized_filepath = os.path.normpath(filepath)
+
+    # Use a regular expression to find the date parts in the file path (OS-independent)
+    # The pattern assumes the date is in 'YYYY/MM/DD' format within the path
+    date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
+    match = re.search(date_pattern, normalized_filepath)
+
+    if match:
+        year, month, day = map(int, match.groups())  # Convert the captured groups to integers
+        return datetime.date(year, month, day)
+    else:
+        raise ValueError(f"Date not found in file path: {filepath}")
+    
 def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
     """
     Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
@@ -447,7 +474,8 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
             for var in target_variables:
                 data_dict[var].append(np.nan)
             # Append the date for this file to the dates list
-            dates.append(np.nan)
+            empty_date = extract_date_from_filepath(datafile)
+            dates.append(empty_date)
 
     # Prepare and save the data for each target variable
     for var, results in data_dict.items():
