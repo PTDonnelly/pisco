@@ -403,12 +403,20 @@ def prepare_dataframe(datafile, df, maximum_zenith_angle=5):
     required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
     if Plotter.check_df(df, required_columns):
         # Proceed with DataFrame manipulations if all required columns are present
+        print(df.head())
         df['Datetime'] = pd.to_datetime(df['Datetime'], format='%Y%m%d%H%M')
         df = df[df['CloudPhase1'] != -1]
         df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
-        return True, df
+
+        # Check that DataFrame still contains data after filtering
+        if not df.empty:
+            return True, df
+        else:
+            print(f"No data remains after filtering")
+            print(f"Skipping DataFrame: {datafile}")
+            return False, None
     else:
-        print(f"\nSkipping DataFrame: {datafile}")
+        print(f"Skipping DataFrame: {datafile}")
         return False, None
 
 def get_outgoing_longwave_radiation(plotter, df):
@@ -433,6 +441,7 @@ def get_ice_fraction(df):
     # Calculate total number of measurements for the entire day
     total_measurements = pivot_df.sum(axis=1)
     # Calculate proportion of measurements for the entire day flagged as "icy"
+    print(pivot_df.head())
     ice_count = pivot_df.get(2, 0).sum()
     return ice_count / total_measurements
 
@@ -534,9 +543,11 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
     for var in target_variables:
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
-            ylim = [0, 100]
+            ylabel = fr"{var} W m$^{-2}$"
+            ylim = [1e-10, 1e-8]
         elif var == 'Ice Fraction':
             file_path = f"{plotter.datapath}daily_ice_fraction.csv"
+            ylabel = "Ice / Total"
             ylim = [0, 1]
         df = load_and_sort_data(file_path, var)
 
@@ -566,9 +577,9 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
         add_grey_box(ax, df_spring_months)
 
         # Customizing the plot with titles and labels
-        ax.set_title(f"MAM Average {var}")
+        ax.set_title(f"MAM Average {var} at Nadir")
         ax.set_xlabel('Year')
-        ax.set_ylabel(var)
+        ax.set_ylabel(ylabel)
         ax.set_ylim(ylim)
         ax.grid(axis='y', linestyle=':', color='k')
         ax.tick_params(axis='both', labelsize=plotter.fontsize)
@@ -587,13 +598,12 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    # datapath = "C:\\Users\\padra\\Documents\\Research\\data\\iasi\\2016"
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb/"
 
     # Define temporal range to plot
-    target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
-    target_month = [3, 4, 5]
+    target_year = [2014]#, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_month = [3]#, 4, 5]
     target_days = [day for day in range(1, 32)] # Search all days in each month
 
     # Define plotting parameters
@@ -608,7 +618,7 @@ def plot_pisco():
 
     # Plot data
     gather_daily_statistics(plotter, target_variables)
-    plot_statistical_timeseries(plotter, target_variables)
+    # plot_statistical_timeseries(plotter, target_variables)
 
 if __name__ == "__main__":
     plot_pisco()
