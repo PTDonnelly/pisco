@@ -485,7 +485,7 @@ def gather_daily_statistics(plotter: object, target_variables: List[str]):
     # Prepare and save the data for each target variable
     for var, results in data_dict.items():
         # Convert any array-like entries in results to scalars
-        processed_results = [result[0] if isinstance(result, (list, np.ndarray)) and len(result) == 1 else result for result in results]
+        processed_results = [result[0] if isinstance(result, (list, np.ndarray)) and len(result) >= 1 else result for result in results]
 
         # Create a DataFrame from the results and dates
         df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates), var: processed_results})
@@ -505,9 +505,15 @@ def load_data(file_path, var):
     Returns:
     - df (pd.DataFrame): DataFrame containing Date and data entries
     """
-    data = pd.read_csv(file_path)
+    data = pd.read_csv(file_path, sep=',')
     df = pd.DataFrame(data, columns=['Date', var])
     df['Date'] = pd.to_datetime(df['Date'])
+
+    df = df[df[var] != -1]
+    if var == 'OLR':
+        # Convert to mW m^2
+        df[var] *= 1e6
+
     return df
 
 def add_grey_box(ax, df):
@@ -538,22 +544,17 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
     for var in target_variables:
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
-            ylabel = fr"{var} W m$^{-2}$"
-            ylim = [-1e-8, 1e-8]
-            yscale = "symlog"
+            ylabel = fr"{var} mW m$^{-2}$"
+            ylim = [-1.2e-2, 2e-3]
         elif var == 'Ice Fraction':
             file_path = f"{plotter.datapath}daily_ice_fraction.csv"
             ylabel = "Ice / Total"
             ylim = [0, 1]
-            yscale = "linear"
         df = load_data(file_path, var)
 
         # Ensure 'Date' is set as the DataFrame index
         if 'Date' in df.columns:
             df.set_index('Date', inplace=True)
-        
-        # Drop NaN values for plotting
-        df = df.dropna(subset=[var])
 
         # Filter for only March, April, and May and add 'Year', 'Month', and 'Year-Month' columns
         df['Year'] = df.index.year
@@ -578,7 +579,6 @@ def plot_statistical_timeseries(plotter, target_variables: List[str]):
         ax.set_xlabel('Year')
         ax.set_ylabel(ylabel)
         ax.set_ylim(ylim)
-        ax.set_yscale(yscale)
         ax.grid(axis='y', linestyle=':', color='k')
         ax.tick_params(axis='both', labelsize=plotter.fontsize)
 
@@ -596,8 +596,8 @@ def plot_pisco():
     """
     """
     # The path to the directory that contains the data files
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb_window/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
     target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
@@ -615,7 +615,7 @@ def plot_pisco():
     target_variables=['OLR', 'Ice Fraction']
 
     # Plot data
-    gather_daily_statistics(plotter, target_variables)
+    # gather_daily_statistics(plotter, target_variables)
     plot_statistical_timeseries(plotter, target_variables)
 
 if __name__ == "__main__":

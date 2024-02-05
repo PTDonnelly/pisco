@@ -117,14 +117,10 @@ class Plotter:
 
     # DataFrame manipulation methods
     @staticmethod
-    def check_df(datafile: str, df: pd.DataFrame, local_time: Optional[str] = None, phase: Optional[str] = None, required_columns: Optional[List[str]] = None) -> bool:
+    def check_df(datafile: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
-            print(f"DataFrame empty: {datafile}")
-            # if local_time:
-            #     print(f"\n    No data available for time: {local_time}")
-            # elif phase:
-            #     print(f"\n    No data available for phase: {phase}")       
+            print(f"DataFrame empty: {datafile}")      
             return False     
 
         # Check for the presence of all required columns 

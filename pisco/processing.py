@@ -5,7 +5,7 @@ from typing import List
 
 import pickle
 
-from pisco import Extractor
+from pisco import Extractor, Plotter
 
 class Processor:
     def __init__(self, ex: Extractor):
@@ -82,11 +82,6 @@ class Processor:
         return
     
     def _save_merged_products(self, reduced_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
-        # Create the output directory if it doesn't exist
-        os.makedirs(self.datapath_merged, exist_ok=True)
-
-        output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
-
         print(f"Saving compressed spectra to {output_path}")
         
         # Compress and save using gzip
@@ -98,13 +93,48 @@ class Processor:
             self._delete_intermediate_analysis_data()
 
     
+    def filter_observations(self, output_path, df, maximum_zenith_angle=5):
+        """
+        Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
+        removing missing data, and filtering for SatelliteZenithAngle less than 5 degrees.
+        
+        Parameters:
+        df (pd.DataFrame): Input DataFrame containing satellite data.
+        maximum_zenith_angle (int): Maximum satellite zenith angle considered (<5 degrees is considered nadir-viewing)
+
+        Returns:
+        pd.DataFrame: Filtered and processed DataFrame.
+        """
+        required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
+        if Plotter.check_df(df, required_columns):
+            # If all required columns are present
+            # Drop rows with bad cloud phase measurement
+            df = df[df['CloudPhase1'] != -1]
+            # Drop rows with multiple cloudphase measurements
+            
+            # Drop measurements beyond specified zenih angle (default = 5 degrees, considered to be nadir)
+            df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
+
+            # Check that DataFrame still contains data after filtering
+            if not df.empty:
+                return True, df
+            else:
+                print(f"No data remains after filtering: {output_path}")
+                return False, None
+        else:
+            return False, None
+    
+
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1"]
         return reduced_fields
     
     def reduce_fields(self) -> None:
-        
+        # Create the output directory if it doesn't exist
+        os.makedirs(self.datapath_merged, exist_ok=True)
+        output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
+
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
         merged_df = pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
@@ -114,8 +144,12 @@ class Processor:
         spectrum_columns = [col for col in merged_df if "Spectrum" in col]
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
 
-        # Save observations
-        self._save_merged_products(reduced_df, delete_obr_files=True)
+        # Filter observations to further reduce dataset
+        check, filtered_df = self.filter_observations(output_path, reduced_df)
+
+        if check:
+            # Save observations
+            self._save_merged_products(output_path, filtered_df, delete_obr_files=True)
     
     
     def merge_spectra_and_cloud_products(self):
