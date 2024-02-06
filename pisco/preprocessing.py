@@ -184,8 +184,8 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
 
-        pp.pprint(dtype_dict, sort_dicts=False)
-        input()
+        # pp.pprint(dtype_dict, sort_dicts=False)
+        # input()
 
         # # Initialise an empty DataFrame to hold the processed chunks
         # processed_data = pd.DataFrame()
@@ -202,8 +202,6 @@ class Preprocessor:
 
         # Assign the concatenated processed data back to self.data_record_df
         self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
-        print(self.data_record_df.info(verbose=True))
-        input()
         return
 
 
@@ -286,7 +284,7 @@ class Preprocessor:
         os.remove(self.intermediate_file)
         return
 
-    def save_observations(self, delete_obr_file: bool = True) -> None:
+    def save_observations(self, delete_tempfiles: bool = True) -> None:
         """
         Saves the observation data to CSV/HDF5 file and deletes OBR output file.
         """  
@@ -299,6 +297,6 @@ class Preprocessor:
             pickle.dump(self.data_record_df, f)
         
         # Delete intermediate OBR output file
-        if delete_obr_file == True:
+        if delete_tempfiles:
             self._delete_intermediate_file()
         return

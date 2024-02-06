@@ -101,10 +101,10 @@ def preprocess_iasi(ex: Extractor, data_level: str):
             # Construct Datetime column and remove individual time elements
             pre.build_datetime()
             # Save filtered DataFrame to compressed pickle
-            pre.save_observations(delete_obr_file=False)
+            pre.save_observations(delete_tempfiles=False)
         
         # Print the DataFrame
-        print(pre.data_record_df.info(verbose=True))
+        print(pre.data_record_df.info())
         return
 
 def process_iasi(ex: Extractor):
@@ -137,7 +137,9 @@ def process_iasi(ex: Extractor):
             pro.merge_datasets()
 
             # Save merged and filtered DataFrame to compressed pickle
-            pro.save_merged_products(delete_preprocessed_files=False)
+            pro.save_merged_products(delete_tempfiles=False)
+        
+        print(pro.merged_df.info())
     return
 
 

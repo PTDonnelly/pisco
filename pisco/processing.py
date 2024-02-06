@@ -21,8 +21,8 @@ class Processor:
         """
         Defines the paths to the intermediate analysis data files.
         """
-        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.csv"
-        self.datafile_l2 = f"{self.datapath_l2}cloud_products.csv"
+        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.pkl.gz"
+        self.datafile_l2 = f"{self.datapath_l2}cloud_products.pkl.gz"
         return
     
     def check_l1c_l2_data_exist(self):
@@ -159,7 +159,7 @@ class Processor:
         return
     
 
-    def _delete_intermediate_analysis_data(self) -> None:
+    def _delete_intermediate_files(self) -> None:
         """
         Delete the intermediate analysis data files used for correlating spectra and clouds.
         """
@@ -167,22 +167,20 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
-    def save_merged_products(self, output_path: str, delete_preprocessed_files: bool = True) -> None:
+    def save_merged_products(self, output_path: str, delete_tempfiles: bool = True) -> None:
         if not self.merged_df.empty:
             # Create the output directory if it doesn't exist
             os.makedirs(self.datapath_merged, exist_ok=True)
             output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
-
-            # Save observations
             print(f"Saving compressed spectra to: {output_path}")
             
             # Compress and save using gzip
             with gzip.open(output_path, 'wb') as f:
                 pickle.dump(self.merged_df, f)
 
-            if delete_preprocessed_files:
+            if delete_tempfiles:
                 # Delete original csv files
-                self._delete_intermediate_analysis_data()
+                self._delete_intermediate_files()
         else:
             print((f"DataFrame empty for: {output_path}"))
         return
