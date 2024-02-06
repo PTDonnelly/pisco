@@ -59,8 +59,8 @@ def main():
                 # Set execute permissions on the script
                 subprocess.run(["chmod", "+x", script])
 
-                # # Submit the batch script to SLURM using sbatch
-                # subprocess.run(["sbatch", script])
+                # Submit the batch script to SLURM using sbatch
+                subprocess.run(["sbatch", script])
 
 if __name__ == "__main__":
     main()
