@@ -184,8 +184,8 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
 
-        # pp.pprint(dtype_dict, sort_dicts=False)
-        # input()
+        pp.pprint(dtype_dict, sort_dicts=False)
+        input()
 
         # # Initialise an empty DataFrame to hold the processed chunks
         # processed_data = pd.DataFrame()
@@ -202,6 +202,7 @@ class Preprocessor:
 
         # Assign the concatenated processed data back to self.df
         self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
+        print(self.df.head())
         return
 
 
@@ -254,7 +255,6 @@ class Preprocessor:
         """
         Stores the local time Boolean indicating whether the current time is day or night.
         """
-        print("\nBuilding Local Time:")
         # Calculate the local time
         local_time = self._calculate_local_time()
 
@@ -267,7 +267,6 @@ class Preprocessor:
         """
         Stores the datetime components to a single column and drops the elements.
         """
-        print("\nBuilding Datetime:")
         self.df['Datetime'] = (self.df['Year'].apply(lambda x: f'{int(x):04d}') +
                                     self.df['Month'].apply(lambda x: f'{int(x):02d}') +
                                     self.df['Day'].apply(lambda x: f'{int(x):02d}') +
