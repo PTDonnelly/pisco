@@ -104,7 +104,7 @@ def preprocess_iasi(ex: Extractor, data_level: str):
             pre.save_observations(delete_tempfiles=False)
         
         # Print the DataFrame
-        print(pre.df.info())
+        # print(pre.df.info())
         return
 
 def process_iasi(ex: Extractor):
@@ -139,7 +139,7 @@ def process_iasi(ex: Extractor):
             # Save merged and filtered DataFrame to compressed pickle
             pro.save_merged_products(delete_tempfiles=False)
         
-        print(pro.df.info())
+        # print(pro.df.info())
     return
 
 

@@ -58,6 +58,8 @@ class Processor:
         print("\nLoading L1C spectra and L2 cloud products:")
         self.df_l1c = Processor.unpickle(self.datafile_l1c)
         self.df_l2 = Processor.unpickle(self.datafile_l2)
+        print(self.df_l1c.head())
+        print(self.df_l2.head())
         return
     
 
