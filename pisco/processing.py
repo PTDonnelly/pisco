@@ -183,17 +183,17 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
-    def save_merged_products(self, output_path: str, delete_tempfiles: bool = True) -> None:
+    def save_merged_products(self, delete_tempfiles: bool = True) -> None:
         if not self.df.empty:
-            print(f"Saving compressed spectra to: {output_path}")
+            print(f"Saving compressed spectra to: {self.output_path}")
             
             # Compress and save using gzip
-            with gzip.open(output_path, 'wb') as f:
+            with gzip.open(self.output_path, 'wb') as f:
                 pickle.dump(self.df, f)
 
             if delete_tempfiles:
                 # Delete original csv files
                 self._delete_intermediate_files()
         else:
-            print((f"DataFrame empty for: {output_path}"))
+            print((f"DataFrame empty for: {self.output_path}"))
         return
