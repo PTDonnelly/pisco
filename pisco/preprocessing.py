@@ -178,8 +178,8 @@ class Metadata:
         self._print_metadata()
         return
 
-
-    def _get_iasi_common_record_fields(self) -> List[Tuple]:
+    @staticmethod
+    def _get_iasi_common_record_fields() -> List[Tuple]:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         common_fields = [
                         ('Year', 'uint16', 2, 2),
@@ -200,83 +200,93 @@ class Metadata:
                         ('Height of Station', 'float32', 4, 50)]
         return common_fields
 
-
-    def _get_iasi_l1c_record_fields(self) -> List[Tuple]:
-        # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end = self._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
+    @staticmethod
+    def _get_end_of_common_record():
+        return Metadata._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
+    
+    @staticmethod
+    def _get_iasi_l1c_record_fields() -> List[Tuple]:
+        offset = Metadata._get_end_of_common_record()
 
         # Format of general L1C-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
         # cumulative total continues from the fourth digit of the last tuple in common_fields.
         l1c_fields = [
-                    ('Day version', 'uint16', 2, 2 + last_field_end),
-                    ('Start Channel 1', 'uint32', 4, 6 + last_field_end),
-                    ('End Channel 1', 'uint32', 4, 10 + last_field_end),
-                    ('Quality Flag 1', 'uint32', 4, 14 + last_field_end),
-                    ('Start Channel 2', 'uint32', 4, 18 + last_field_end),
-                    ('End Channel 2', 'uint32', 4, 22 + last_field_end),
-                    ('Quality Flag 2', 'uint32', 4, 26 + last_field_end),
-                    ('Start Channel 3', 'uint32', 4, 30 + last_field_end),
-                    ('End Channel 3', 'uint32', 4, 34 + last_field_end),
-                    ('Quality Flag 3', 'uint32', 4, 38 + last_field_end),
-                    ('Cloud Fraction', 'uint32', 4, 42 + last_field_end),
-                    ('Surface Type', 'uint8', 1, 43 + last_field_end)]
+                    ('Day version', 'uint16', 2, 2 + offset),
+                    ('Start Channel 1', 'uint32', 4, 6 + offset),
+                    ('End Channel 1', 'uint32', 4, 10 + offset),
+                    ('Quality Flag 1', 'uint32', 4, 14 + offset),
+                    ('Start Channel 2', 'uint32', 4, 18 + offset),
+                    ('End Channel 2', 'uint32', 4, 22 + offset),
+                    ('Quality Flag 2', 'uint32', 4, 26 + offset),
+                    ('Start Channel 3', 'uint32', 4, 30 + offset),
+                    ('End Channel 3', 'uint32', 4, 34 + offset),
+                    ('Quality Flag 3', 'uint32', 4, 38 + offset),
+                    ('Cloud Fraction', 'uint32', 4, 42 + offset),
+                    ('Surface Type', 'uint8', 1, 43 + offset)]
         return l1c_fields
     
-    def _get_l1c_product_record_fields(self) -> List[Tuple]:
+    @staticmethod
+    def _get_end_of_l1c_record():
         # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end =  self._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
+        return Metadata._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
+
+    def _get_l1c_product_record_fields(self) -> List[Tuple]:
+        offset = Metadata._get_end_of_l1c_record()
         
         # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + last_field_end)]
+        fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + offset)]
         return fields
-
-
-    def _get_iasi_l2_record_fields(self) -> List[Tuple]:
-        # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end = self._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
+    
+    @staticmethod
+    def _get_iasi_l2_record_fields() -> List[Tuple]:
+        offset = Metadata._get_end_of_common_record()
 
         # Format of general L2-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
         # cumulative total continues from the fourth digit of the last tuple in common_fields.
         l2_fields = [
-                    ('Superadiabatic Indicator', 'uint8', 1, 1 + last_field_end),
-                    ('Land Sea Qualifier', 'uint8', 1, 2 + last_field_end),
-                    ('Day Night Qualifier', 'uint8', 1, 3 + last_field_end),
-                    ('Processing Technique', 'uint32', 4, 7 + last_field_end),
-                    ('Sun Glint Indicator', 'uint8', 1, 8 + last_field_end),
-                    ('Cloud Formation and Height Assignment', 'uint32', 4, 12 + last_field_end),
-                    ('Instrument Detecting Clouds', 'uint32', 4, 16 + last_field_end),
-                    ('Validation Flag for IASI L1 Product', 'uint32', 4, 20 + last_field_end),
-                    ('Quality Completeness of Retrieval', 'uint32', 4, 24 + last_field_end),
-                    ('Retrieval Choice Indicator', 'uint32', 4, 28 + last_field_end),
-                    ('Satellite Manoeuvre Indicator', 'uint32', 4, 32 + last_field_end)]
+                    ('Superadiabatic Indicator', 'uint8', 1, 1 + offset),
+                    ('Land Sea Qualifier', 'uint8', 1, 2 + offset),
+                    ('Day Night Qualifier', 'uint8', 1, 3 + offset),
+                    ('Processing Technique', 'uint32', 4, 7 + offset),
+                    ('Sun Glint Indicator', 'uint8', 1, 8 + offset),
+                    ('Cloud Formation and Height Assignment', 'uint32', 4, 12 + offset),
+                    ('Instrument Detecting Clouds', 'uint32', 4, 16 + offset),
+                    ('Validation Flag for IASI L1 Product', 'uint32', 4, 20 + offset),
+                    ('Quality Completeness of Retrieval', 'uint32', 4, 24 + offset),
+                    ('Retrieval Choice Indicator', 'uint32', 4, 28 + offset),
+                    ('Satellite Manoeuvre Indicator', 'uint32', 4, 32 + offset)]
         return l2_fields
     
-    def _get_l2_product_record_fields(self, product_index: int, product_ID: int) -> List[Tuple]:
+    @staticmethod
+    def _get_end_of_l2_record(product_index: int, product_ID: int):
         # Determine the position of the anchor point for spectral radiance data in the binary file
-        last_field_end =  self._get_iasi_l2_record_fields()[-1][-1]  # End of the Satellite Manoeuvre Indicator field
+        last_field_end =  Metadata._get_iasi_l2_record_fields()[-1][-1]  # End of the Satellite Manoeuvre Indicator field
         # Shift cumsizes by offset equal to number of other L2 products already read
         last_field_end_with_offset = last_field_end * (product_index + 1)
         
         # Use product ID to extract relevant L2 product
         l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
         product = l2_product_dictionary.get(product_ID)
-        
+        return last_field_end_with_offset, product
+
+    @staticmethod
+    def _get_l2_product_record_fields(product: int, offset: Optional[int]) -> List[Tuple]:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "clp":
             fields = [
-                    ('Vertical Significance', 'uint32', 4, 4 + last_field_end_with_offset),
-                    ('Pressure 1', 'float32', 4, 8 + last_field_end_with_offset),
-                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 12 + last_field_end_with_offset),
-                    ('Cloud Amount in Segment 1', 'float32', 4, 16 + last_field_end_with_offset),
-                    ('Cloud Phase 1', 'uint32', 4, 20 + last_field_end_with_offset),
-                    ('Pressure 2', 'float32', 4, 24 + last_field_end_with_offset),
-                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 28 + last_field_end_with_offset),
-                    ('Cloud Amount in Segment 2', 'float32', 4, 32 + last_field_end_with_offset),
-                    ('Cloud Phase 2', 'uint32', 4, 36 + last_field_end_with_offset),
-                    ('Pressure 3', 'float32', 4, 40 + last_field_end_with_offset),
-                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 44 + last_field_end_with_offset),
-                    ('Cloud Amount in Segment 3', 'float32', 4, 48 + last_field_end_with_offset),
-                    ('Cloud Phase 3', 'uint32', 4, 52 + last_field_end_with_offset)
+                    ('Vertical Significance', 'uint32', 4, 4 + offset),
+                    ('Pressure 1', 'float32', 4, 8 + offset),
+                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 12 + offset),
+                    ('Cloud Amount in Segment 1', 'float32', 4, 16 + offset),
+                    ('Cloud Phase 1', 'uint32', 4, 20 + offset),
+                    ('Pressure 2', 'float32', 4, 24 + offset),
+                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 28 + offset),
+                    ('Cloud Amount in Segment 2', 'float32', 4, 32 + offset),
+                    ('Cloud Phase 2', 'uint32', 4, 36 + offset),
+                    ('Pressure 3', 'float32', 4, 40 + offset),
+                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 44 + offset),
+                    ('Cloud Amount in Segment 3', 'float32', 4, 48 + offset),
+                    ('Cloud Phase 3', 'uint32', 4, 52 + offset)
                     ]
         if product == "twt":
             fields = []
@@ -363,21 +373,39 @@ class Preprocessor:
 
     @staticmethod
     def process_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
-        # Select columns that contain 'Spectrum' in their name
-        spectrum_cols = chunk.filter(like='Spectrum').columns
-        
-        # Convert the data type of these columns to float32
-        chunk[spectrum_cols] = chunk[spectrum_cols].astype('float32')
+        # Select all int64 columns and convert them to int32
+        int_cols = chunk.select_dtypes(include='int64').columns
+        chunk[int_cols] = chunk[int_cols].astype('int32')
+
+        # Select all float64 columns and convert them to float32
+        float_cols = chunk.select_dtypes(include='float64').columns
+        chunk[float_cols] = chunk[float_cols].astype('float32')
+
         return chunk
     
     def open_text_file(self) -> None:
         print("\nLoading intermediate text file:")    
+        
+        # Read and combine byte tables to optimise reading of OBR txtfile
+        combined_fields = (Metadata._get_iasi_common_record_fields() +
+                           Metadata._get_iasi_l1c_record_fields() +
+                           ['Spectrum', 'float32'] +
+                           Metadata._get_l2_product_record_fields('clp')
+                           )
+        
+        print(combined_fields)
+
+        exit()()
+
+        # Create dtype dict from combined fields
+        dtype_dict = {field[0]: field[1] for field in combined_fields}
+
+        
         # Initialise an empty DataFrame to hold the processed chunks
         processed_data = pd.DataFrame()
 
         # Specify the chunk size
         chunk_size = 1000
-        
         # Iterate over the CSV file in chunks
         for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", chunksize=chunk_size)):
             # Process each chunk using the static method
@@ -386,10 +414,9 @@ class Preprocessor:
             # Append the processed chunk to the DataFrame
             processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
 
-            print(f'Chunk: {i+1}')
-
         # Assign the concatenated processed data back to self.data_record_df
         self.data_record_df = processed_data
+        print(self.data_record_df.info(verbose=True))
         return
     
     def fix_spectrum_columns(self) -> None:
@@ -504,7 +531,8 @@ class Preprocessor:
     def read_l2_product_fields(self):
         # Retrieve the individual L2 products from the configuration file
         for product_index, product_ID in enumerate(self.metadata.l2_product_IDs):
-            self.read_record_fields(self.metadata._get_l2_product_record_fields(product_index, product_ID))
+            offset, product = Metadata._get_end_of_l2_record(product_index, product_ID)
+            self.read_record_fields(Metadata.metadata._get_l2_product_record_fields(product, offset))
 
 
     def _calculate_local_time(self) -> None:
