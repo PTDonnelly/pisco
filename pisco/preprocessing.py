@@ -375,8 +375,8 @@ class Preprocessor:
 
     @staticmethod
     def process_chunk(chunk: pd.DataFrame, dtype_dict: dict) -> pd.DataFrame:
-        # Find the intersection of chunk columns and dtype_dict keys
-        relevant_cols = set(chunk.columns) & set(dtype_dict.keys())
+        # Find the intersection of chunk columns and dtype_dict keys, and convert it to a list
+        relevant_cols = list(set(chunk.columns) & set(dtype_dict.keys()))
         
         # Apply type conversion in a vectorized manner
         chunk[relevant_cols] = chunk[relevant_cols].astype({col: dtype_dict[col] for col in relevant_cols})
