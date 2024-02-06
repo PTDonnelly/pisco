@@ -2,7 +2,7 @@ import gzip
 import os
 import numpy as np
 import pandas as pd
-from typing import Any, List, BinaryIO, Tuple, List, Optional
+from typing import List, Tuple, List
 
 import pickle
 import pprint as pp
@@ -290,7 +290,7 @@ class Preprocessor:
         Saves the observation data to CSV/HDF5 file and deletes OBR output file.
         """  
         # Create output file name
-        outfile = self.intermediate_file.split(".")[0]
+        outfile = os.path.join(self.intermediate_file.split(".")[0], ".pkl.gz")
         print(f"\nSaving DataFrame to: {outfile}.pkl.gz")
 
         # Compress and save using gzip
