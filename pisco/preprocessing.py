@@ -374,15 +374,13 @@ class Preprocessor:
         self.data_record_df = pd.DataFrame()
 
     @staticmethod
-    def process_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
-        # Select all int64 columns and convert them to int32
-        int_cols = chunk.select_dtypes(include='int64').columns
-        chunk[int_cols] = chunk[int_cols].astype('int32')
-
-        # Select all float64 columns and convert them to float32
-        float_cols = chunk.select_dtypes(include='float64').columns
-        chunk[float_cols] = chunk[float_cols].astype('float32')
-
+    def process_chunk(chunk: pd.DataFrame, dtype_dict: dict) -> pd.DataFrame:
+        # Find the intersection of chunk columns and dtype_dict keys
+        relevant_cols = set(chunk.columns) & set(dtype_dict.keys())
+        
+        # Apply type conversion in a vectorized manner
+        chunk[relevant_cols] = chunk[relevant_cols].astype({col: dtype_dict[col] for col in relevant_cols})
+        
         return chunk
     
     def open_text_file(self) -> None:
@@ -406,11 +404,11 @@ class Preprocessor:
         chunk_size = 1000
         # Iterate over the CSV file in chunks
         for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
-            # # Process each chunk using the static method
-            # processed_chunk = Preprocessor.process_chunk(chunk)
+            # Process each chunk using the static method
+            processed_chunk = Preprocessor.process_chunk(chunk, dtype_dict)
             
             # Append the processed chunk to the DataFrame
-            processed_data = pd.concat([processed_data, chunk], ignore_index=True)
+            processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
 
         # Assign the concatenated processed data back to self.data_record_df
         self.data_record_df = processed_data
