@@ -17,22 +17,20 @@ class Configurer:
         os.makedirs(self.datapath_out, exist_ok=True)
     
     @staticmethod
-    def set_channels(mode):
+    def set_channels(mode, start_channel=220, end_channel=2220):
         # Set the list of IASI spectral channel indices
         if mode == "all":
-            # Extract all 8461 IASI L1C spectral channels
-            return [(i + 1) for i in range(8461)]
+            # Directly return the list comprehension for all 8461 channels
+            return list(range(1, 8462))
         elif mode == "all_reduced":
-            # Extract every second channel of the 8461 IASI L1C spectral channels
-            channels = [(i + 1) for i in range(8461)]
-            return channels[::2]
+            # Use list slicing to get every second channel starting from the first
+            return list(range(1, 8462, 2))
         elif mode == "range":
-            # Specify a subset of channels
-            start_channel = 220
-            end_channel = 2220
-            return  [i for i in range(start_channel, end_channel+1)]
+            if start_channel is None or end_channel is None:
+                raise ValueError("Start and end channels must be specified for 'range' mode")
+            return list(range(start_channel, end_channel + 1))  # Include end_channel in the range
         elif mode == "flag":
             # Select single channel for fast processing
             return [1]
         else:
-            raise ValueError('mode must be "all", "range", or "flag" for L1C reduction')
+            raise ValueError('mode must be "all", "all_reduced", "range", or "flag" for L1C reduction')

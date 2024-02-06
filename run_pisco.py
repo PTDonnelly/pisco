@@ -105,7 +105,8 @@ def preprocess_iasi(ex: Extractor, data_level: str):
             pre.save_observations()
         
         # Print the DataFrame
-        print(pre.data_record_df)
+        print(pre.data_record_df.info)
+        input()
         return
 
 

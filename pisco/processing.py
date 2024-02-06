@@ -114,7 +114,7 @@ class Processor:
                 return False
         return True
         
-    def filter_observations(self, output_path, df, maximum_zenith_angle=5):
+    def filter_observations(self, df, maximum_zenith_angle=5):
         """
         Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
         removing missing data, and filtering for SatelliteZenithAngle less than 5 degrees.
@@ -177,7 +177,7 @@ class Processor:
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
 
         # Filter observations to further reduce dataset
-        filtered_df = self.filter_observations(output_path, reduced_df)
+        filtered_df = self.filter_observations(reduced_df)
         if not filtered_df.empty:
             # Save observations
             self._save_merged_products(output_path, filtered_df, delete_obr_files=True)

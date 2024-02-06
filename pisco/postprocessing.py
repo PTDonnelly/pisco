@@ -12,18 +12,14 @@ class Postprocessor:
         self.df = df
         self.filepath = filepath
 
-    def prepare_dataframe(self, maximum_zenith_angle=5):
+    def prepare_dataframe(self):
         """
         Prepares the DataFrame for analysis by filtering based on specified criteria.
 
-        This includes converting 'Datetime' to datetime objects, removing missing data,
-        and applying a zenith angle threshold.
-        
-        Parameters:
-        - maximum_zenith_angle (int): The zenith angle threshold for filtering.
+        This includes checking the contents and converting 'Datetime' to datetime objects.
 
         Returns:
-        - tuple: A boolean indicating if the DataFrame is prepared and the prepared DataFrame.
+        - tuple: A boolean indicating if the DataFrame is prepared.
         """
         required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
         if not Processor.check_df(self.filepath, self.df, required_columns):
@@ -32,15 +28,7 @@ class Postprocessor:
         else:
             # Proceed with DataFrame manipulations if all required columns are present
             self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
-            self.df = self.df[self.df['CloudPhase1'] != -1]
-            self.df = self.df[self.df['SatelliteZenithAngle'] < maximum_zenith_angle]
-
-            # Check that DataFrame still contains data after filtering
-            if self.df.empty:
-                print(f"No data remains after filtering: {self.filepath}")
-                return False
-            else:
-                return True
+            return True
 
     @staticmethod
     def _get_iasi_spectral_grid():

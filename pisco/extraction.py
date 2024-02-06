@@ -104,7 +104,7 @@ class Extractor:
         """
         # Define the parameters for the command
         if (self.data_level == 'l1c'):
-            # Set range of spectral channels to use
+            # Set range of spectral channels to use (pass custom spectral range as arguments, defaults to channels 220-2220 in the main absorption band of water ice)
             self.channels = self.config.set_channels(self.config.channels_mode)
             
             list_of_parameters = [
