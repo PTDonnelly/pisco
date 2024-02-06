@@ -9,7 +9,7 @@
     "process": true,
 
     // channels: str, Specifies which mode of selection for IASI spectral channels
-    "channels_mode": "all",
+    "channels_mode": "range",
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",

@@ -8,138 +8,6 @@ import pickle
 
 from pisco import Extractor
 
-class Metadata:
-    """
-    Metadata class provides the structure and methods to read and process
-    metadata of binary files.
-
-    Attributes:
-        f (BinaryIO): The binary file object.
-        header_size (int): The size of the header in bytes.
-        record_header_size (int): The size of the record header.
-        number_of_channels (int): The number of channels.
-        channel_IDs (np.array): The IDs of the channels.
-        record_size (int): The size of each record in bytes.
-        number_of_measurements (int): The number of measurements.
-    """
-    def __init__(self, file: BinaryIO):
-        self.f: BinaryIO = file
-        self.header_size: int = None
-        self.record_size: int = None
-        self.number_of_measurements: int = None
-        self.number_of_channels: int = None
-        self.channel_IDs: np.array = None
-        self.number_of_l2_products: int = None
-        self.l2_product_IDs: List[int] = None
-    
-    @staticmethod
-    def _get_iasi_common_record_fields() -> List[Tuple]:
-        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        common_fields = [
-                        ('Year', 'uint16', 2, 2),
-                        ('Month', 'uint8', 1, 3),
-                        ('Day', 'uint8', 1, 4),
-                        ('Hour', 'uint8', 1, 5),
-                        ('Minute', 'uint8', 1, 6),
-                        ('Milliseconds', 'uint32', 4, 10),
-                        ('Latitude', 'float32', 4, 14),
-                        ('Longitude', 'float32', 4, 18),
-                        ('Satellite Zenith Angle', 'float32', 4, 22),
-                        ('Bearing', 'float32', 4, 26),
-                        ('Solar Zenith Angle', 'float32', 4, 30),
-                        ('Solar Azimuth', 'float32', 4, 34),
-                        ('Field of View Number', 'uint32', 4, 38),
-                        ('Orbit Number', 'uint32', 4, 42),
-                        ('Scan Line Number', 'uint32', 4, 46),
-                        ('Height of Station', 'float32', 4, 50)]
-        return common_fields
-  
-
-    @staticmethod
-    def _get_iasi_l1c_record_fields() -> List[Tuple]:
-        # Format of general L1C-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
-        # cumulative total continues from the fourth digit of the last tuple in common_fields.
-        l1c_fields = [
-                    ('Day version', 'uint16', 2, 2 + offset),
-                    ('Start Channel 1', 'uint32', 4, 6 + offset),
-                    ('End Channel 1', 'uint32', 4, 10 + offset),
-                    ('Quality Flag 1', 'uint32', 4, 14 + offset),
-                    ('Start Channel 2', 'uint32', 4, 18 + offset),
-                    ('End Channel 2', 'uint32', 4, 22 + offset),
-                    ('Quality Flag 2', 'uint32', 4, 26 + offset),
-                    ('Start Channel 3', 'uint32', 4, 30 + offset),
-                    ('End Channel 3', 'uint32', 4, 34 + offset),
-                    ('Quality Flag 3', 'uint32', 4, 38 + offset),
-                    ('Cloud Fraction', 'uint32', 4, 42 + offset),
-                    ('Surface Type', 'uint8', 1, 43 + offset)]
-        return l1c_fields
-        
-    @staticmethod
-    def _get_iasi_l2_record_fields() -> List[Tuple]:
-       # Format of general L2-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
-        # cumulative total continues from the fourth digit of the last tuple in common_fields.
-        l2_fields = [
-                    ('Superadiabatic Indicator', 'uint8', 1, 1 + offset),
-                    ('Land Sea Qualifier', 'uint8', 1, 2 + offset),
-                    ('Day Night Qualifier', 'uint8', 1, 3 + offset),
-                    ('Processing Technique', 'uint32', 4, 7 + offset),
-                    ('Sun Glint Indicator', 'uint8', 1, 8 + offset),
-                    ('Cloud Formation and Height Assignment', 'uint32', 4, 12 + offset),
-                    ('Instrument Detecting Clouds', 'uint32', 4, 16 + offset),
-                    ('Validation Flag for IASI L1 Product', 'uint32', 4, 20 + offset),
-                    ('Quality Completeness of Retrieval', 'uint32', 4, 24 + offset),
-                    ('Retrieval Choice Indicator', 'uint32', 4, 28 + offset),
-                    ('Satellite Manoeuvre Indicator', 'uint32', 4, 32 + offset)]
-        return l2_fields
-
-    @staticmethod
-    def _get_l2_product_fields(product: int, offset: int=0) -> List[Tuple]:
-        # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        if product == "clp":
-            fields = [
-                    ('Vertical Significance', 'uint32', 4, 4 + offset),
-                    ('Pressure 1', 'float32', 4, 8 + offset),
-                    ('Temperature or Dry Bulb Temperature 1', 'float32', 4, 12 + offset),
-                    ('Cloud Amount in Segment 1', 'float32', 4, 16 + offset),
-                    ('Cloud Phase 1', 'uint32', 4, 20 + offset),
-                    ('Pressure 2', 'float32', 4, 24 + offset),
-                    ('Temperature or Dry Bulb Temperature 2', 'float32', 4, 28 + offset),
-                    ('Cloud Amount in Segment 2', 'float32', 4, 32 + offset),
-                    ('Cloud Phase 2', 'uint32', 4, 36 + offset),
-                    ('Pressure 3', 'float32', 4, 40 + offset),
-                    ('Temperature or Dry Bulb Temperature 3', 'float32', 4, 44 + offset),
-                    ('Cloud Amount in Segment 3', 'float32', 4, 48 + offset),
-                    ('Cloud Phase 3', 'uint32', 4, 52 + offset)
-                    ]
-        if product == "twt":
-            fields = []
-        if product == "ozo":
-            fields = [
-                    ('Selection Background State', 'uint32', 4, 4 + last_field_end_with_offset),
-                    ('Pressure 11', 'float32', 4, 8 + last_field_end_with_offset),
-                    ('Pressure 12', 'float32', 4, 12 + last_field_end_with_offset),
-                    ('Integrated O3 Density 1', 'float32', 4, 16 + last_field_end_with_offset),
-                    ('Pressure 21', 'float32', 4, 20 + last_field_end_with_offset),
-                    ('Pressure 22', 'float32', 4, 24 + last_field_end_with_offset),
-                    ('Integrated O3 Density 2', 'float32', 4, 28 + last_field_end_with_offset),
-                    ('Pressure 31', 'float32', 4, 32 + last_field_end_with_offset),
-                    ('Pressure 32', 'float32', 4, 36 + last_field_end_with_offset),
-                    ('Integrated O3 Density 3', 'float32', 4, 40 + last_field_end_with_offset),
-                    ('Pressure 41', 'float32', 4, 44 + last_field_end_with_offset),
-                    ('Pressure 42', 'float32', 4, 48 + last_field_end_with_offset),
-                    ('Integrated O3 Density 4', 'float32', 4, 52 + last_field_end_with_offset)]
-        if product == "trg":
-            fields = [
-                    ('Selection Background State', 'uint32', 4, 4 + last_field_end_with_offset),
-                    ('Integrated N20 Density', 'float32', 4, 8 + last_field_end_with_offset),
-                    ('Integrated CO Density', 'float32', 4, 16 + last_field_end_with_offset),
-                    ('Integrated CH4 Density', 'float32', 4, 20 + last_field_end_with_offset),
-                    ('Integrated CO2 Density', 'float32', 4, 24 + last_field_end_with_offset)]
-        if product == "ems":
-            fields = []
-        return fields
-
-
 class Preprocessor:
     """
     A class used to handle the preprocessing of IASI data.
@@ -191,8 +59,7 @@ class Preprocessor:
         self.longitude_range: Tuple[float] = ex.config.longitude_range
         self.channels: List[int] = ex.channels
         self.f: BinaryIO = None
-        self.metadata: Metadata = None
-        self.data_record_df = pd.DataFrame()
+        self.data_record_df = None
 
     @staticmethod
     def _get_common_fields() -> List[Tuple]:
