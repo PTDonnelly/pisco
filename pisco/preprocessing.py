@@ -191,20 +191,18 @@ class Preprocessor:
     def read_file_in_chunks(self, dtype_dict: Dict):
         # Load in chunks
         print("Loading in chunks...")
-        input()
         # Initialize a list to hold processed chunks
         chunk_list = []
         
         # Specify the chunk size
-        chunk_size = Preprocessor.calculate_chunk_size(dtype_dict)
+        chunk_size = 10000 # Preprocessor.calculate_chunk_size(dtype_dict)
         
-        # Iterate over the CSV file in chunks
+        # Iterate over the file in chunks
         for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
             # Append the processed chunk to the list
             chunk_list.append(chunk)
             print(f"Chunk: {i}")
-
-        input()
+            
         # Concatenate all processed chunks at once
         return pd.concat(chunk_list, ignore_index=True)
     
