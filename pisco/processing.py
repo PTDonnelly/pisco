@@ -13,9 +13,11 @@ class Processor:
         self.datapath_l1c = f"{ex.config.datapath}{ex.config.satellite_identifier}/l1c/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_l2 = f"{ex.config.datapath}{ex.config.satellite_identifier}/l2/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_merged = f"{ex.config.datapath}{ex.config.satellite_identifier}/{ex.year}/{ex.month}/{ex.day}/"
+        self.output_path: str = None
         self.df_l1c: object = None
         self.df_l2: object = None
-        self.merged_df: object = None
+        self.df: object = None
+        
 
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
@@ -110,7 +112,7 @@ class Processor:
         """
         # Check if all required columns are present in the DataFrame
         required_columns = ['CloudPhase1', 'CloudPhase2', 'CloudPhase3', 'SatelliteZenithAngle']
-        if not Processor.check_df(self.filepath, df, required_columns):
+        if not Processor.check_df(self.output_path, df, required_columns):
             # If Dataframe is missing values or columns, return empty dataframe
             return pd.DataFrame()
         else:
@@ -130,32 +132,48 @@ class Processor:
             combined_conditions = condition_1 & condition_2 & condition_3 & condition_4 & condition_5
            
             # Filter the DataFrame based on the combined conditions
-            self.merged_df = df[combined_conditions]
+            self.df = df[combined_conditions]
 
             # Check that DataFrame still contains data after filtering
-            if self.merged_df.empty:
-                print(f"No data remains after filtering: {self.filepath}")
+            if self.df.empty:
+                print(f"No data remains after filtering: {self.output_path}")
                 return pd.DataFrame()
             else:
                 return 
-
+    
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1"]
         return reduced_fields
     
+    def reduce_fields(self, merged_df: pd.DataFrame):
+        # Keep only columns containing variables present in reduced_fields and spectral channels
+        reduced_fields = Processor._get_reduced_fields()
+        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
+        return merged_df.filter(reduced_fields + spectrum_columns)
+    
     def merge_datasets(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
-        merged_df = pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
+        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
 
-        # Keep only columns containing variables present in reduced_fields and spectral channels
-        reduced_fields = self._get_reduced_fields()
-        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
-        reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
+    def _create_merged_datapath(self):
+        # Create the output directory if it doesn't exist
+        os.makedirs(self.datapath_merged, exist_ok=True)
+        self.output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
+        return
+
+    def combine_datasets(self) -> None:
+        self._create_merged_datapath()
+        
+        # Merge two DataFrames based on space-time co-ordinates
+        merged_df = self.merge_datasets()
+
+        # Select data fields of interest
+        reduced_df = self.reduce_fields(merged_df)
 
         # Filter merged dataset to throw away unwanted or bad measurements
-        self.filter_observations(reduced_df)
+        filtered_df = self.filter_observations(reduced_df)
         return
     
 
@@ -168,15 +186,12 @@ class Processor:
         return
     
     def save_merged_products(self, output_path: str, delete_tempfiles: bool = True) -> None:
-        if not self.merged_df.empty:
-            # Create the output directory if it doesn't exist
-            os.makedirs(self.datapath_merged, exist_ok=True)
-            output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
+        if not self.df.empty:
             print(f"Saving compressed spectra to: {output_path}")
             
             # Compress and save using gzip
             with gzip.open(output_path, 'wb') as f:
-                pickle.dump(self.merged_df, f)
+                pickle.dump(self.df, f)
 
             if delete_tempfiles:
                 # Delete original csv files

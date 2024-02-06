@@ -59,7 +59,7 @@ class Preprocessor:
         self.latitude_range: Tuple[float] = ex.config.latitude_range
         self.longitude_range: Tuple[float] = ex.config.longitude_range
         self.channels: List[int] = ex.channels
-        self.data_record_df = None
+        self.df = None
 
     @staticmethod
     def _get_common_fields() -> List[Tuple]:
@@ -200,15 +200,15 @@ class Preprocessor:
         #     # Append the processed chunk to the DataFrame
         #     processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
 
-        # Assign the concatenated processed data back to self.data_record_df
-        self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
+        # Assign the concatenated processed data back to self.df
+        self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
         return
 
 
     def fix_spectrum_columns(self) -> None:
         # Rename columns based on the integer list of channel IDs
         rename_mapping = {str(self.channels[0] + i): f"Spectrum {channel_id}" for i, channel_id in enumerate(self.channels)}
-        self.data_record_df.rename(columns=rename_mapping, inplace=True)
+        self.df.rename(columns=rename_mapping, inplace=True)
         return
 
 
@@ -221,7 +221,7 @@ class Preprocessor:
         """
 
         # Retrieve the necessary field data
-        hour, minute, millisecond, longitude = self.data_record_df['Hour'], self.data_record_df['Minute'], self.data_record_df['Milliseconds'], self.data_record_df['Longitude']
+        hour, minute, millisecond, longitude = self.df['Hour'], self.df['Minute'], self.df['Milliseconds'], self.df['Longitude']
 
         # Calculate the total time in hours, minutes, and milliseconds
         total_time = (hour * 1e4) + (minute * 1e2) + (millisecond / 1e3)
@@ -259,7 +259,7 @@ class Preprocessor:
         local_time = self._calculate_local_time()
 
         # Store the Boolean indicating day (True) or night (False) in the DataFrame
-        self.data_record_df['Local Time'] = (6 < local_time) & (local_time < 18)
+        self.df['Local Time'] = (6 < local_time) & (local_time < 18)
         return
 
 
@@ -268,21 +268,22 @@ class Preprocessor:
         Stores the datetime components to a single column and drops the elements.
         """
         print("\nBuilding Datetime:")
-        self.data_record_df['Datetime'] = (self.data_record_df['Year'].apply(lambda x: f'{int(x):04d}') +
-                                    self.data_record_df['Month'].apply(lambda x: f'{int(x):02d}') +
-                                    self.data_record_df['Day'].apply(lambda x: f'{int(x):02d}') +
-                                    self.data_record_df['Hour'].apply(lambda x: f'{int(x):02d}') +
-                                    self.data_record_df['Minute'].apply(lambda x: f'{int(x):02d}')
+        self.df['Datetime'] = (self.df['Year'].apply(lambda x: f'{int(x):04d}') +
+                                    self.df['Month'].apply(lambda x: f'{int(x):02d}') +
+                                    self.df['Day'].apply(lambda x: f'{int(x):02d}') +
+                                    self.df['Hour'].apply(lambda x: f'{int(x):02d}') +
+                                    self.df['Minute'].apply(lambda x: f'{int(x):02d}')
                                     )
         
-        # Drop original time element columns
-        self.data_record_df = self.data_record_df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'])
+        # Drop original time element columns (in place to save on memory)
+        self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
         return  
     
 
     def _delete_intermediate_file(self) -> None:
         os.remove(self.intermediate_file)
         return
+
 
     def save_observations(self, delete_tempfiles: bool = True) -> None:
         """
@@ -294,7 +295,7 @@ class Preprocessor:
 
         # Compress and save using gzip
         with gzip.open(outfile, 'wb') as f:
-            pickle.dump(self.data_record_df, f)
+            pickle.dump(self.df, f)
         
         # Delete intermediate OBR output file
         if delete_tempfiles:
