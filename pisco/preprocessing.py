@@ -1,8 +1,10 @@
-from datetime import datetime
+import gzip
 import os
 import numpy as np
 import pandas as pd
 from typing import Any, List, BinaryIO, Tuple, List, Optional
+
+import pickle
 
 from pisco import Extractor
 
@@ -576,18 +578,23 @@ class Preprocessor:
         os.remove(self.intermediate_file)
         return
 
-    def save_observations(self) -> None:
+    def save_observations(self, delete_obr_file: bool = True) -> None:
         """
         Saves the observation data to CSV/HDF5 file and deletes OBR output file.
         """  
         # Create output file name
         outfile = self.intermediate_file.split(".")[0]
-        print(f"\nSaving DataFrame to: {outfile}.csv")
+        print(f"\nSaving DataFrame to: {outfile}.pkl.gz")
 
         # Save the DataFrame to a file in HDF5 format
-        # self.data_record_df.to_hdf(f"{datapath_out}{datafile_out}.h5", key='df', mode='w')
-        self.data_record_df.to_csv(f"{outfile}.csv", index=False, mode='w')
+        # # self.data_record_df.to_hdf(f"{datapath_out}{datafile_out}.h5", key='df', mode='w')
+        # self.data_record_df.to_csv(f"{outfile}.csv", index=False, mode='w')
+
+        # Compress and save using gzip
+        with gzip.open(outfile, 'wb') as f:
+            pickle.dump(self.data_record_df, f)
         
         # Delete intermediate OBR output file
-        self._delete_intermediate_file()
+        if delete_obr_file == True:
+            self._delete_intermediate_file()
         return

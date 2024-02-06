@@ -102,11 +102,11 @@ def preprocess_iasi(ex: Extractor, data_level: str):
             # Construct Datetime column and remove individual time elements
             pre.build_datetime()
             # Save filtered DataFrame to CSV/HDF5
-            pre.save_observations()
+            pre.save_observations(delete_obr_file=False)
         
         # Print the DataFrame
-        print(pre.data_record_df.info)
-        input()
+        print(pre.data_record_df.info(verbose=True))
+        exit()
         return
 
 
