@@ -191,7 +191,7 @@ class Preprocessor:
     def read_file_in_chunks(self, dtype_dict: Dict):
         # Load in chunks
         print("Loading in chunks...")
-        
+        input()
         # Initialize a list to hold processed chunks
         chunk_list = []
         
@@ -204,6 +204,7 @@ class Preprocessor:
             chunk_list.append(chunk)
             print(f"Chunk: {i}")
 
+        input()
         # Concatenate all processed chunks at once
         return pd.concat(chunk_list, ignore_index=True)
     
