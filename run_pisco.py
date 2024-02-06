@@ -134,7 +134,7 @@ def process_iasi(ex: Extractor):
             pro.correlate_datasets()
             
             # Merge DataFrames, dropping uncorrelated rows and unwanted columns
-            pro.merge_datasets()
+            pro.combine_datasets()
 
             # Save merged and filtered DataFrame to compressed pickle
             pro.save_merged_products(delete_tempfiles=False)

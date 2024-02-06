@@ -183,6 +183,8 @@ class Preprocessor:
         # Available memory
         available_memory = Preprocessor._get_available_memory()
 
+        print(available_memory, adjusted_memory_per_row, int(available_memory / adjusted_memory_per_row))
+
         # Calculate chunk size
         return int(available_memory / adjusted_memory_per_row)
 
@@ -195,7 +197,6 @@ class Preprocessor:
         
         # Specify the chunk size
         chunk_size = Preprocessor.calculate_chunk_size(dtype_dict)
-        print(chunk_size)
         
         # Iterate over the CSV file in chunks
         for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
