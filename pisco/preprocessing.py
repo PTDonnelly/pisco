@@ -231,12 +231,12 @@ class Metadata:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         return Metadata._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
 
-    # def _get_l1c_product_record_fields(self) -> List[Tuple]:
-    #     offset = Metadata._get_end_of_l1c_record()
+    def _get_l1c_product_record_fields(self) -> List[Tuple]:
+        offset = Metadata._get_end_of_l1c_record()
         
-    #     # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-    #     fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + offset)]
-    #     return fields
+        # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + offset)]
+        return fields
     
 
     @staticmethod
@@ -395,14 +395,9 @@ class Preprocessor:
                            Metadata._get_iasi_l2_record_fields() +
                            Metadata._get_l2_product_fields('clp')
                            )
-        
-        print(combined_fields)
-
-        exit()
 
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
-
         
         # Initialise an empty DataFrame to hold the processed chunks
         processed_data = pd.DataFrame()
@@ -420,6 +415,7 @@ class Preprocessor:
         # Assign the concatenated processed data back to self.data_record_df
         self.data_record_df = processed_data
         print(self.data_record_df.info(verbose=True))
+        exit()
         return
     
     def fix_spectrum_columns(self) -> None:
@@ -616,10 +612,6 @@ class Preprocessor:
         # Create output file name
         outfile = self.intermediate_file.split(".")[0]
         print(f"\nSaving DataFrame to: {outfile}.pkl.gz")
-
-        # Save the DataFrame to a file in HDF5 format
-        # # self.data_record_df.to_hdf(f"{datapath_out}{datafile_out}.h5", key='df', mode='w')
-        # self.data_record_df.to_csv(f"{outfile}.csv", index=False, mode='w')
 
         # Compress and save using gzip
         with gzip.open(outfile, 'wb') as f:
