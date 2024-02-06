@@ -18,7 +18,6 @@ class Processor:
         self.df_l2: object = None
         self.df: object = None
         
-
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
         Defines the paths to the intermediate analysis data files.
@@ -55,13 +54,6 @@ class Processor:
         self.df_l2 = pd.read_csv(self.datafile_l2)
         return
     
-    @staticmethod
-    def unpickle(file):
-        print(file)
-        with gzip.open(file, 'rb') as f:
-            df = pickle.load(f)
-        return df
-
 
     def _check_headers(self):
         required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
@@ -199,3 +191,11 @@ class Processor:
         else:
             print((f"DataFrame empty for: {output_path}"))
         return
+    
+    
+    @staticmethod
+    def unpickle(file):
+        print(file)
+        with gzip.open(file, 'rb') as f:
+            df = pickle.load(f)
+        return df

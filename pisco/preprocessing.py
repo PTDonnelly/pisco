@@ -289,9 +289,10 @@ class Preprocessor:
         """
         Saves the observation data to CSV/HDF5 file and deletes OBR output file.
         """  
-        # Create output file name
-        outfile = os.path.join(self.intermediate_file.split(".")[0], ".pkl.gz")
-        print(f"\nSaving DataFrame to: {outfile}.pkl.gz")
+        # Split the intermediate file path into the root and extension, and give new extension
+        file_root, _ = os.path.splitext(self.intermediate_file)
+        outfile = f"{file_root}.pkl.gz"
+        print(f"\nSaving DataFrame to: {outfile}")
 
         # Compress and save using gzip
         with gzip.open(outfile, 'wb') as f:
