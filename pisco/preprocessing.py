@@ -5,6 +5,7 @@ import pandas as pd
 from typing import Any, List, BinaryIO, Tuple, List, Optional
 
 import pickle
+import pprint as pp
 
 from pisco import Extractor
 
@@ -58,7 +59,6 @@ class Preprocessor:
         self.latitude_range: Tuple[float] = ex.config.latitude_range
         self.longitude_range: Tuple[float] = ex.config.longitude_range
         self.channels: List[int] = ex.channels
-        self.f: BinaryIO = None
         self.data_record_df = None
 
     @staticmethod
@@ -157,10 +157,10 @@ class Preprocessor:
         # Apply type conversion in a vectorized manner
         chunk[relevant_cols] = chunk[relevant_cols].astype({col: dtype_dict[col] for col in relevant_cols})
         
-        # Find columns in chunk but not in dtype_dict and print them
-        missing_cols = list(set(chunk.columns) - set(dtype_dict.keys()))
-        if missing_cols:
-            print("Columns in DataFrame but not in dtype_dict:", missing_cols)
+        # # Find columns in chunk but not in dtype_dict and print them
+        # missing_cols = list(set(chunk.columns) - set(dtype_dict.keys()))
+        # if missing_cols:
+        #     print("Columns in DataFrame but not in dtype_dict:", missing_cols)
             
         return chunk
  
@@ -168,31 +168,40 @@ class Preprocessor:
         print("\nLoading intermediate text file:")    
         
         # Read and combine byte tables to optimise reading of OBR txtfile
-        combined_fields = (Preprocessor._get_common_fields() +
-                           Preprocessor._get_l1c_record_fields() +
-                           Preprocessor._get_l1c_product_fields() +
-                           Preprocessor._get_l2_record_fields() +
-                           Preprocessor._get_l2_product_fields()
-                           )
+        if self.data_level == 'l1c':
+            combined_fields = (
+                Preprocessor._get_common_fields() +
+                Preprocessor._get_l1c_record_fields() +
+                Preprocessor._get_l1c_product_fields()
+                )
+        if self.data_level == 'l2':
+            combined_fields = (
+                Preprocessor._get_common_fields() +
+                Preprocessor._get_l2_record_fields() +
+                Preprocessor._get_l2_product_fields()
+                )
 
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
-        
-        # Initialise an empty DataFrame to hold the processed chunks
-        processed_data = pd.DataFrame()
 
-        # Specify the chunk size
-        chunk_size = 1000
-        # Iterate over the CSV file in chunks
-        for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
-            # Process each chunk using the static method
-            processed_chunk = Preprocessor.process_chunk(chunk, dtype_dict)
+        pp.print(dtype_dict)
+        input()
+
+        # # Initialise an empty DataFrame to hold the processed chunks
+        # processed_data = pd.DataFrame()
+
+        # # Specify the chunk size
+        # chunk_size = 1000
+        # # Iterate over the CSV file in chunks
+        # for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
+        #     # Process each chunk using the static method
+        #     processed_chunk = Preprocessor.process_chunk(chunk, dtype_dict)
             
-            # Append the processed chunk to the DataFrame
-            processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
+        #     # Append the processed chunk to the DataFrame
+        #     processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
 
         # Assign the concatenated processed data back to self.data_record_df
-        self.data_record_df = processed_data
+        self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t") #processed_data
         print(self.data_record_df.info(verbose=True))
         input()
         return
