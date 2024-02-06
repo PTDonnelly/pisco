@@ -201,7 +201,7 @@ class Preprocessor:
         #     processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
 
         # Assign the concatenated processed data back to self.data_record_df
-        self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t") #processed_data
+        self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
         print(self.data_record_df.info(verbose=True))
         input()
         return
