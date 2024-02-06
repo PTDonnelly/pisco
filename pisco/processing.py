@@ -78,8 +78,19 @@ class Processor:
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
         return
-    
 
+
+    @staticmethod
+    def _get_reduced_fields() -> List[str]:
+        reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1"]
+        return reduced_fields
+    
+    def reduce_fields(self, merged_df: pd.DataFrame):
+        # Keep only columns containing variables present in reduced_fields and spectral channels
+        reduced_fields = Processor._get_reduced_fields()
+        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
+        return merged_df.filter(reduced_fields + spectrum_columns)
+    
     @staticmethod
     def check_df(filepath: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
         # Ensure the dataframe is not empty
@@ -126,7 +137,7 @@ class Processor:
             condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_1 & condition_5# & condition_3 & condition_4 & condition_5
+            combined_conditions = condition_1 & condition_2 & condition_3 & condition_4 & condition_5
            
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
@@ -137,18 +148,7 @@ class Processor:
                 return pd.DataFrame()
             else:
                 return filtered_df
-    
-    @staticmethod
-    def _get_reduced_fields() -> List[str]:
-        reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1"]
-        return reduced_fields
-    
-    def reduce_fields(self, merged_df: pd.DataFrame):
-        # Keep only columns containing variables present in reduced_fields and spectral channels
-        reduced_fields = Processor._get_reduced_fields()
-        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
-        return merged_df.filter(reduced_fields + spectrum_columns)
-    
+            
     def merge_datasets(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
@@ -165,14 +165,13 @@ class Processor:
         
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
-        print(merged_df.head())
-
-        # Select data fields of interest
-        reduced_df = self.reduce_fields(merged_df)
-        print(reduced_df.head())
 
         # Filter merged dataset to throw away unwanted or bad measurements
-        self.df = self.filter_observations(reduced_df)
+        filtered_df = self.filter_observations(merged_df)
+        print(filtered_df.head())
+
+        # Reduce dataset to specified parameters
+        self.df = self.reduce_fields(filtered_df)
         print(self.df.head())
         return
     
