@@ -405,17 +405,16 @@ class Preprocessor:
         # Specify the chunk size
         chunk_size = 1000
         # Iterate over the CSV file in chunks
-        for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", chunksize=chunk_size)):
-            # Process each chunk using the static method
-            processed_chunk = Preprocessor.process_chunk(chunk)
+        for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
+            # # Process each chunk using the static method
+            # processed_chunk = Preprocessor.process_chunk(chunk)
             
             # Append the processed chunk to the DataFrame
-            processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
+            processed_data = pd.concat([processed_data, chunk], ignore_index=True)
 
         # Assign the concatenated processed data back to self.data_record_df
         self.data_record_df = processed_data
         print(self.data_record_df.info(verbose=True))
-        exit()
         return
     
     def fix_spectrum_columns(self) -> None:

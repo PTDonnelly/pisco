@@ -88,14 +88,14 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
-    def _save_merged_products(self, output_path: str, reduced_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
+    def _save_merged_products(self, output_path: str, reduced_df: pd.DataFrame, delete_preprocessed_files: bool = False) -> None:
         print(f"Saving compressed spectra to {output_path}")
         
         # Compress and save using gzip
         with gzip.open(output_path, 'wb') as f:
             pickle.dump(reduced_df, f)
 
-        if delete_obr_files == True:
+        if delete_preprocessed_files == True:
             # Delete original csv files
             self._delete_intermediate_analysis_data()
 
@@ -180,4 +180,4 @@ class Processor:
         filtered_df = self.filter_observations(reduced_df)
         if not filtered_df.empty:
             # Save observations
-            self._save_merged_products(output_path, filtered_df, delete_obr_files=True)
+            self._save_merged_products(output_path, filtered_df, delete_preprocessed_files=True)
