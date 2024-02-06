@@ -104,7 +104,7 @@ def preprocess_iasi(ex: Extractor, data_level: str):
             pre.save_observations(delete_tempfiles=False)
         
         # Print the DataFrame
-        # print(pre.df.info())
+        print(pre.df.head())
         return
 
 def process_iasi(ex: Extractor):

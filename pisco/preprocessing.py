@@ -2,6 +2,7 @@ import gzip
 import os
 import numpy as np
 import pandas as pd
+import psutil
 from typing import List, Tuple, List
 
 import pickle
@@ -148,7 +149,49 @@ class Preprocessor:
             ('Cloud Phase 3', 'uint32')
             ]
         return fields
- 
+    
+    @staticmethod
+    def _get_memory_usage_per_type():
+        memory_dict = {
+            'uint8': 1,
+            'uint16': 2,
+            'uint32': 4,
+            'uint64': 8,
+            'float16': 2,
+            'float32': 4,
+            'float64': 8,
+            }
+        return memory_dict
+
+    @staticmethod
+    def _get_available_memory():
+        """Returns the available memory in bytes."""
+        mem = psutil.virtual_memory()
+        return mem.available
+        
+    @staticmethod
+    def calculate_chunk_size(dtype_dict):
+        memory_dict = Preprocessor._get_memory_usage_per_type()
+
+        # Calculate memory per row based on dtype_dict
+        memory_per_row = sum(memory_dict[dtype] for dtype in dtype_dict.values())
+
+        # Add a 25% buffer for overhead from Python and pandas
+        overhead = 0.25
+        adjusted_memory_per_row = memory_per_row * (1 + overhead)
+
+        # Available memory
+        available_memory = Preprocessor._get_available_memory()
+
+        # Calculate chunk size
+        return int(available_memory / adjusted_memory_per_row)
+
+    @staticmethod
+    def should_load_in_chunks(file_path, threshold=1e9):
+        "Checks if file size is greater than 1e9 bytes (1 GB)"
+        file_size = os.path.getsize(file_path)
+        return file_size > threshold
+
     def open_text_file(self) -> None:
         print("\nLoading intermediate text file:")    
         
@@ -169,23 +212,25 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
 
-        # Initialize a list to hold processed chunks
-        chunk_list = []
-        # Specify the chunk size
-        chunk_size = 1000
-        
-        # Iterate over the CSV file in chunks
-        for chunk in pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size):
-            # Append the processed chunk to the list
-            chunk_list.append(chunk)
+        if Preprocessor.should_load_in_chunks(self.intermediate_file):
+            # Load in chunks
+            print("Loading in chunks...")
+            # Initialize a list to hold processed chunks
+            chunk_list = []
+            # Specify the chunk size
+            chunk_size = Preprocessor.calculate_chunk_size(dtype_dict)
+            print(chunk_size)
+            # Iterate over the CSV file in chunks
+            for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
+                # Append the processed chunk to the list
+                chunk_list.append(chunk)
+                print(f"Chunk: {i}")
 
-        # Concatenate all processed chunks at once
-        self.df = pd.concat(chunk_list, ignore_index=True)
-
-        # # Assign the concatenated processed data to class attribute self.df
-        # print(self.intermediate_file)
-        # self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
-        print(self.df.head())
+            # Concatenate all processed chunks at once
+            self.df = pd.concat(chunk_list, ignore_index=True)
+        else:
+            # Read in as normal
+            self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
         return
 
 
