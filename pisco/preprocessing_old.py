@@ -32,6 +32,152 @@ class Metadata:
         self.number_of_l2_products: int = None
         self.l2_product_IDs: List[int] = None
     
+    def _print_metadata(self) -> None:
+        print(f"Header  : {self.header_size} bytes")
+        print(f"Record  : {self.record_size} bytes")
+        print(f"Data    : {self.number_of_measurements} measurements")
+        return
+
+    def _verify_header(self) -> None:
+        """
+        Verifies the header size by comparing it with the header size at the end of the header.
+        """
+        # Reset file pointer to the beginning
+        self.f.seek(0)
+
+        # Skip first int32 value
+        np.fromfile(self.f, dtype='uint32', count=1)
+
+        # Skip header content
+        np.fromfile(self.f, dtype='uint8', count=self.header_size)
+
+        # Read header size at the end of the header
+        header_size_check = np.fromfile(self.f, dtype='uint32', count=1)[0]
+
+        # Check if header sizes match
+        assert self.header_size == header_size_check, "Header size mismatch"
+
+    def _count_measurements(self) -> int:
+        """
+        Calculate the number of measurements in the binary file based on its size, 
+        header size and record size.
+
+        Returns:
+        int: The number of measurements.
+        """
+        # Get the total size of the file
+        file_size = self.f.seek(0, 2)
+        # Calculate the number of measurements (minus 1 to avoid erroneous reads at the end of the byte structure)
+        self.number_of_measurements = int(((file_size - self.header_size - 8) // (self.record_size + 8)) - 1)
+        return
+    
+    def _read_header_record_size(self, common_header_fields: List[Tuple]) -> None:
+        # Read header size
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Header Size', common_header_fields)
+        self.f.seek(cumsize-dtype_size, 0)
+        self.header_size = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
+
+        # Read record size
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Record Header Size', common_header_fields)
+        self.f.seek(cumsize-dtype_size, 0)
+        self.record_size = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
+        return
+
+
+    def _get_field_from_tuples(self, key, tuples_list) -> Optional[Tuple]:
+        try:
+            for tup in tuples_list:
+                if tup[0] == key:
+                    return tup
+            raise ValueError(f"Key '{key}' not found in tuples list")
+        except Exception as e:
+            print(f"Error in _get_value_from_tuples: {e}")
+            raise
+
+
+    def _get_fixed_size_fields_pre(self) -> List[Tuple]:
+        "Byte table for values occuring before Channel IDs"
+        pre_channel_id_fields = [
+            ('Header Size', 'uint32', 4, 4),
+            ('Byte Order', 'uint8', 1, 5),
+            ('Format Version', 'uint32', 4, 9),
+            ('Satellite Identifier', 'uint32', 4, 13),
+            ('Record Header Size', 'uint32', 4, 17),
+            ('Brightness Temperature Brilliance', 'bool', 1, 18),
+            ('Number of Channels', 'uint32', 4, 22)
+        ]
+        return pre_channel_id_fields
+
+    def _get_fixed_size_fields_post(self, channel_id_field: Tuple) -> List[Tuple]:
+        "Byte table for values occuring after Channel IDs"
+        # Get the tuple for 'Channel IDs'
+        field, dtype, dtype_size, cumsize = self._get_field_from_tuples('Channel IDs', channel_id_field)
+        post_channel_id_fields = [
+            ('AVHRR Brilliance', 'bool', 1, 1 + cumsize),
+            ('Number of L2 Products', 'uint16', 2, 3 + cumsize)
+        ]
+        return post_channel_id_fields
+    
+
+    def _read_channel_ids(self, cumsize: int) -> None:
+        self.f.seek(cumsize, 0)
+        self.channel_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_channels)
+        return
+    
+    def _get_channel_id_field(self, pre_channel_id_fields: List[Tuple]):
+        """This is variable and treated separately."""
+        # Get the tuple for 'Number of Channels'
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of Channels', pre_channel_id_fields)
+        self.f.seek(cumsize-dtype_size, 0)
+        self.number_of_channels = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
+
+        # Store for later
+        self._read_channel_ids(cumsize)
+
+        # Return as a list for concatenation with other fields
+        return [('Channel IDs', 'uint32', 4 * self.number_of_channels, cumsize + (4 * self.number_of_channels))]
+
+    
+    def _read_l2_product_ids(self, cumsize: int) -> None:
+        self.f.seek(cumsize, 0)
+        self.l2_product_IDs = np.fromfile(self.f, dtype='uint32', count=self.number_of_l2_products)
+        return
+        
+    def _get_l2_product_id_field(self, post_channel_id_fields: List[Tuple]):
+        """This is variable and treated separately."""
+        # Get the tuple for 'Number of L2 Products'
+        _, dtype, dtype_size, cumsize = self._get_field_from_tuples('Number of L2 Products', post_channel_id_fields)
+        self.f.seek(cumsize-dtype_size, 0)
+        self.number_of_l2_products = int(np.fromfile(self.f, dtype=dtype, count=1)[0])
+        
+        # Store for later
+        self._read_l2_product_ids(cumsize)
+
+        # Return as a list for concatenation with other fields
+        return [('L2 Product IDs', 'uint32', 4 * self.number_of_l2_products, cumsize + (4 * self.number_of_l2_products))]
+    
+
+    def _build_iasi_common_header_fields(self) -> List[Tuple]:
+        # Step 1: Get pre-channel ID fields
+        pre_channel_id_fields = self._get_fixed_size_fields_pre()
+        
+        # Step 2: Get channel ID field
+        channel_id_field = self._get_channel_id_field(pre_channel_id_fields)
+
+        # Step 3: Get post-channel ID fields
+        post_channel_id_fields = self._get_fixed_size_fields_post(channel_id_field)
+
+        # Step 4: Get L2 product ID field
+        l2_product_id_field = self._get_l2_product_id_field(post_channel_id_fields)
+        return pre_channel_id_fields + channel_id_field + post_channel_id_fields + l2_product_id_field
+    
+    def check_iasi_common_header(self) -> None:
+        common_header_fields = self._build_iasi_common_header_fields()
+        self._read_header_record_size(common_header_fields)
+        self._count_measurements()
+        self._print_metadata()
+        return
+
     @staticmethod
     def _get_iasi_common_record_fields() -> List[Tuple]:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
@@ -53,10 +199,16 @@ class Metadata:
                         ('Scan Line Number', 'uint32', 4, 46),
                         ('Height of Station', 'float32', 4, 50)]
         return common_fields
-  
+
+    @staticmethod
+    def _get_end_of_common_record():
+        return Metadata._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
+    
 
     @staticmethod
     def _get_iasi_l1c_record_fields() -> List[Tuple]:
+        offset = Metadata._get_end_of_common_record()
+
         # Format of general L1C-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
         # cumulative total continues from the fourth digit of the last tuple in common_fields.
         l1c_fields = [
@@ -73,10 +225,25 @@ class Metadata:
                     ('Cloud Fraction', 'uint32', 4, 42 + offset),
                     ('Surface Type', 'uint8', 1, 43 + offset)]
         return l1c_fields
+    
+    @staticmethod
+    def _get_end_of_l1c_record():
+        # Determine the position of the anchor point for spectral radiance data in the binary file
+        return Metadata._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
+
+    def _get_l1c_product_record_fields(self) -> List[Tuple]:
+        offset = Metadata._get_end_of_l1c_record()
         
+        # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+        fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + offset)]
+        return fields
+    
+
     @staticmethod
     def _get_iasi_l2_record_fields() -> List[Tuple]:
-       # Format of general L2-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
+        offset = Metadata._get_end_of_common_record()
+
+        # Format of general L2-specific fields in binary file (field_name, data_type, data_size, cumulative_data_size),
         # cumulative total continues from the fourth digit of the last tuple in common_fields.
         l2_fields = [
                     ('Superadiabatic Indicator', 'uint8', 1, 1 + offset),
@@ -91,6 +258,18 @@ class Metadata:
                     ('Retrieval Choice Indicator', 'uint32', 4, 28 + offset),
                     ('Satellite Manoeuvre Indicator', 'uint32', 4, 32 + offset)]
         return l2_fields
+    
+    @staticmethod
+    def _get_end_of_l2_record(product_index: int, product_ID: int):
+        # Determine the position of the anchor point for spectral radiance data in the binary file
+        last_field_end =  Metadata._get_iasi_l2_record_fields()[-1][-1]  # End of the Satellite Manoeuvre Indicator field
+        # Shift cumsizes by offset equal to number of other L2 products already read
+        last_field_end_with_offset = last_field_end * (product_index + 1)
+        
+        # Use product ID to extract relevant L2 product
+        l2_product_dictionary = {1: "clp", 2: "twt", 3: "ozo", 4: "trg", 5: "ems"}
+        product = l2_product_dictionary.get(product_ID)
+        return last_field_end_with_offset, product
 
     @staticmethod
     def _get_l2_product_fields(product: int, offset: int=0) -> List[Tuple]:
@@ -195,94 +374,6 @@ class Preprocessor:
         self.data_record_df = pd.DataFrame()
 
     @staticmethod
-    def _get_common_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
-        fields = [
-            ('Year', 'uint16'),
-            ('Month', 'uint8'),
-            ('Day', 'uint8'),
-            ('Hour', 'uint8'),
-            ('Minute', 'uint8'),
-            ('Milliseconds', 'uint32'),
-            ('Latitude', 'float32'),
-            ('Longitude', 'float32'),
-            ('Satellite Zenith Angle', 'float32'),
-            ('Bearing', 'float32'),
-            ('Solar Zenith Angle', 'float32'),
-            ('Solar Azimuth', 'float32'),
-            ('Field of View Number', 'uint32'),
-            ('Orbit Number', 'uint32'),
-            ('Scan Line Number', 'uint32'),
-            ('Height of Station', 'float32')
-            ]
-        return fields
-  
-    @staticmethod
-    def _get_l1c_record_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
-        fields = [
-            ('Day version', 'uint16'),
-            ('Start Channel 1', 'uint32'),
-            ('End Channel 1', 'uint32'),
-            ('Quality Flag 1', 'uint32'),
-            ('Start Channel 2', 'uint32'),
-            ('End Channel 2', 'uint32'),
-            ('Quality Flag 2', 'uint32'),
-            ('Start Channel 3', 'uint32'),
-            ('End Channel 3', 'uint32'),
-            ('Quality Flag 3', 'uint32'),
-            ('Cloud Fraction', 'uint32'),
-            ('Surface Type', 'uint8')
-            ]
-        return fields
-    
-    @staticmethod
-    def _get_l1c_product_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
-        fields = [
-            ('Spectrum', 'float32')
-            ]
-        return fields
-      
-    @staticmethod
-    def _get_l2_record_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
-        fields = [
-            ('Superadiabatic Indicator', 'uint8'),
-            ('Land Sea Qualifier', 'uint8'),
-            ('Day Night Qualifier', 'uint8'),
-            ('Processing Technique', 'uint32'),
-            ('Sun Glint Indicator', 'uint8'),
-            ('Cloud Formation and Height Assignment', 'uint32'),
-            ('Instrument Detecting Clouds', 'uint32'),
-            ('Validation Flag for IASI L1 Product', 'uint32'),
-            ('Quality Completeness of Retrieval', 'uint32'),
-            ('Retrieval Choice Indicator', 'uint32'),
-            ('Satellite Manoeuvre Indicator', 'uint32')
-            ]
-        return fields
-
-    @staticmethod
-    def _get_l2_product_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
-        fields = [
-            ('Vertical Significance', 'uint32'),
-            ('Pressure 1', 'float32'),
-            ('Temperature or Dry Bulb Temperature 1', 'float32'),
-            ('Cloud Amount in Segment 1', 'float32'),
-            ('Cloud Phase 1', 'uint32'),
-            ('Pressure 2', 'float32'),
-            ('Temperature or Dry Bulb Temperature 2', 'float32'),
-            ('Cloud Amount in Segment 2', 'float32'),
-            ('Cloud Phase 2', 'uint32'),
-            ('Pressure 3', 'float32'),
-            ('Temperature or Dry Bulb Temperature 3', 'float32'),
-            ('Cloud Amount in Segment 3', 'float32'),
-            ('Cloud Phase 3', 'uint32')
-            ]
-        return fields
-
-    @staticmethod
     def process_chunk(chunk: pd.DataFrame, dtype_dict: dict) -> pd.DataFrame:
         # Find the intersection of chunk columns and dtype_dict keys, and convert it to a list
         relevant_cols = list(set(chunk.columns) & set(dtype_dict.keys()))
@@ -290,22 +381,17 @@ class Preprocessor:
         # Apply type conversion in a vectorized manner
         chunk[relevant_cols] = chunk[relevant_cols].astype({col: dtype_dict[col] for col in relevant_cols})
         
-        # Find columns in chunk but not in dtype_dict and print them
-        missing_cols = list(set(chunk.columns) - set(dtype_dict.keys()))
-        if missing_cols:
-            print("Columns in DataFrame but not in dtype_dict:", missing_cols)
-            
         return chunk
- 
+    
     def open_text_file(self) -> None:
         print("\nLoading intermediate text file:")    
         
         # Read and combine byte tables to optimise reading of OBR txtfile
-        combined_fields = (Preprocessor._get_common_fields() +
-                           Preprocessor._get_l1c_record_fields() +
-                           Preprocessor._get_l1c_product_fields() +
-                           Preprocessor._get_l2_record_fields() +
-                           Preprocessor._get_l2_product_fields()
+        combined_fields = (Metadata._get_iasi_common_record_fields() +
+                           Metadata._get_iasi_l1c_record_fields() +
+                           [('Spectrum', 'float32')] +
+                           Metadata._get_iasi_l2_record_fields() +
+                           Metadata._get_l2_product_fields('clp')
                            )
 
         # Create dtype dict from combined fields
@@ -327,15 +413,122 @@ class Preprocessor:
         # Assign the concatenated processed data back to self.data_record_df
         self.data_record_df = processed_data
         print(self.data_record_df.info(verbose=True))
-        input()
         return
-
-
+    
     def fix_spectrum_columns(self) -> None:
         # Rename columns based on the integer list of channel IDs
         rename_mapping = {str(self.channels[0] + i): f"Spectrum {channel_id}" for i, channel_id in enumerate(self.channels)}
         self.data_record_df.rename(columns=rename_mapping, inplace=True)
         return
+
+    def open_binary_file(self) -> None:
+        print("\nLoading intermediate binary file:")
+        self.f = open(self.intermediate_file, 'rb')
+        
+        # Get structure of file header and data record
+        self.metadata = Metadata(self.f)
+        self.metadata.check_iasi_common_header()
+        return
+
+    def close_binary_file(self):
+        self.f.close()
+        return       
+
+
+    def _calculate_byte_offset(self, dtype_size: int) -> int:
+        return self.metadata.record_size + 8 - dtype_size
+    
+    def _set_field_start_position(self, cumsize: int) -> None:
+        self.f.seek(self.metadata.header_size + 12 + cumsize, 0)
+        return
+    
+    def _store_data_in_df(self, field: str, data: np.ndarray) -> None:
+        if not field == "Spectrum":
+            self.data_record_df[field] = data
+        else:
+            # Prepare new columns for the spectrum data
+            spectrum_columns = {f'Spectrum {channel_ID}': data[i, :] for i, channel_ID in enumerate(self.metadata.channel_IDs)}
+            
+            # Create a new DataFrame from the spectrum columns
+            spectrum_df = pd.DataFrame(spectrum_columns)
+
+            # Concatenate this new DataFrame with the existing one
+            self.data_record_df = pd.concat([self.data_record_df, spectrum_df], axis=1)
+        return
+
+    def _read_binary_data(self, field: str, dtype: Any, dtype_size: int) -> np.ndarray:
+        """
+        Reads the data of each measurement based on the valid indices.
+
+        Args:
+            dtype (Any): Data type of the field.
+            dtype_size (int): Data type size in Bytes.
+
+        Returns:
+            np.ndarray: 1-D array of field data.
+        """
+        # Calculate the byte offset to the next measurement
+        byte_offset = self._calculate_byte_offset(dtype_size)
+        
+        # Calculate byte location to start pointer (skipping invalid indices)
+        byte_start = (byte_offset + dtype_size)
+        # Move file pointer to first valid index
+        self.f.seek(byte_start, 1)
+
+        # Iterate over field elements and extract values from binary file.
+        # Split conditions to avoid evaluting if statements at each iteration.
+        if not field == "Spectrum":
+            # Prepare an NaN array to store the data of the current field
+            data = np.full(self.metadata.number_of_measurements, np.nan, dtype="float32")
+            for i in range(self.metadata.number_of_measurements):
+                
+                # Read the field for the current measurement
+                step = (byte_offset * i) + (dtype_size * (i - 1))
+                value = np.fromfile(self.f, dtype=dtype, count=1, sep='', offset=step)
+
+                # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+                data[i] = value[0] if len(value) != 0 else data[i]
+        else:
+            # Prepare an NaN array to store the data of the spectrum field
+            data = np.full((self.metadata.number_of_channels, self.metadata.number_of_measurements), np.nan, dtype="float32")
+            for i in range(self.metadata.number_of_measurements):
+                
+                # Read the value for the current measurement
+                step = (byte_offset * i) + (dtype_size * (i - 1))
+                
+                # Store the value in the data array if value exists; leave untouched otherwise (as np.nan).
+                spectrum = np.fromfile(self.f, dtype='float32', count=self.metadata.number_of_channels, sep='', offset=step)
+                data[:, i] = spectrum if len(spectrum) != 0 else data[:, i]
+
+        # Store the data in the DataFrame
+        self._store_data_in_df(field, data)
+        return
+          
+    def read_record_fields(self, fields: List[Tuple]) -> None:
+        """
+        Reads the data of each field from the binary file and stores it in a pandas DataFrame.
+
+        Args:
+            fields (List[Tuple]): List of field tuples containing field information.
+
+        Returns:
+            None
+        """        
+        for field, dtype, dtype_size, cumsize in fields:
+            # Print field extraction progress
+            print(f"Extracting: {field}", dtype, dtype_size, cumsize)
+            
+            # Set the file pointer to the start position of the field
+            self._set_field_start_position(cumsize)
+            
+            # Read the binary data based on the valid indices
+            self._read_binary_data(field, dtype, dtype_size)
+    
+    def read_l2_product_fields(self):
+        # Retrieve the individual L2 products from the configuration file
+        for product_index, product_ID in enumerate(self.metadata.l2_product_IDs):
+            offset, product = Metadata._get_end_of_l2_record(product_index, product_ID)
+            self.read_record_fields(Metadata._get_l2_product_fields(product))
 
 
     def _calculate_local_time(self) -> None:
@@ -374,7 +567,6 @@ class Preprocessor:
 
         # Take the modulus again to ensure the time is within the 0 to 23 hours range
         return np.mod(time_shifted, 24)
-
 
     def build_local_time(self) -> List:
         """
