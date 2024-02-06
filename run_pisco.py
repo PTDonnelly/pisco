@@ -26,7 +26,7 @@ def _clean_up_files(ex: Extractor, metop: str):
     move_file(source_sh, target_sh)
     move_file(source_log, target_log)
 
-def preprocess_iasi(ex: Extractor, data_level: str):
+def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     """
     This function is used to process IASI (Infrared Atmospheric Sounding Interferometer) data 
     by extracting raw binary files and preprocessing them into pandas DataFrames.
@@ -92,7 +92,7 @@ def preprocess_iasi(ex: Extractor, data_level: str):
 
         elif ex.config.output_format == "txt":
             # Read OBR textfiles and store to pandas DataFrame
-            pre.open_text_file()
+            pre.open_text_file(memory)
             if pre.data_level == "l1c":
                 # Rename the spectral columns to contain "Spectrum"
                 pre.fix_spectrum_columns()
@@ -141,7 +141,7 @@ def process_iasi(ex: Extractor):
     return
 
 
-def run_pisco(metop, year, month, day, config):
+def run_pisco(memory, metop, year, month, day, config):
     ex = Extractor(config)
     ex.year = f"{year:04d}"
     ex.month = f"{month:02d}"
@@ -149,9 +149,9 @@ def run_pisco(metop, year, month, day, config):
 
     # The Logging context manager (in this location in run_pisco.py) is not needed here due to SLURM's built-in logging functionality 
     if ex.config.L1C:
-        preprocess_iasi(ex, data_level="l1c")
+        preprocess_iasi(ex, memory, data_level="l1c")
     if ex.config.L2:
-        preprocess_iasi(ex, data_level="l2")
+        preprocess_iasi(ex, memory, data_level="l2")
     if ex.config.process:
         process_iasi(ex)
     
@@ -160,6 +160,7 @@ def run_pisco(metop, year, month, day, config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process IASI data for a given date.")
+    parser.add_argument("mem", type=int, help="Memory Request")
     parser.add_argument("metop", type=str, help="Satellite identifier")
     parser.add_argument("year", type=int, help="Year to process")
     parser.add_argument("month", type=int, help="Month to process")
@@ -167,4 +168,4 @@ if __name__ == "__main__":
     parser.add_argument("config", type=str, help="Path to configuration file")
 
     args = parser.parse_args()
-    run_pisco(args.metop, args.year, args.month, args.day, args.config)
+    run_pisco(args.mem, args.metop, args.year, args.month, args.day, args.config)

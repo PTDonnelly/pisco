@@ -170,7 +170,7 @@ class Preprocessor:
         return mem.available
         
     @staticmethod
-    def calculate_chunk_size(dtype_dict):
+    def calculate_chunk_size(dtype_dict, available_memory):
         memory_dict = Preprocessor._get_memory_usage_per_type()
 
         # Calculate memory per row based on dtype_dict
@@ -180,29 +180,32 @@ class Preprocessor:
         overhead = 0.25
         adjusted_memory_per_row = memory_per_row * (1 + overhead)
 
-        # Available memory
-        available_memory = Preprocessor._get_available_memory()
+        # # Available memory
+        # available_memory = Preprocessor._get_available_memory()
 
         print(available_memory, adjusted_memory_per_row, int(available_memory / adjusted_memory_per_row))
 
         # Calculate chunk size
         return int(available_memory / adjusted_memory_per_row)
 
-    def read_file_in_chunks(self, dtype_dict: Dict):
+    def read_file_in_chunks(self, dtype_dict: Dict, memory: int):
         # Load in chunks
         print("Loading in chunks...")
         # Initialize a list to hold processed chunks
         chunk_list = []
         
         # Specify the chunk size
-        chunk_size = 10000 # Preprocessor.calculate_chunk_size(dtype_dict)
+        chunk_size = Preprocessor.calculate_chunk_size(dtype_dict, memory)
         
+        input()
+
         # Iterate over the file in chunks
         for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
             # Append the processed chunk to the list
             chunk_list.append(chunk)
             print(f"Chunk: {i}")
-            
+        
+        input()
         # Concatenate all processed chunks at once
         return pd.concat(chunk_list, ignore_index=True)
     
@@ -230,14 +233,14 @@ class Preprocessor:
         # Create dtype dict from combined fields
         return {field[0]: field[1] for field in combined_fields}
 
-    def open_text_file(self) -> None:
+    def open_text_file(self, memory) -> None:
         print("\nLoading intermediate text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
 
         if Preprocessor.should_load_in_chunks(self.intermediate_file):
-            self.df = self.read_file_in_chunks(dtype_dict)
+            self.df = self.read_file_in_chunks(dtype_dict, memory)
         else:
             # Read in as normal
             self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)

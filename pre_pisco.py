@@ -3,6 +3,9 @@ import subprocess
 from pisco import Extractor
 
 def generate_slurm_script(metop, year, month, day, config_file):
+    # Memory request (in GB, used later for optimal file reading)
+    mem = 4
+    
     # Format date integers to date strings
     year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
     
@@ -13,7 +16,7 @@ def generate_slurm_script(metop, year, month, day, config_file):
 #SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
 #SBATCH --time=02:00:00
 #SBATCH --ntasks=1
-#SBATCH --mem=4GB
+#SBATCH --mem={mem}GB
 
 # Purge all modules to prevent conflict with current environnement
 module purge
@@ -21,7 +24,7 @@ module purge
 # Load necessary modules
 module load python/meso-3.8
 
-python /data/pdonnelly/github/pisco/run_pisco.py {metop} {year} {month} {day} {config_file}
+python /data/pdonnelly/github/pisco/run_pisco.py {mem} {metop} {year} {month} {day} {config_file}
 
 """
     with open(script_name, 'w') as file:
