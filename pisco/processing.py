@@ -45,7 +45,6 @@ class Processor:
     
     @staticmethod
     def unpickle(file):
-        print(file)
         with gzip.open(file, 'rb') as f:
             df = pickle.load(f)
         return df
@@ -58,8 +57,6 @@ class Processor:
         print("\nLoading L1C spectra and L2 cloud products:")
         self.df_l1c = Processor.unpickle(self.datafile_l1c)
         self.df_l2 = Processor.unpickle(self.datafile_l2)
-        print(self.df_l1c.head())
-        print(self.df_l2.head())
         return
     
 
@@ -168,12 +165,15 @@ class Processor:
         
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
+        print(merged_df.head())
 
         # Select data fields of interest
         reduced_df = self.reduce_fields(merged_df)
+        print(reduced_df.head())
 
         # Filter merged dataset to throw away unwanted or bad measurements
         self.df = self.filter_observations(reduced_df)
+        print(self.df.head())
         return
     
 
