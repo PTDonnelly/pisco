@@ -120,24 +120,22 @@ def process_iasi(ex: Extractor):
     Result:
         A CSV file containing all spectra at those locations and times.
     """
-    # If IASI data was successfully extracted
-    if ex.intermediate_file_check:
-        # Instantiate a Processor class 
-        pro = Processor(ex)
+    # Instantiate a Processor class 
+    pro = Processor(ex)
 
-        # Check that both L1C and L2 data exist
-        if pro.check_l1c_l2_data_exist():
-            # Load IASI spectra and cloud products
-            pro.load_data()      
-            
-            # Correlates measurements, keep matching locations and times of observation
-            pro.correlate_datasets()
-            
-            # Merge DataFrames, dropping uncorrelated rows and unwanted columns
-            pro.combine_datasets()
+    # Check that both L1C and L2 data exist
+    if pro.check_l1c_l2_data_exist():
+        # Load IASI spectra and cloud products
+        pro.load_data()      
+        
+        # Correlates measurements, keep matching locations and times of observation
+        pro.correlate_datasets()
+        
+        # Merge DataFrames, dropping uncorrelated rows and unwanted columns
+        pro.combine_datasets()
 
-            # Save merged and filtered DataFrame to compressed pickle
-            pro.save_merged_products(delete_tempfiles=False)
+        # Save merged and filtered DataFrame to compressed pickle
+        pro.save_merged_products(delete_tempfiles=False)
         
         # print(pro.df.info())
     return

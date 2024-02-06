@@ -165,14 +165,15 @@ class Processor:
         
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
-
+        print(merged_df.info())
+        
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
-        print(filtered_df.head())
+        print(filtered_df.info())
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
-        print(self.df.head())
+        print(self.df.info())
         return
     
 
