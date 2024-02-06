@@ -164,29 +164,24 @@ class Preprocessor:
         return memory_dict
 
     @staticmethod
-    def _get_available_memory():
-        """Returns the available memory in bytes."""
-        mem = psutil.virtual_memory()
-        return mem.available
-        
-    @staticmethod
     def calculate_chunk_size(dtype_dict: Dict, memory: int):
         memory_dict = Preprocessor._get_memory_usage_per_type()
-
         # Calculate memory per row based on dtype_dict
         memory_per_row = sum(memory_dict[dtype] for dtype in dtype_dict.values())
-
-        # Add a 25% buffer for overhead from Python and pandas
-        overhead = 0.25
+        # Add a 50% buffer for overhead from Python and pandas
+        overhead = 0.50
         adjusted_memory_per_row = memory_per_row * (1 + overhead)
 
         # Available memory
-        available_memory = memory * 1e9 #Preprocessor._get_available_memory()
-
-        print(available_memory, adjusted_memory_per_row, int(available_memory / adjusted_memory_per_row))
+        available_memory = memory * 1e9
 
         # Calculate chunk size
-        return int(available_memory / adjusted_memory_per_row)
+        chunk_size = int(available_memory / adjusted_memory_per_row)
+        
+        print(f"Available memory: {available_memory} B")
+        print(f"Memory per row (+50% margin): {adjusted_memory_per_row} B")
+        print(f"Chunk size: {chunk_size} rows")
+        return chunk_size
 
     def read_file_in_chunks(self, dtype_dict: Dict, memory: int):
         # Load in chunks
@@ -196,16 +191,13 @@ class Preprocessor:
         
         # Specify the chunk size
         chunk_size = Preprocessor.calculate_chunk_size(dtype_dict, memory)
-        
-        input()
 
         # Iterate over the file in chunks
-        for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
+        for chunk in pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size):
             # Append the processed chunk to the list
             chunk_list.append(chunk)
-            print(f"Chunk: {i}")
-        
-        input()
+        print(f"Number of chunks: {len(chunk_list)}")
+
         # Concatenate all processed chunks at once
         return pd.concat(chunk_list, ignore_index=True)
     
