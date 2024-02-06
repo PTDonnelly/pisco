@@ -202,10 +202,10 @@ class Preprocessor:
         return pd.concat(chunk_list, ignore_index=True)
     
     @staticmethod
-    def should_load_in_chunks(file_path, threshold=1e9):
-        "Checks if file size is greater than 1e9 bytes (1 GB)"
+    def should_load_in_chunks(file_path, memory):
+        "Checks if file size is greater than half the available memory (for conservative use of memory)"
         file_size = os.path.getsize(file_path)
-        return file_size > threshold
+        return file_size > (memory / 2)
 
     def _get_fields_and_datatypes(self):
         # Read and combine byte tables to optimise reading of OBR txtfile
@@ -231,7 +231,7 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
 
-        if Preprocessor.should_load_in_chunks(self.intermediate_file):
+        if Preprocessor.should_load_in_chunks(self.intermediate_file, memory):
             self.df = self.read_file_in_chunks(dtype_dict, memory)
         else:
             # Read in as normal
