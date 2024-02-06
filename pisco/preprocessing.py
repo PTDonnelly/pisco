@@ -170,7 +170,7 @@ class Preprocessor:
         return mem.available
         
     @staticmethod
-    def calculate_chunk_size(dtype_dict, available_memory):
+    def calculate_chunk_size(dtype_dict: Dict, memory: int):
         memory_dict = Preprocessor._get_memory_usage_per_type()
 
         # Calculate memory per row based on dtype_dict
@@ -180,8 +180,8 @@ class Preprocessor:
         overhead = 0.25
         adjusted_memory_per_row = memory_per_row * (1 + overhead)
 
-        # # Available memory
-        # available_memory = Preprocessor._get_available_memory()
+        # Available memory
+        available_memory = memory * 1e9 #Preprocessor._get_available_memory()
 
         print(available_memory, adjusted_memory_per_row, int(available_memory / adjusted_memory_per_row))
 
