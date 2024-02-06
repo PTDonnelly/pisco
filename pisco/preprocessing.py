@@ -359,9 +359,35 @@ class Preprocessor:
         self.metadata: Metadata = None
         self.data_record_df = pd.DataFrame()
 
+    @staticmethod
+    def process_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
+        # Select columns that contain 'Spectrum' in their name
+        spectrum_cols = chunk.filter(like='Spectrum').columns
+        
+        # Convert the data type of these columns to float32
+        chunk[spectrum_cols] = chunk[spectrum_cols].astype('float32')
+        return chunk
+    
     def open_text_file(self) -> None:
-        print("\nLoading intermediate text file:")
-        self.data_record_df = pd.read_csv(self.intermediate_file, sep="\t")
+        print("\nLoading intermediate text file:")    
+        # Initialise an empty DataFrame to hold the processed chunks
+        processed_data = pd.DataFrame()
+
+        # Specify the chunk size
+        chunk_size = 1000
+        
+        # Iterate over the CSV file in chunks
+        for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", chunksize=chunk_size)):
+            # Process each chunk using the static method
+            processed_chunk = Preprocessor.process_chunk(chunk)
+            
+            # Append the processed chunk to the DataFrame
+            processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
+
+            print(f'Chunk: {i+1}')
+
+        # Assign the concatenated processed data back to self.data_record_df
+        self.data_record_df = processed_data
         return
     
     def fix_spectrum_columns(self) -> None:
