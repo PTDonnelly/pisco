@@ -132,14 +132,14 @@ class Processor:
             combined_conditions = condition_1 & condition_5# & condition_3 & condition_4 & condition_5
            
             # Filter the DataFrame based on the combined conditions
-            self.df = df[combined_conditions]
+            filtered_df = df[combined_conditions]
 
             # Check that DataFrame still contains data after filtering
-            if self.df.empty:
+            if filtered_df.empty:
                 print(f"No data remains after filtering: {self.output_path}")
                 return pd.DataFrame()
             else:
-                return 
+                return filtered_df
     
     @staticmethod
     def _get_reduced_fields() -> List[str]:
@@ -173,7 +173,7 @@ class Processor:
         reduced_df = self.reduce_fields(merged_df)
 
         # Filter merged dataset to throw away unwanted or bad measurements
-        filtered_df = self.filter_observations(reduced_df)
+        self.df = self.filter_observations(reduced_df)
         return
     
 

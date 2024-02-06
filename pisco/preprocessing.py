@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import psutil
-from typing import List, Tuple, List
+from typing import List, Tuple, List, Dict
 
 import pickle
 import pprint as pp
@@ -186,15 +186,33 @@ class Preprocessor:
         # Calculate chunk size
         return int(available_memory / adjusted_memory_per_row)
 
+    def read_file_in_chunks(self, dtype_dict: Dict):
+        # Load in chunks
+        print("Loading in chunks...")
+        
+        # Initialize a list to hold processed chunks
+        chunk_list = []
+        
+        # Specify the chunk size
+        chunk_size = Preprocessor.calculate_chunk_size(dtype_dict)
+        print(chunk_size)
+        
+        # Iterate over the CSV file in chunks
+        for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
+            # Append the processed chunk to the list
+            chunk_list.append(chunk)
+            print(f"Chunk: {i}")
+
+        # Concatenate all processed chunks at once
+        return pd.concat(chunk_list, ignore_index=True)
+    
     @staticmethod
     def should_load_in_chunks(file_path, threshold=1e9):
         "Checks if file size is greater than 1e9 bytes (1 GB)"
         file_size = os.path.getsize(file_path)
         return file_size > threshold
 
-    def open_text_file(self) -> None:
-        print("\nLoading intermediate text file:")    
-        
+    def _get_fields_and_datatypes(self):
         # Read and combine byte tables to optimise reading of OBR txtfile
         if self.data_level == 'l1c':
             combined_fields = (
@@ -210,24 +228,16 @@ class Preprocessor:
                 )
 
         # Create dtype dict from combined fields
-        dtype_dict = {field[0]: field[1] for field in combined_fields}
+        return {field[0]: field[1] for field in combined_fields}
+
+    def open_text_file(self) -> None:
+        print("\nLoading intermediate text file:")
+        
+        # Create dtype dict from combined fields
+        dtype_dict = self._get_fields_and_datatypes()
 
         if Preprocessor.should_load_in_chunks(self.intermediate_file):
-            # Load in chunks
-            print("Loading in chunks...")
-            # Initialize a list to hold processed chunks
-            chunk_list = []
-            # Specify the chunk size
-            chunk_size = Preprocessor.calculate_chunk_size(dtype_dict)
-            print(chunk_size)
-            # Iterate over the CSV file in chunks
-            for i, chunk in enumerate(pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size)):
-                # Append the processed chunk to the list
-                chunk_list.append(chunk)
-                print(f"Chunk: {i}")
-
-            # Concatenate all processed chunks at once
-            self.df = pd.concat(chunk_list, ignore_index=True)
+            self.df = self.read_file_in_chunks(dtype_dict)
         else:
             # Read in as normal
             self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
