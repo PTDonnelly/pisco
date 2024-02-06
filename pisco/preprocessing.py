@@ -63,8 +63,10 @@ class Preprocessor:
 
     @staticmethod
     def _get_common_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
+        # Format of OBR fields (field_name, data_type)
         fields = [
+            ('SatelliteIdentifier', 'uint32'),
+            ('Tb', 'bool'),
             ('Year', 'uint16'),
             ('Month', 'uint8'),
             ('Day', 'uint8'),
@@ -86,7 +88,7 @@ class Preprocessor:
   
     @staticmethod
     def _get_l1c_record_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
+        # Format of OBR fields (field_name, data_type)
         fields = [
             ('Day version', 'uint16'),
             ('Start Channel 1', 'uint32'),
@@ -104,16 +106,14 @@ class Preprocessor:
         return fields
     
     @staticmethod
-    def _get_l1c_product_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
-        fields = [
-            ('Spectrum', 'float32')
-            ]
+    def _get_l1c_product_fields(channels: List[int]) -> List[Tuple]:
+        # Format of spectral fields (field_name, data_type) where field_name is the channel ID
+        fields = [(str(channel_id), 'float32') for channel_id in channels]
         return fields
       
     @staticmethod
     def _get_l2_record_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
+        # Format of OBR fields (field_name, data_type)
         fields = [
             ('Superadiabatic Indicator', 'uint8'),
             ('Land Sea Qualifier', 'uint8'),
@@ -131,7 +131,7 @@ class Preprocessor:
 
     @staticmethod
     def _get_l2_product_fields() -> List[Tuple]:
-        # Format of OBR fields List[(field_name, data_type)]
+        # Format of OBR fields (field_name, data_type)
         fields = [
             ('Vertical Significance', 'uint32'),
             ('Pressure 1', 'float32'),
@@ -172,7 +172,7 @@ class Preprocessor:
             combined_fields = (
                 Preprocessor._get_common_fields() +
                 Preprocessor._get_l1c_record_fields() +
-                Preprocessor._get_l1c_product_fields()
+                Preprocessor._get_l1c_product_fields(self.channels)
                 )
         if self.data_level == 'l2':
             combined_fields = (
