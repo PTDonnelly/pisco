@@ -100,17 +100,17 @@ class Processor:
             self._delete_intermediate_analysis_data()
 
     @staticmethod
-    def check_df(datafile: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
+    def check_df(filepath: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
-            print(f"DataFrame empty: {datafile}")      
+            print(f"DataFrame empty: {filepath}")      
             return False     
 
         # Check for the presence of all required columns 
         if required_columns:
             missing_columns = [col for col in required_columns if col not in df.columns]
             if missing_columns:
-                print(f"Missing column(s) in DataFrame: {datafile}\n{', '.join(missing_columns)}")
+                print(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
         return True
         
@@ -126,38 +126,36 @@ class Processor:
         Returns:
         pd.DataFrame: Filtered and processed DataFrame.
         """
-        required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
-        if self.check_df(df, required_columns):
-            # If all required columns are present
+        # Check if all required columns are present in the DataFrame
+        required_columns = ['CloudPhase1', 'CloudPhase2', 'CloudPhase3', 'SatelliteZenithAngle']
+        if not Processor.check_df(self.filepath, self.df, required_columns):
+            # If Dataframe is missing values or columns, return empty dataframe
+            return pd.DataFrame()
+        else:
+            # Define filter conditions
+            # Keep rows where 'CloudPhase1' is not -1 (-1 is a bad measurement indicator, throw these measurements)
+            condition_1 = df['CloudPhase1'] != -1
+            # Keep rows where 'CloudPhase1' is not 7 (7 is a missing value indicator, throw these measurements)
+            condition_2 = df['CloudPhase1'] != 7
+            # Keep rows where 'CloudPhase2' is -1 (throw measurements with multiple cloud phases)
+            condition_3 = df['CloudPhase2'] == -1
+            # Keep rows where 'CloudPhase3' is -1 (throw measurements with multiple cloud phases)
+            condition_4 = df['CloudPhase3'] == -1
+            # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
+            condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
-            # criteria_df = pd.concat(df['CloudPhase1'] != -1, df['CloudPhase1'] == 7, df['CloudPhase2'] == -1, df['CloudPhase3'] == -1, df['SatelliteZenithAngle'] < maximum_zenith_angle)
-            # # # Drop rows with bad cloud phase measurement
-            # bad_cloud_phase_measurement = df['CloudPhase1'] != -1
-            # missing_value = df['CloudPhase1'] == 7
-            # # Drop rows with multiple cloudphase measurements
-            # cloud_2_exists = df['CloudPhase2'] != -1
-            # cloud_3_exists = df['CloudPhase3'] != -1
-            # # Drop measurements beyond specified zenih angle (default = 5 degrees, considered to be nadir)
-            # off_nadir = df['SatelliteZenithAngle'] < maximum_zenith_angle
-
-
-            # fitered_df = df[bad_cloud_phase_measurement, missing_value, cloud_2_exists, cloud_3_exists, off_nadir]
-
-            df = df[df['CloudPhase1'] != -1]
-            # Drop rows with multiple cloudphase measurements
-            df = df[df['CloudPhase2', 'CloudPhase3'] == -1]
-            # Drop measurements beyond specified zenih angle (default = 5 degrees, considered to be nadir)
-            df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
+            # Combine all conditions using the bitwise AND operator
+            combined_conditions = condition_1 & condition_2 & condition_3 & condition_4 & condition_5
+           
+            # Filter the DataFrame based on the combined conditions
+            filtered_df = self.df[combined_conditions]
 
             # Check that DataFrame still contains data after filtering
-            if not df.empty:
-                return True, df
+            if filtered_df.empty:
+                print(f"No data remains after filtering: {self.filepath}")
+                return pd.DataFrame()
             else:
-                print(f"No data remains after filtering: {output_path}")
-                return False, None
-        else:
-            return False, None
-    
+                return filtered_df
 
     @staticmethod
     def _get_reduced_fields() -> List[str]:
@@ -179,8 +177,7 @@ class Processor:
         reduced_df = merged_df.filter(reduced_fields + spectrum_columns)
 
         # Filter observations to further reduce dataset
-        check, filtered_df = self.filter_observations(output_path, reduced_df)
-
-        if check:
+        filtered_df = self.filter_observations(output_path, reduced_df)
+        if not filtered_df.empty:
             # Save observations
             self._save_merged_products(output_path, filtered_df, delete_obr_files=True)
