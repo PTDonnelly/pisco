@@ -204,6 +204,7 @@ class Metadata:
     def _get_end_of_common_record():
         return Metadata._get_iasi_common_record_fields()[-1][-1]  # End of the Height of Station field
     
+
     @staticmethod
     def _get_iasi_l1c_record_fields() -> List[Tuple]:
         offset = Metadata._get_end_of_common_record()
@@ -230,13 +231,14 @@ class Metadata:
         # Determine the position of the anchor point for spectral radiance data in the binary file
         return Metadata._get_iasi_l1c_record_fields()[-1][-1]  # End of the Surface Type field
 
-    def _get_l1c_product_record_fields(self) -> List[Tuple]:
-        offset = Metadata._get_end_of_l1c_record()
+    # def _get_l1c_product_record_fields(self) -> List[Tuple]:
+    #     offset = Metadata._get_end_of_l1c_record()
         
-        # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
-        fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + offset)]
-        return fields
+    #     # Format of L1Cspectral radiance fields in binary file (field_name, data_type, data_size, cumulative_data_size)
+    #     fields = [('Spectrum', 'float32', 4 * self.number_of_channels, (4 * self.number_of_channels) + offset)]
+    #     return fields
     
+
     @staticmethod
     def _get_iasi_l2_record_fields() -> List[Tuple]:
         offset = Metadata._get_end_of_common_record()
@@ -270,7 +272,7 @@ class Metadata:
         return last_field_end_with_offset, product
 
     @staticmethod
-    def _get_l2_product_record_fields(product: int, offset: Optional[int]) -> List[Tuple]:
+    def _get_l2_product_fields(product: int, offset: int=0) -> List[Tuple]:
         # Format of fields in binary file (field_name, data_type, data_size, cumulative_data_size)
         if product == "clp":
             fields = [
@@ -389,13 +391,14 @@ class Preprocessor:
         # Read and combine byte tables to optimise reading of OBR txtfile
         combined_fields = (Metadata._get_iasi_common_record_fields() +
                            Metadata._get_iasi_l1c_record_fields() +
-                           ['Spectrum', 'float32'] +
-                           Metadata._get_l2_product_record_fields('clp')
+                           [('Spectrum', 'float32')] +
+                           Metadata._get_iasi_l2_record_fields() +
+                           Metadata._get_l2_product_fields('clp')
                            )
         
         print(combined_fields)
 
-        exit()()
+        exit()
 
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
@@ -532,7 +535,7 @@ class Preprocessor:
         # Retrieve the individual L2 products from the configuration file
         for product_index, product_ID in enumerate(self.metadata.l2_product_IDs):
             offset, product = Metadata._get_end_of_l2_record(product_index, product_ID)
-            self.read_record_fields(Metadata.metadata._get_l2_product_record_fields(product, offset))
+            self.read_record_fields(Metadata._get_l2_product_fields(product))
 
 
     def _calculate_local_time(self) -> None:
