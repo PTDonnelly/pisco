@@ -184,7 +184,7 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = {field[0]: field[1] for field in combined_fields}
 
-        pp.print(dtype_dict)
+        pp.pprint(dtype_dict)
         input()
 
         # # Initialise an empty DataFrame to hold the processed chunks
