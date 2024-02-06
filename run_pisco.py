@@ -139,7 +139,7 @@ def process_iasi(ex: Extractor):
             # Save merged and filtered DataFrame to compressed pickle
             pro.save_merged_products(delete_tempfiles=False)
         
-        print(pro.merged_df.info())
+        print(pro.df.info())
     return
 
 
