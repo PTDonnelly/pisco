@@ -42,16 +42,22 @@ class Processor:
             return False
         else:
             return True
-        
+    
+    @staticmethod
+    def unpickle(file):
+        print(file)
+        with gzip.open(file, 'rb') as f:
+            df = pickle.load(f)
+        return df
+    
     def load_data(self) -> None:
         """
-        Opens two DataFrames loaded from the intermediate analysis data files.
+        Uncompresses two pickled DataFrames loaded from the intermediate analysis data files.
         
         """
-        # Open csv files
         print("\nLoading L1C spectra and L2 cloud products:")
-        self.df_l1c = pd.read_csv(self.datafile_l1c)
-        self.df_l2 = pd.read_csv(self.datafile_l2)
+        self.df_l1c = Processor.unpickle(self.datafile_l1c)
+        self.df_l2 = Processor.unpickle(self.datafile_l2)
         return
     
 
@@ -191,11 +197,3 @@ class Processor:
         else:
             print((f"DataFrame empty for: {output_path}"))
         return
-    
-    
-    @staticmethod
-    def unpickle(file):
-        print(file)
-        with gzip.open(file, 'rb') as f:
-            df = pickle.load(f)
-        return df
