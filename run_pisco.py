@@ -58,9 +58,54 @@ def preprocess_iasi(ex: Extractor, data_level: str):
         pre = Preprocessor(ex)
         
         if ex.config.output_format == "bin":
-            pre.preprocess_binary_files()
+            # Open binary file and extract metadata
+            pre.open_binary_file()
+            # Read common IASI record fields and store to pandas DataFrame
+            print(f"\nCommon Record Fields:")
+            pre.read_record_fields(pre.metadata._get_iasi_common_record_fields())
+
+            if pre.data_level == "l1c":
+                print("\nL1C Record Fields:")
+                # Read general L1C-specific record fields and add to DataFrame
+                pre.read_record_fields(pre.metadata._get_iasi_l1c_record_fields())
+                # Read L1C radiance spectrum field and add to DataFrame
+                pre.read_record_fields(pre.metadata._get_l1c_product_record_fields())
+            
+            if pre.data_level == "l2":
+                print("\nL2 Record Fields:")
+                # Read general L2-specific record fields and add to DataFrame
+                pre.read_record_fields(pre.metadata._get_iasi_l2_record_fields())
+                # Read L2 retrieved products
+                pre.read_l2_product_fields()
+                # Filter columns
+                filtered_columns = [col for col in pre.data_record_df.columns if "Cloud Phase" in col]
+                filtered_df = pre.data_record_df[filtered_columns]
+                # Print the head of the filtered DataFrame
+                print(filtered_df.head())
+            pre.close_binary_file()
+
+            # Construct Local Time column
+            pre.build_local_time()
+            # Construct Datetime column and remove individual time elements
+            pre.build_datetime()
+            # Save filtered DataFrame to CSV/HDF5
+            pre.save_observations()
+
         elif ex.config.output_format == "txt":
-            pre.preprocess_text_files()
+            # Read OBR textfiles and store to pandas DataFrame
+            pre.open_text_file()
+            if pre.data_level == "l1c":
+                # Rename the spectral columns to contain "Spectrum"
+                pre.fix_spectrum_columns()
+            # Construct Local Time column
+            pre.build_local_time()
+            # Construct Datetime column and remove individual time elements
+            pre.build_datetime()
+            # Save filtered DataFrame to CSV/HDF5
+            pre.save_observations()
+        
+        # Print the DataFrame
+        print(pre.data_record_df)
         return
 
 
@@ -84,8 +129,14 @@ def process_iasi(ex: Extractor):
 
         # Check that both L1C and L2 data exist
         if pro.check_l1c_l2_data_exist():
-            # Merge data sets
-            pro.merge_spectra_and_cloud_products()
+            # Load IASI spectra and cloud products
+            pro.load_data()      
+            
+            # Correlates measurements, keep matching locations and times of observation
+            pro.correlate_measurements()
+            
+            # Merge DataFrames, dropping uncorrelated rows and unwanted columns
+            pro.reduce_fields()
     return
 
 

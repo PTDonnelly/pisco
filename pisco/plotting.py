@@ -32,24 +32,6 @@ class Plotter:
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
 
 
-    # IASI-specific methods
-    def _get_iasi_spectral_grid(self):
-        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
-        channels = spectral_grid[:, 0]
-        wavenumber_grid = spectral_grid[:, 1]
-        return wavenumber_grid
-
-    def get_dataframe_spectral_grid(self, df: pd.DataFrame) -> List[float]:
-        # Get the full IASI spectral grid
-        wavenumber_grid = self._get_iasi_spectral_grid()
-        # Extract the numbers from the column names
-        spectral_channels = df[[col for col in df.columns if 'Spectrum' in col]]
-        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
-        # Extract the wavenumbers corresponding to the channel positions
-        extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
-        return extracted_wavenumbers
-
-
     # File I/O methods
     def _format_filepath_from_target_date_range(self) -> None:
         # Format years as 'YYYY'
@@ -108,30 +90,6 @@ class Plotter:
                     selected_files.append(file)
         return sorted(selected_files)
     
-    @staticmethod
-    def unpickle(file):
-        print(file)
-        with gzip.open(file, 'rb') as f:
-            df = pickle.load(f)
-        return df
-
-    # DataFrame manipulation methods
-    @staticmethod
-    def check_df(datafile: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
-        # Ensure the dataframe is not empty
-        if df.empty:
-            print(f"DataFrame empty: {datafile}")      
-            return False     
-
-        # Check for the presence of all required columns 
-        if required_columns:
-            missing_columns = [col for col in required_columns if col not in df.columns]
-            if missing_columns:
-                print(f"Missing column(s) in DataFrame: {datafile}\n{', '.join(missing_columns)}")
-                return False
-        else:
-            return True
-
     def extract_by_cloud_phase_and_day_night(self, df: pd.DataFrame, conditions_dict: dict = None):
         """
         Function to extract subset of DataFrame based on conditions for Cloud Phase and Day Night Qualifier.

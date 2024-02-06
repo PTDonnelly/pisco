@@ -1,11 +1,11 @@
 import gzip
 import os
 import pandas as pd
-from typing import List
+from typing import List, Optional
 
 import pickle
 
-from pisco import Extractor, Plotter
+from pisco import Extractor
 
 class Processor:
     def __init__(self, ex: Extractor):
@@ -52,6 +52,13 @@ class Processor:
         self.df_l2 = pd.read_csv(self.datafile_l2)
         return
     
+    @staticmethod
+    def unpickle(file):
+        print(file)
+        with gzip.open(file, 'rb') as f:
+            df = pickle.load(f)
+        return df
+
 
     def _check_headers(self):
         required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
@@ -81,7 +88,7 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
-    def _save_merged_products(self, reduced_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
+    def _save_merged_products(self, output_path: str, reduced_df: pd.DataFrame, delete_obr_files: bool = False) -> None:
         print(f"Saving compressed spectra to {output_path}")
         
         # Compress and save using gzip
@@ -92,7 +99,21 @@ class Processor:
             # Delete original csv files
             self._delete_intermediate_analysis_data()
 
-    
+    @staticmethod
+    def check_df(datafile: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
+        # Ensure the dataframe is not empty
+        if df.empty:
+            print(f"DataFrame empty: {datafile}")      
+            return False     
+
+        # Check for the presence of all required columns 
+        if required_columns:
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            if missing_columns:
+                print(f"Missing column(s) in DataFrame: {datafile}\n{', '.join(missing_columns)}")
+                return False
+        return True
+        
     def filter_observations(self, output_path, df, maximum_zenith_angle=5):
         """
         Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
@@ -106,12 +127,25 @@ class Processor:
         pd.DataFrame: Filtered and processed DataFrame.
         """
         required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
-        if Plotter.check_df(df, required_columns):
+        if self.check_df(df, required_columns):
             # If all required columns are present
-            # Drop rows with bad cloud phase measurement
+
+            # criteria_df = pd.concat(df['CloudPhase1'] != -1, df['CloudPhase1'] == 7, df['CloudPhase2'] == -1, df['CloudPhase3'] == -1, df['SatelliteZenithAngle'] < maximum_zenith_angle)
+            # # # Drop rows with bad cloud phase measurement
+            # bad_cloud_phase_measurement = df['CloudPhase1'] != -1
+            # missing_value = df['CloudPhase1'] == 7
+            # # Drop rows with multiple cloudphase measurements
+            # cloud_2_exists = df['CloudPhase2'] != -1
+            # cloud_3_exists = df['CloudPhase3'] != -1
+            # # Drop measurements beyond specified zenih angle (default = 5 degrees, considered to be nadir)
+            # off_nadir = df['SatelliteZenithAngle'] < maximum_zenith_angle
+
+
+            # fitered_df = df[bad_cloud_phase_measurement, missing_value, cloud_2_exists, cloud_3_exists, off_nadir]
+
             df = df[df['CloudPhase1'] != -1]
             # Drop rows with multiple cloudphase measurements
-            
+            df = df[df['CloudPhase2', 'CloudPhase3'] == -1]
             # Drop measurements beyond specified zenih angle (default = 5 degrees, considered to be nadir)
             df = df[df['SatelliteZenithAngle'] < maximum_zenith_angle]
 
@@ -150,17 +184,3 @@ class Processor:
         if check:
             # Save observations
             self._save_merged_products(output_path, filtered_df, delete_obr_files=True)
-    
-    
-    def merge_spectra_and_cloud_products(self):
-        """
-        Intended to be operated on a specific day, e.g. in the nested year-month-day loop of the default run_pisco.py
-        """
-        # Load IASI spectra and cloud products
-        self.load_data()      
-        
-        # Correlates measurements, keep matching locations and times of observation
-        self.correlate_measurements()
-        
-        # Merge DataFrames, dropping uncorrelated rows and unwated columns
-        self.reduce_fields()
