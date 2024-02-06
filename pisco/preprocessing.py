@@ -66,7 +66,7 @@ class Preprocessor:
         # Format of OBR fields (field_name, data_type)
         fields = [
             ('SatelliteIdentifier', 'uint32'),
-            ('Tb', 'bool'),
+            ('Tb', 'unit8'),
             ('Year', 'uint16'),
             ('Month', 'uint8'),
             ('Day', 'uint8'),
