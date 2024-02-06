@@ -185,7 +185,7 @@ class Preprocessor:
         dtype_dict = {field[0]: field[1] for field in combined_fields}
 
         pp.pprint(dtype_dict, sort_dicts=False)
-        input()
+        # input()
 
         # # Initialise an empty DataFrame to hold the processed chunks
         # processed_data = pd.DataFrame()
@@ -200,7 +200,8 @@ class Preprocessor:
         #     # Append the processed chunk to the DataFrame
         #     processed_data = pd.concat([processed_data, processed_chunk], ignore_index=True)
 
-        # Assign the concatenated processed data back to self.df
+        # Assign the concatenated processed data to class attribute self.df
+        print(self.intermediate_file)
         self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
         print(self.df.head())
         return
