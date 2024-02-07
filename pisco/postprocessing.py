@@ -115,8 +115,11 @@ class Postprocessor:
         # Retrieve the DataFrame contained in the file at the location filepath
         self.df = Postprocessor._get_dataframe(self.filepath)
 
+        # Check if DataFrame contains data and required columns are present
         required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
-        if not Processor.check_df(self.filepath, self.df, required_columns):
+        df_good = Processor.check_df(self.filepath, self.df, required_columns)
+        
+        if not df_good:
             # Report if Dataframe is missing values or columns
             return False
         else:
