@@ -2,7 +2,6 @@ import gzip
 import os
 import pandas as pd
 from typing import List, Optional
-import warnings
 
 import pickle
 
@@ -96,14 +95,14 @@ class Processor:
     def check_df(filepath: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
-            warnings.warn(f"DataFrame empty: {filepath}")      
+            print(f"DataFrame empty: {filepath}")      
             return False     
 
         # Check for the presence of all required columns 
         if required_columns:
             missing_columns = [col for col in required_columns if col not in df.columns]
             if missing_columns:
-                warnings.warn(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
+                print(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
         print(f"DataFrame processed: {filepath}")
         return True
