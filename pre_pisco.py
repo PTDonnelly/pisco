@@ -14,7 +14,7 @@ def generate_slurm_script(metop, year, month, day, config_file):
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
 #SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem={mem}GB
 
