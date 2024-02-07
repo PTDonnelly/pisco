@@ -5,6 +5,7 @@ import re
 import pandas as pd
 from collections import defaultdict
 from typing import List, Tuple, Dict, Optional
+import warnings
 
 from pisco import Processor
 
@@ -162,7 +163,11 @@ class Postprocessor:
         # Integrate the radiance over the wavelength for each measurement
         olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
 
-        return np.sum(olr_integrals)
+        # Check if there are any NaNs in olr_integrals and report it
+        if np.isnan(olr_integrals).any():
+            warnings.warn("NaN values found in OLR integrals. These will be ignored in the mean calculation.")
+
+        return np.nanmean(olr_integrals)
 
 
     def get_outgoing_longwave_radiation(self):
