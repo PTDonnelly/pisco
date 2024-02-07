@@ -4,7 +4,7 @@ from pisco import Extractor
 
 def generate_slurm_script(metop, year, month, day):
     # Memory request (in GB, used later for optimal file reading)
-    mem = 4
+    mem = 8
     
     # Format date integers to date strings
     year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
