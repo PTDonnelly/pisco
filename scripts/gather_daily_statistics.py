@@ -31,7 +31,7 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
         else:
             Postprocessor.append_bad_values(target_variables, data_dict)
 
-        date_to_append = postprocessor.df['Datetime'].dt.date.iloc[0] if is_df_prepared else postprocessor.extract_date_from_filepath()
+        date_to_append = postprocessor.df['Datetime'].dt.date.iloc[0] if is_df_prepared else Postprocessor.extract_date_from_filepath(filepath)
         dates.append(date_to_append)
 
     Postprocessor.save_results(data_dict, dates, datapath)
@@ -53,7 +53,7 @@ def main():
     target_variables=['OLR', 'Ice Fraction']
 
     # Find and sort data files
-    files_by_date = Postprocessor.organise_files_by_date()
+    files_by_date = Postprocessor.organise_files_by_date(datapath)
     filepaths = Postprocessor.select_files(target_range, files_by_date)
 
     # Plot data

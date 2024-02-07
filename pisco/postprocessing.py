@@ -3,7 +3,7 @@ import datetime
 import os
 import re
 import pandas as pd
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 from pisco import Processor
 
@@ -11,8 +11,9 @@ class Postprocessor:
     def __init__(self, df: pd.DataFrame, filepath: str):
         self.df = df
         self.filepath = filepath
-  
-    def organise_files_by_date(self) -> Dict[Tuple]:
+    
+    @staticmethod
+    def organise_files_by_date(filepath) -> Dict[Tuple]:
         """
         Organises .pkl.gz files in the data directory by date.
 
@@ -24,7 +25,7 @@ class Postprocessor:
         """
         
         files_by_date = dict()
-        for root, dirs, files in os.walk(self.filepath):
+        for root, dirs, files in os.walk(filepath):
             for file in files:
                 if ".pkl.gz" in file:
                     # Split the root directory path and get year, month and day
@@ -72,8 +73,8 @@ class Postprocessor:
                     selected_files.append(file)
         return sorted(selected_files)
     
-
-    def extract_date_from_filepath(self):
+    @staticmethod
+    def extract_date_from_filepath(filepath: str) -> Optional[object]:
         """
         Extracts the date from a file path using a regular expression.
 
@@ -85,7 +86,7 @@ class Postprocessor:
         Raises:
         - ValueError: If the date is not found in the file path.
         """
-        normalised_filepath = os.path.normpath(self.filepath)
+        normalised_filepath = os.path.normpath(filepath)
         date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
         match = re.search(date_pattern, normalised_filepath)
 
@@ -93,7 +94,7 @@ class Postprocessor:
             year, month, day = map(int, match.groups())
             return datetime.date(year, month, day)
         else:
-            raise ValueError(f"Date not found in file path: {self.filepath}")
+            raise ValueError(f"Date not found in file path: {filepath}")
 
 
     def prepare_dataframe(self):
