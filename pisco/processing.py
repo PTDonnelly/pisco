@@ -119,9 +119,11 @@ class Processor:
         Returns:
         pd.DataFrame: Filtered and processed DataFrame.
         """
-        # Check if all required columns are present in the DataFrame
+        # Check if DataFrame contains data and required columns are present
         required_columns = ['CloudPhase1', 'CloudPhase2', 'CloudPhase3', 'SatelliteZenithAngle']
-        if not Processor.check_df(self.output_path, df, required_columns):
+        df_good = Processor.check_df(self.output_path, df, required_columns)
+        
+        if not df_good:
             # If Dataframe is missing values or columns, return empty dataframe
             return pd.DataFrame()
         else:

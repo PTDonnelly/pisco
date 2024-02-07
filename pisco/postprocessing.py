@@ -151,27 +151,24 @@ class Postprocessor:
         Returns:
         - float: The average calculated OLR value.
         """
-        # Retrieve IASI spectral grid and radiance from the DataFrame
-        wavenumbers = self.get_dataframe_spectral_grid()
-        radiance_df = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]]
+        # Check DataFrame contains data
+        df_good = Processor.check_df(self.filepath, sub_df)
         
-        print(np.shape(radiance_df))
+        if not df_good:
+            return -1
+        else:
+            # Retrieve IASI spectral grid and radiance from the DataFrame
+            wavenumbers = self.get_dataframe_spectral_grid()
+            radiance_df = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]]
+            # Convert wavenumbers to wavelengths in meters
+            wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
+            # Convert radiance to SI units: W/m^2/sr/m
+            radiance_si = radiance_df.values * 1e-3  # Convert from mW to W
+            
+            # Integrate the radiance over the wavelength for each measurement
+            olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
 
-        # Convert wavenumbers to wavelengths in meters
-        wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
-        # Convert radiance to SI units: W/m^2/sr/m
-        radiance_si = radiance_df.values * 1e-3  # Convert from mW to W
-        
-        # Integrate the radiance over the wavelength for each measurement
-        olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
-
-        print(np.shape(radiance_si), np.shape(olr_integrals))
-        
-        # Check if there are any NaNs in olr_integrals and report it
-        if np.isnan(olr_integrals).any():
-            warnings.warn("NaN values found in OLR integrals. These will be ignored in the mean calculation.")
-
-        return np.nanmean(olr_integrals)
+            return np.mean(olr_integrals)
 
 
     def get_outgoing_longwave_radiation(self):
