@@ -161,6 +161,8 @@ class Postprocessor:
         
         # Integrate the radiance over the wavelength and sum integral elements
         olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
+
+        print(np.shape(olr_integrals), np.shape(np.sum(olr_integrals)))
         return np.sum(olr_integrals)
 
 
