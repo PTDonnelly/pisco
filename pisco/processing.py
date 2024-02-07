@@ -104,6 +104,7 @@ class Processor:
             if missing_columns:
                 print(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
+        print(f"DataFrame processed: {filepath}")
         return True
         
     def filter_observations(self, df, maximum_zenith_angle=5):
