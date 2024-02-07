@@ -24,7 +24,7 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
 
         # Prepare DataFrame for analysis
         is_df_prepared = post.prepare_dataframe()
-        
+
         if is_df_prepared:
             post.process_target_variables(target_variables, data_dict)
         else:
@@ -59,9 +59,12 @@ def main():
     gather_daily_statistics(datapath, filepaths, target_variables)
 
 if __name__ == "__main__":
-    lp = LineProfiler()
-    lp_wrapper = lp(main)
-    lp_wrapper()
-    lp.print_stats()
+    # lp = LineProfiler()
+    # lp_wrapper = lp(main())
+    # lp_wrapper()
+    # lp.print_stats()
 
-    # main()
+    lp = LineProfiler()
+    lp.add_function(main)  # Add the function you want to profile
+    lp.run('main()')  # Execute the function within the LineProfiler context
+    lp.print_stats()  # Print the profiling results
