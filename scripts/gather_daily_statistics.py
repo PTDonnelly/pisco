@@ -12,8 +12,8 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
     - target_variables (list): Variables to process, e.g., ['OLR', 'Ice Fraction'].
     """
 
-    # Initialise a dictionary to store the data for each target variable
-    data_dict = {var: [] for var in target_variables}
+    # Initialise a dictionary to store the data for each target variable (default is empty, to store data dynamically based on desired column headers)
+    data_dict = {}
     dates = []
 
     for filepath in filepaths:
@@ -37,8 +37,8 @@ def main():
     """
     """
     # The path to the directory that contains the data files
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb_window/"
+    datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
     target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
@@ -47,13 +47,13 @@ def main():
     target_range = (target_years, target_months, target_days)
     
     # Define second-order target variables to calculate and plot
-    target_variables=['OLR', 'Ice Fraction']
+    target_variables=['OLR', 'Phase Fraction']
 
     # Find and sort data files
     files_by_date = Postprocessor.organise_files_by_date(datapath)
     filepaths = Postprocessor.select_files(target_range, files_by_date)
 
-    # Plot data
+    # Process data files and collect time series for each target variable 
     gather_daily_statistics(datapath, filepaths, target_variables)
 
 if __name__ == "__main__":

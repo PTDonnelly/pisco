@@ -12,6 +12,7 @@ from pisco import Processor
 class Postprocessor:
     def __init__(self, filepath: str):
         self.filepath = filepath
+        self.cloud_phase_names = {0: "Unknown", 1: "Water", 2: "Ice", 3: "Mixed", 4: "Clear", 5: "Reserved", 6: "Reserved"}
         self.df: pd.DataFrame = None
     
     @staticmethod
@@ -179,33 +180,33 @@ class Postprocessor:
         Returns:
         - dict: Dictionary with OLR values for each CloudPhase condition.
         """
-        cloud_phase_names = {0: "Unknown", 1: "Water", 2: "Ice", 3: "Mixed", 4: "Clear", 5: "Reserved", 6: "Reserved"}
         olr_values = {}
-
-        for phase, name in cloud_phase_names.items():
+        for phase, name in self.cloud_phase_names.items():
             olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == phase])
             olr_values[name] = olr
 
         return olr_values
     
 
-    def get_ice_fraction(self):
+    def get_phase_fraction(self):
         """
-        Calculates the fraction of icy cloud measurements in the DataFrame.
+        Calculates the fraction of measurements for each CloudPhase in the DataFrame.
 
         Returns:
-        - float: The fraction of measurements flagged as icy.
+        - dict: A dictionary with CloudPhase names as keys and their corresponding fractions as values.
         """
         # Pivot the DataFrame to get the individual counts of each Cloud Phase per Datetime
         pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
 
         # Calculate total number of measurements for the entire day
-        total_measurements = pivot_df.sum(axis=1).values
-        
-        # Calculate proportion of measurements for the entire day flagged as "icy"
-        ice_count = pivot_df.get(2, 0).sum()
+        total_measurements = pivot_df.sum(axis=1).sum()
 
-        return np.round(ice_count / total_measurements, 3) if total_measurements.sum() > 0 else 0
+        phase_fractions = {}
+        for phase, name in self.cloud_phase_names.items():
+            phase_count = pivot_df.get(phase, 0).sum()
+            phase_fractions[name] = np.round(phase_count / total_measurements, 3) if total_measurements > 0 else 0
+
+        return phase_fractions
 
 
     def process_target_variables(self, target_variables, data_dict):
@@ -221,9 +222,12 @@ class Postprocessor:
                 olr_values = self.get_outgoing_longwave_radiation()
                 for name, value in olr_values.items():
                     data_dict[f'{var}_{name}'].append(value)
-            elif var == 'Ice Fraction':
-                result = self.get_ice_fraction()
-                data_dict[var].append(result)
+            
+            elif var == 'Phase Fraction':
+                phase_fractions = self.get_phase_fraction()
+                for name, fraction in phase_fractions.items():
+                    data_dict[f'{var}_{name}'].append(fraction)
+            
             else:
                 print(f"Target variable not recognised: {var}")
                 continue
