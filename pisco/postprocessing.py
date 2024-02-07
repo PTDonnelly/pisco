@@ -4,15 +4,16 @@ import os
 import re
 import pandas as pd
 from collections import defaultdict
-from typing import List, Tuple, Dict, Optional
-import warnings
+from typing import List, Tuple, Dict, Union
+
+import pprint as pp
 
 from pisco import Processor
 
 class Postprocessor:
     def __init__(self, filepath: str):
         self.filepath = filepath
-        self.cloud_phase_names = {0: "Unknown", 1: "Water", 2: "Ice", 3: "Mixed", 4: "Clear", 5: "Reserved", 6: "Reserved"}
+        self.cloud_phase_names = {0: "Unknown", 1: "Water", 2: "Ice", 3: "Mixed", 4: "Clear", 5: "Reserved_1", 6: "Reserved_2"}
         self.df: pd.DataFrame = None
     
     @staticmethod
@@ -78,7 +79,7 @@ class Postprocessor:
         return sorted(selected_files)
     
     @staticmethod
-    def extract_date_from_filepath(filepath: str) -> Optional[object]:
+    def extract_date_from_filepath(filepath: str) -> object:
         """
         Extracts the date from a file path using a regular expression.
 
@@ -101,10 +102,11 @@ class Postprocessor:
             raise ValueError(f"Date not found in file path: {filepath}")
 
     @staticmethod
-    def _get_dataframe(filepath):
+    def _get_dataframe(filepath) -> pd.DataFrame:
         return Processor.unpickle(filepath)
 
-    def prepare_dataframe(self):
+
+    def prepare_dataframe(self) -> bool:
         """
         Prepares the DataFrame for analysis by filtering based on specified criteria.
 
@@ -147,8 +149,13 @@ class Postprocessor:
         extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
         return extracted_wavenumbers
 
+    @staticmethod
+    def set_as_invalid():
+        # Return a dictionary with a specific structure or flag to indicate invalid data
+        return {"invalid": True}
 
-    def calculate_olr_from_spectrum(self, sub_df: pd.DataFrame):
+
+    def calculate_olr_from_spectrum(self, sub_df: pd.DataFrame) -> Union[float, int]:
         """
         Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
 
@@ -170,17 +177,21 @@ class Postprocessor:
             # Integrate the radiance over the wavelength for each measurement
             olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
 
-            return np.mean(olr_integrals)
+            return np.float32(np.mean(olr_integrals))
 
 
-    def get_outgoing_longwave_radiation(self):
+
+    def get_outgoing_longwave_radiation(self) -> Dict[str, Union[float, int]]:
         """
         Calculates OLR values for all CloudPhase conditions from the DataFrame.
 
         Returns:
         - dict: Dictionary with OLR values for each CloudPhase condition.
         """
+        # Initialize an empty dictionary to store values.
         olr_values = {}
+
+        # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
             olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == phase])
             olr_values[name] = olr
@@ -188,35 +199,34 @@ class Postprocessor:
         return olr_values
     
 
-    def get_phase_fraction(self):
+    def get_phase_fraction(self) -> Dict[str, Union[float, int]]:
         """
         Calculates the fraction of measurements for each CloudPhase in the DataFrame.
 
         Returns:
         - dict: A dictionary with CloudPhase names as keys and their corresponding fractions as values.
         """
-        # Pivot the DataFrame to get the individual counts of each Cloud Phase per Datetime
+        # Pivot the DataFrame to get the individual counts of each Cloud Phase, and collapse Datetimesto single row
         pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
 
-        # Calculate total number of measurements for the entire day
+        # Calculate total number of measurements for the entire day (ensure total_measurements is a scalar by summing over the Series)
         total_measurements = pivot_df.sum(axis=1).sum()
 
+        # Initialize an empty dictionary to store values.
         phase_fractions = {}
+
+        # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
-            phase_count = pivot_df.get(phase, 0).sum()
-            phase_fractions[name] = np.round(phase_count / total_measurements, 3) if total_measurements > 0 else 0
+            # Check if the phase exists in the DataFrame and sum its values, or default to 0
+            phase_count = pivot_df[phase].sum() if phase in pivot_df.columns else 0
+            
+            # Set fraction to 0 if either total or count is 0, otherwise calculate the fraction
+            phase_fractions[name] = 0 if (total_measurements == 0) or (phase_count == 0) else np.round(phase_count / total_measurements, 3)
 
         return phase_fractions
     
-    def get_tests(self):
-        tests = {}
-        test_reference = {'A': 1, 'B': 2, 'C': 3}
-        for key, value in test_reference.items():
-            tests[key] = value
-        return tests
 
-
-    def process_target_variables(self, target_variables, data_dict):
+    def process_target_variables(self, target_variables, data_dict) -> None:
         """
         Processes each target variable and appends the results to the data dictionary.
 
@@ -226,28 +236,20 @@ class Postprocessor:
         """
         for var in target_variables:
             if var == 'OLR':
-                olr_values = self.get_outgoing_longwave_radiation()
-                for name, value in olr_values.items():
-                    data_dict[f'{var}_{name}'].append(value)
-            
-            if var == 'Phase Fraction':
-                phase_fractions = self.get_phase_fraction()
-                for name, fraction in phase_fractions.items():
-                    data_dict[f'{var}_{name}'].append(fraction)
+                values = self.get_outgoing_longwave_radiation()
+            elif var == 'Phase Fraction':
+                values = self.get_phase_fraction()
+            else:
+                print(f"Target variable not recognised: {var}")
+                values = Postprocessor.set_as_invalid()
 
-            if var == 'Test':
-                tests = self.get_test_values()
-                for name, value in tests.items():
-                    data_dict[f'{var}_{name}'].append(value)
-            
-            print(data_dict.keys)
-            # else:
-            #     print(f"Target variable not recognised: {var}")
-            #     continue
+            for key, value in values.items():
+                data_dict[var][key].append(value)
 
+        return None
 
     @staticmethod
-    def append_bad_values(target_variables, data_dict):
+    def append_bad_values(target_variables, data_dict) -> None:
         """
         Appends bad values for each target variable in the data dictionary.
 
@@ -258,25 +260,33 @@ class Postprocessor:
         for var in target_variables:
             data_dict[var].append([-1, -1])  # Assuming [-1, -1] represents bad or missing data
 
+        return None
        
     @staticmethod
-    def save_results(data_dict, dates, datapath):
+    def save_results(data_dict, dates, datapath) -> None:
         """
         Saves the processed results into CSV files.
 
         Parameters:
-        - data_dict (dict): Dictionary containing the results for each target variable.
+        - data_dict (defaultdict): Nested dictionary containing the results for each target variable.
         - dates (list): List of dates corresponding to each entry in the data dictionary.
         - datapath (str): Path to save the CSV files.
         """
         for var, results in data_dict.items():
+            # Check if variable dictionary contains invalid values
+            if ("invalid" in results) and results["invalid"]:
+                # Skip saving for unrecognised variables
+                continue
+            
+            # Store dates to first column of DataFrame
             df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates)})
             
-            # Expand each result (which is a dictionary) into separate columns
-            for key, measurements in results.items():
-                # Create a column for each measurement, appending the phase name to distinguish them
-                df_to_save[f'{var}_{key}'] = measurements
+            # For each key in the inner dictionary, create a new column in the DataFrame
+            for key, value in results.items():
+                df_to_save[key] = value
             
-
+            # Build filename and save to CSV
             filename = f"daily_{var.lower().replace(' ', '_')}.csv"
             df_to_save.to_csv(os.path.join(datapath, filename), index=False)
+
+        return None

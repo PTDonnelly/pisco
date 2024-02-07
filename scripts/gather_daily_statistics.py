@@ -13,10 +13,10 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
     - target_variables (list): Variables to process, e.g., ['OLR', 'Ice Fraction'].
     """
 
-    # Initialise a dictionary to store the data for each target variable
-    # Default is empty, to store data dynamically based on desired column headers
-    # Use defaultdict(list) to automatically handle missing keys (if key doesn't exist, creates it and places empty list as value)
-    data_dict = defaultdict(list)
+    # Initialise a defaultdict of defaultdicts, stores data dynamically based on desired column headers, automatically handles missing keys
+    data_dict = defaultdict(lambda: defaultdict(list))
+    
+    # Create empty list to store datetime objects
     dates = []
 
     for filepath in filepaths:
