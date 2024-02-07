@@ -36,10 +36,6 @@ class Postprocessor:
                     # Append the file path to the corresponding date
                     files_by_date[(year, month, day)].append(os.path.join(root, file))
 
-
-
-        print(files_by_date)
-        input()
         return files_by_date  # Convert defaultdict back to dict if necessary
 
     @staticmethod
@@ -51,7 +47,7 @@ class Postprocessor:
         return (formatted_years, formatted_months, formatted_days)
     
 
-    def select_files(target_range: Tuple[List], files_by_date: Dict[Tuple]) -> List[str]:
+    def select_files(target_range: Tuple[List], files_by_date: Dict[Tuple[str, str, str], List[str]]) -> List[str]:
         """
         Selects files from the dictionary created by organise_files_by_date method
         based on a target year, month, days and file name part.
