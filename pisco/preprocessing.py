@@ -321,12 +321,14 @@ class Preprocessor:
         """  
         # Split the intermediate file path into the root and extension, and give new extension
         file_root, _ = os.path.splitext(self.intermediate_file)
-        outfile = f"{file_root}.pkl.gz"
+        outfile = f"{file_root}"
         print(f"\nSaving DataFrame to: {outfile}")
 
         # Compress and save using gzip
-        with gzip.open(outfile, 'wb') as f:
+        with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:
             pickle.dump(self.df, f)
+
+        self.df.to_csv(f"{outfile}.pkl.gz", sep='\t')
         
         # Delete intermediate OBR output file
         if delete_tempfiles:

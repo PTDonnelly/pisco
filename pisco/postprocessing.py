@@ -145,10 +145,10 @@ class Postprocessor:
 
     def calculate_olr_from_spectrum(self, sub_df):
         """
-        Calculates the Outgoing Longwave Radiation (OLR) from spectral data.
+        Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
 
         Returns:
-        - float: The calculated OLR value.
+        - float: The average calculated OLR value.
         """
         # Retrieve IASI spectral grid and radiance from the DataFrame
         wavenumbers = self.get_dataframe_spectral_grid()
@@ -159,12 +159,10 @@ class Postprocessor:
         # Convert radiance to SI units: W/m^2/sr/m
         radiance_si = radiance_df.values * 1e-3  # Convert from mW to W
         
-        # Integrate the radiance over the wavelength and sum integral elements
+        # Integrate the radiance over the wavelength for each measurement
         olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
-
-        print(np.shape(sub_df), np.shape(olr_integrals), np.sum(olr_integrals))
-        exit()
-        return np.sum(olr_integrals)
+        
+        return np.mean(olr_integrals)
 
 
     def get_outgoing_longwave_radiation(self):
