@@ -14,7 +14,7 @@ class Postprocessor:
         self.df: pd.DataFrame = None
     
     @staticmethod
-    def organise_files_by_date(datapath) -> Dict[Tuple[str, str, str]]:
+    def organise_files_by_date(datapath) -> Dict[Tuple[str, str, str], List[str]]:
         """
         Organises .pkl.gz files in the data directory by date.
 
@@ -22,13 +22,13 @@ class Postprocessor:
         The result is stored in self.files_by_date, which is a dictionary
         mapping from (year, month, day) tuples to lists of file paths.
 
-        This creates a dictionary with keys as dates (year, month, day) and values as lists of files.
+        This creates a dictionary with keys as tuples of dates (year, month, day) and values as lists of strings of files.
         """
         
         files_by_date = defaultdict(list)  # Initializes an empty list for new keys automatically
         for root, dirs, files in os.walk(datapath):
             for file in files:
-                if ".pkl.gz" in file:
+                if file.endswith(".pkl.gz"):
                     # Split the root directory path and get year, month and day
                     dir_structure = os.path.normpath(root).split(os.sep)
                     year, month, day = dir_structure[-3], dir_structure[-2], dir_structure[-1]
