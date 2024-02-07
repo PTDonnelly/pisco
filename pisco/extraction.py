@@ -55,8 +55,6 @@ class Extractor:
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
             return f"/bdd/{self.config.satellite_identifier}/{self.data_level}/iasi/"
-        # elif  (self.data_level == 'l2'):
-        #     return f"/bdd/IASI/L2/"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -71,18 +69,18 @@ class Extractor:
         self.datapath_out = self._get_datapath_out()
 
 
-    def create_intermediate_filepath(self) -> None:
+    def create_intermediate_filepath(self) -> str:
         """
-        Creates the directory to save the output files, based on the input file name and time.
+        Creates the directory to save the output files.
         
         Returns:
             intermediate_file (str): the full path to the intermediate file produced by IASI extraction script.
         """
         if self.data_level == 'l1c':
             # Get the output file name from the input file name
-            self.datafile_out = f"extracted_spectra.{self.config.output_format}"
+            self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
-            self.datafile_out = f"cloud_products.{self.config.output_format}"
+            self.datafile_out = f"cloud_products.txt"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -113,7 +111,7 @@ class Extractor:
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-c {self.channels[0]}-{self.channels[-1]}",  # spectral channels
                 f"-qlt {self.config.quality_flags}",
-                f"-of {self.config.output_format}"  # output file format
+                f"-of txt"  # output file format
             ]
         elif (self.data_level == 'l2'):
             list_of_parameters = [
@@ -124,7 +122,7 @@ class Extractor:
                 f"-milo {self.config.longitude_range[0]} ", # min_longitude
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
                 f"-t2 {self.config.products}", # l2 products
-                f"-of {self.config.output_format}"  # output file format
+                f"-of txt"  # output file format
             ]
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
