@@ -154,10 +154,8 @@ class Postprocessor:
         Returns:
         - float: The average calculated OLR value.
         """
-        # Check DataFrame contains data
-        df_good = Processor.check_df(self.filepath, sub_df)
-        
-        if not df_good:
+        # Check that sub-DataFrame contains data
+        if sub_df.empty:
             return -1
         else:
             # Retrieve IASI spectral grid and radiance from the DataFrame
