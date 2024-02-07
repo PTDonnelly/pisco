@@ -362,37 +362,6 @@ def plot_spectral_distributon(plotter: object):
     plotter.png_to_gif(f"{plotter.datapath}/{filename}.gif", png_files)
 
 
-def gather_daily_statistics(datapath: str, filepaths: List[str], target_variables: List[str]):
-    """
-    Processes and saves daily statistics for specified target variables.
-
-    Parameters:
-    - target_variables (list): Variables to process, e.g., ['OLR', 'Ice Fraction'].
-    """
-
-    # Initialise a dictionary to store the data for each target variable
-    data_dict = {var: [] for var in target_variables}
-    dates = []
-
-    for filepath in filepaths:
-        df = Processor.unpickle(filepath)
-
-        # Initialise a Postprocessor
-        postprocessor = Postprocessor(df, filepath)
-        
-        # Prepare DataFrame for analysis
-        is_df_prepared = postprocessor.prepare_dataframe()
-        if is_df_prepared:
-            postprocessor.process_target_variables(target_variables, data_dict)
-        else:
-            Postprocessor.append_bad_values(target_variables, data_dict)
-
-        date_to_append = postprocessor.df['Datetime'].dt.date.iloc[0] if is_df_prepared else postprocessor.extract_date_from_filepath()
-        dates.append(date_to_append)
-
-    Postprocessor.save_results(data_dict, dates, datapath)
-
-
 def load_data(file_path, var):
     """
     Loads and sorts data from a .npy file.
@@ -540,26 +509,26 @@ def plot_pisco():
     datapath = "/data/pdonnelly/iasi/metopb_window/"
 
     # Define temporal range to plot
-    target_year = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
-    target_month = [3, 4, 5]
+    target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_months = [3, 4, 5]
     target_days = [day for day in range(1, 32)] # Search all days in each month
+    target_range = (target_years, target_months, target_days)
+
+    # Find and sort data files
+    files_by_date = Postprocessor.organise_files_by_date()
+    filepaths = Postprocessor.select_files(target_range, files_by_date)
 
     # Define plotting parameters
     fontsize = 10
     dpi = 300
-
+    
     # Instantiate the Plotter and organise files
-    plotter = Plotter(datapath, target_year, target_month, target_days, fontsize, dpi)
+    plotter = Plotter(datapath, fontsize, dpi)
     
     # Define second-order target variables to calculate and plot
     target_variables=['OLR', 'Ice Fraction']
 
-    # Find and sort data files
-    plotter.organise_files_by_date()
-    filepaths = plotter.select_files()
-
     # Plot data
-    gather_daily_statistics(plotter.datapath, filepaths, target_variables)
     plot_statistical_timeseries(plotter, target_variables, plot_type='line')
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ class Plotter:
     """
     Class to contain useful plotting functions for the IASI dataset
     """
-    def __init__(self, datapath: str, target_years: list, target_months: list, target_days: list, fontsize: float, dpi: int):
+    def __init__(self, datapath: str, fontsize: float, dpi: int):
         """
         Initialises the Plotter class with a given data path.
 
@@ -22,74 +22,12 @@ class Plotter:
             datapath (str): The path to the data directory.
         """
         self.datapath = datapath
-        self.target_years = target_years
-        self.target_months = target_months
-        self.target_days = target_days
         self.fontsize = fontsize
         self.dpi = dpi
-        self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
         self.day_night_dictionary = {"night": 0, "day": 1, "twilight": 2}
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
 
 
-    # File I/O methods
-    def _format_filepath_from_target_date_range(self) -> None:
-        # Format years as 'YYYY'
-        self.target_years = [str(year) for year in self.target_years]
-        # Format months as 'mm' with leading zero if necessary
-        self.target_months = [f"{month:02d}" for month in self.target_months]
-        # Format days as 'dd' with leading zero if necessary
-        self.target_days = [f"{day:02d}" for day in self.target_days]
-        return
-    
-    def organise_files_by_date(self) -> None:
-        """
-        Organises .pkl.gz files in the data directory by date.
-
-        The date is inferred from the directory structure: year/month/day.
-        The result is stored in self.files_by_date, which is a dictionary
-        mapping from (year, month, day) tuples to lists of file paths.
-
-        This creates a dictionary with keys as dates (year, month, day) and values as lists of files.
-        """
-        self._format_filepath_from_target_date_range()
-
-        for root, dirs, files in os.walk(self.datapath):
-            for file in files:
-                if ".pkl.gz" in file:
-                    # Split the root directory path and get year, month and day
-                    dir_structure = os.path.normpath(root).split(os.sep)
-                    year, month, day = dir_structure[-3], dir_structure[-2], dir_structure[-1]
-
-                    # Append the file path to the corresponding date
-                    self.files_by_date[(year, month, day)].append(os.path.join(root, file))
-    
-    def select_files(self) -> List[str]:
-        """
-        Selects files from the dictionary created by organise_files_by_date method
-        based on a target year, month, days and file name part.
-
-        Args:
-            target_years (str): The target year as a string.
-            target_months (str): The target month as a string.
-            target_days (List[str]): The target days as a list of strings.
-            target_file_part (Optional[str]): The target part of the file name to select (defaults to None, the file containing all measurements)
-
-        Returns:
-            List[str]: List of the file paths that matched the conditions.
-        """
-        selected_files = []
-
-        # Iterate through dictionary keys
-        for (year, month, day), files in self.files_by_date.items():
-            # Check if the year, month and day match your conditions
-            if (year in self.target_years) and (month in self.target_months) and (day in self.target_days):
-                # Iterate through the files for this date
-                for file in files:
-                    # Select file containing all measurements
-                    selected_files.append(file)
-        return sorted(selected_files)
-    
     def extract_by_cloud_phase_and_day_night(self, df: pd.DataFrame, conditions_dict: dict = None):
         """
         Function to extract subset of DataFrame based on conditions for Cloud Phase and Day Night Qualifier.

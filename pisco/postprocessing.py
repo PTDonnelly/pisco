@@ -1,9 +1,9 @@
 import numpy as np
 import datetime
-import os.path as ospath
+import os
 import re
 import pandas as pd
-from typing import List
+from typing import List, Tuple, Dict
 
 from pisco import Processor
 
@@ -11,6 +11,90 @@ class Postprocessor:
     def __init__(self, df: pd.DataFrame, filepath: str):
         self.df = df
         self.filepath = filepath
+  
+    def organise_files_by_date(self) -> Dict[Tuple]:
+        """
+        Organises .pkl.gz files in the data directory by date.
+
+        The date is inferred from the directory structure: year/month/day.
+        The result is stored in self.files_by_date, which is a dictionary
+        mapping from (year, month, day) tuples to lists of file paths.
+
+        This creates a dictionary with keys as dates (year, month, day) and values as lists of files.
+        """
+        
+        files_by_date = dict()
+        for root, dirs, files in os.walk(self.filepath):
+            for file in files:
+                if ".pkl.gz" in file:
+                    # Split the root directory path and get year, month and day
+                    dir_structure = os.path.normpath(root).split(os.sep)
+                    year, month, day = dir_structure[-3], dir_structure[-2], dir_structure[-1]
+
+                    # Append the file path to the corresponding date
+                    files_by_date[(year, month, day)].append(os.path.join(root, file))
+        return files_by_date
+
+    @staticmethod
+    def _format_target_date_range(target_range: Tuple[List]) -> Tuple[List]:
+        # Format each element as a string to make YYYY-mm-dd
+        formatted_years = [f"{year}" for year in target_range[0]]  # Year formatting remains the same
+        formatted_months = [f"{month:02d}" for month in target_range[1]]
+        formatted_days = [f"{day:02d}" for day in target_range[2]]
+        return (formatted_years, formatted_months, formatted_days)
+    
+
+    def select_files(target_range: Tuple[List], files_by_date: Dict[Tuple]) -> List[str]:
+        """
+        Selects files from the dictionary created by organise_files_by_date method
+        based on a target year, month, days and file name part.
+
+        Args:
+            target_range Tuple[List]: The target date range
+            target_months (str): The target month as a string.
+
+        Returns:
+            List[str]: List of the file paths that matched the conditions.
+        """
+        # Format the date range as YYYY-mm-dd
+        years, months, days = Postprocessor._format_target_date_range(target_range)
+
+        # Create empty list to store filepaths
+        selected_files = []
+
+        # Iterate through dictionary keys
+        for (year, month, day), files in files_by_date.items():
+            # Check if the year, month and day match your conditions
+            if (year in years) and (month in months) and (day in days):
+                # Iterate through the files for this date
+                for file in files:
+                    # Select file containing all measurements
+                    selected_files.append(file)
+        return sorted(selected_files)
+    
+
+    def extract_date_from_filepath(self):
+        """
+        Extracts the date from a file path using a regular expression.
+
+        The function assumes the file path contains a date in 'YYYY/MM/DD' format.
+    
+        Returns:
+        - datetime.date: The extracted date.
+
+        Raises:
+        - ValueError: If the date is not found in the file path.
+        """
+        normalised_filepath = os.path.normpath(self.filepath)
+        date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
+        match = re.search(date_pattern, normalised_filepath)
+
+        if match:
+            year, month, day = map(int, match.groups())
+            return datetime.date(year, month, day)
+        else:
+            raise ValueError(f"Date not found in file path: {self.filepath}")
+
 
     def prepare_dataframe(self):
         """
@@ -30,12 +114,14 @@ class Postprocessor:
             self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
             return True
 
+
     @staticmethod
     def _get_iasi_spectral_grid():
         spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
         channel_ids = spectral_grid[:, 0]
         wavenumber_grid = spectral_grid[:, 1]
         return channel_ids, wavenumber_grid
+
 
     def get_dataframe_spectral_grid(self) -> List[float]:
         # Get the full IASI spectral grid
@@ -46,6 +132,7 @@ class Postprocessor:
         # Extract the wavenumbers corresponding to the channel positions
         extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
         return extracted_wavenumbers
+
 
     def calculate_olr_from_spectrum(self, sub_df):
         """
@@ -67,6 +154,7 @@ class Postprocessor:
         olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
         return np.sum(olr_integrals)
 
+
     def get_outgoing_longwave_radiation(self):
         """
         Calculates OLR values for icy and clear-sky conditions from the DataFrame.
@@ -79,6 +167,7 @@ class Postprocessor:
         
         return clear_olr, icy_olr
     
+
     def get_ice_fraction(self):
         """
         Calculates the fraction of icy cloud measurements in the DataFrame.
@@ -96,6 +185,7 @@ class Postprocessor:
         ice_count = pivot_df.get(2, 0).sum()
 
         return np.round(ice_count / total_measurements, 3) if total_measurements.sum() > 0 else 0
+
 
     def process_target_variables(self, target_variables, data_dict):
         """
@@ -116,6 +206,7 @@ class Postprocessor:
             
             data_dict[var].append(result)
 
+
     @staticmethod
     def append_bad_values(target_variables, data_dict):
         """
@@ -128,29 +219,7 @@ class Postprocessor:
         for var in target_variables:
             data_dict[var].append([-1, -1])  # Assuming [-1, -1] represents bad or missing data
 
-
-    def extract_date_from_filepath(self):
-        """
-        Extracts the date from a file path using a regular expression.
-
-        The function assumes the file path contains a date in 'YYYY/MM/DD' format.
-    
-        Returns:
-        - datetime.date: The extracted date.
-
-        Raises:
-        - ValueError: If the date is not found in the file path.
-        """
-        normalised_filepath = ospath.normpath(self.filepath)
-        date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
-        match = re.search(date_pattern, normalised_filepath)
-
-        if match:
-            year, month, day = map(int, match.groups())
-            return datetime.date(year, month, day)
-        else:
-            raise ValueError(f"Date not found in file path: {self.filepath}")
-        
+       
     @staticmethod
     def save_results(data_dict, dates, datapath):
         """
@@ -171,4 +240,4 @@ class Postprocessor:
                 df_to_save[f'{var} Clear-Sky'] = clear_sky
                 df_to_save[f'{var} Icy'] = icy
 
-            df_to_save.to_csv(ospath.join(datapath, f"daily_{var.lower().replace(' ', '_')}.csv"), index=False)
+            df_to_save.to_csv(os.path.join(datapath, f"daily_{var.lower().replace(' ', '_')}.csv"), index=False)
