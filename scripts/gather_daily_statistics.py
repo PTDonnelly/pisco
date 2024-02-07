@@ -1,8 +1,6 @@
 # Standard library imports
 from typing import List
 
-import line_profiler as LineProfiler
-
 # Local application/library specific imports
 from pisco import Plotter, Processor, Postprocessor
 
@@ -59,12 +57,4 @@ def main():
     gather_daily_statistics(datapath, filepaths, target_variables)
 
 if __name__ == "__main__":
-    # lp = LineProfiler()
-    # lp_wrapper = lp(main())
-    # lp_wrapper()
-    # lp.print_stats()
-
-    lp = LineProfiler()
-    lp.add_function(main)  # Add the function you want to profile
-    lp.run('main()')  # Execute the function within the LineProfiler context
-    lp.print_stats()  # Print the profiling results
+    main()
