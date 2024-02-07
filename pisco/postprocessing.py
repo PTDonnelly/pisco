@@ -161,8 +161,8 @@ class Postprocessor:
         
         # Integrate the radiance over the wavelength for each measurement
         olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
-        
-        return np.mean(olr_integrals)
+
+        return np.sum(olr_integrals)
 
 
     def get_outgoing_longwave_radiation(self):
