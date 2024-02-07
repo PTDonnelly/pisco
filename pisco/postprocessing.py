@@ -105,6 +105,7 @@ class Postprocessor:
         - target_variables (list): List of target variables to process.
         - data_dict (dict): Dictionary to store the results.
         """
+        print(self.filepath)
         for var in target_variables:
             if var == 'OLR':
                 result = self.get_outgoing_longwave_radiation()
