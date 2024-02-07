@@ -154,6 +154,8 @@ class Postprocessor:
         # Retrieve IASI spectral grid and radiance from the DataFrame
         wavenumbers = self.get_dataframe_spectral_grid()
         radiance_df = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]]
+        
+        print(np.shape(radiance_df))
 
         # Convert wavenumbers to wavelengths in meters
         wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
