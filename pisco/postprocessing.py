@@ -163,6 +163,8 @@ class Postprocessor:
         # Integrate the radiance over the wavelength for each measurement
         olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
 
+        print(np.shape(radiance_si), np.shape(olr_integrals))
+        
         # Check if there are any NaNs in olr_integrals and report it
         if np.isnan(olr_integrals).any():
             warnings.warn("NaN values found in OLR integrals. These will be ignored in the mean calculation.")
