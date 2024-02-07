@@ -3,17 +3,18 @@ import datetime
 import os
 import re
 import pandas as pd
+from collections import defaultdict
 from typing import List, Tuple, Dict, Optional
 
 from pisco import Processor
 
 class Postprocessor:
-    def __init__(self, df: pd.DataFrame, filepath: str):
-        self.df = df
+    def __init__(self, filepath: str):
         self.filepath = filepath
+        self.df: pd.DataFrame = None
     
     @staticmethod
-    def organise_files_by_date(filepath) -> Dict[Tuple]:
+    def organise_files_by_date(datapath) -> Dict[Tuple[str, str, str]]:
         """
         Organises .pkl.gz files in the data directory by date.
 
@@ -24,8 +25,8 @@ class Postprocessor:
         This creates a dictionary with keys as dates (year, month, day) and values as lists of files.
         """
         
-        files_by_date = dict()
-        for root, dirs, files in os.walk(filepath):
+        files_by_date = defaultdict(list)  # Initializes an empty list for new keys automatically
+        for root, dirs, files in os.walk(datapath):
             for file in files:
                 if ".pkl.gz" in file:
                     # Split the root directory path and get year, month and day
@@ -34,7 +35,12 @@ class Postprocessor:
 
                     # Append the file path to the corresponding date
                     files_by_date[(year, month, day)].append(os.path.join(root, file))
-        return files_by_date
+
+
+
+        print(files_by_date)
+        input()
+        return files_by_date  # Convert defaultdict back to dict if necessary
 
     @staticmethod
     def _format_target_date_range(target_range: Tuple[List]) -> Tuple[List]:
@@ -96,6 +102,9 @@ class Postprocessor:
         else:
             raise ValueError(f"Date not found in file path: {filepath}")
 
+    @staticmethod
+    def _get_dataframe(filepath):
+        return Processor.unpickle(filepath)
 
     def prepare_dataframe(self):
         """
@@ -106,6 +115,9 @@ class Postprocessor:
         Returns:
         - tuple: A boolean indicating if the DataFrame is prepared.
         """
+        # Retrieve the DataFrame contained in the file at the location filepath
+        self.df = Postprocessor._get_dataframe(self.filepath)
+
         required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
         if not Processor.check_df(self.filepath, self.df, required_columns):
             # Report if Dataframe is missing values or columns

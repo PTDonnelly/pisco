@@ -19,19 +19,18 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
     dates = []
 
     for filepath in filepaths:
-        df = Processor.unpickle(filepath)
-
         # Initialise a Postprocessor
-        postprocessor = Postprocessor(df, filepath)
-        
+        post = Postprocessor(filepath)
+
         # Prepare DataFrame for analysis
-        is_df_prepared = postprocessor.prepare_dataframe()
+        is_df_prepared = post.prepare_dataframe()
+        
         if is_df_prepared:
-            postprocessor.process_target_variables(target_variables, data_dict)
+            post.process_target_variables(target_variables, data_dict)
         else:
             Postprocessor.append_bad_values(target_variables, data_dict)
 
-        date_to_append = postprocessor.df['Datetime'].dt.date.iloc[0] if is_df_prepared else Postprocessor.extract_date_from_filepath(filepath)
+        date_to_append = post.df['Datetime'].dt.date.iloc[0] if is_df_prepared else Postprocessor.extract_date_from_filepath(filepath)
         dates.append(date_to_append)
 
     Postprocessor.save_results(data_dict, dates, datapath)
