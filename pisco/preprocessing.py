@@ -149,7 +149,8 @@ class Preprocessor:
             ('Cloud Phase 3', 'uint32')
             ]
         return fields
-    
+
+
     def calculate_chunk_size(self, dtype_dict: Dict):       
         # Open the first 100 rows of the csv to check memory usage of DataFrame
         sample_df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, nrows=100)
@@ -165,6 +166,7 @@ class Preprocessor:
         print(f"Memory per row (+50% margin): {memory_per_row} B")
         print(f"Chunk size: {chunk_size} rows")
         return chunk_size
+
 
     def read_file_in_chunks(self, dtype_dict: Dict):
         # Load in chunks
@@ -184,11 +186,13 @@ class Preprocessor:
 
         # Concatenate all processed chunks at once
         return pd.concat(chunk_list, ignore_index=True)
-    
+
+
     def should_load_in_chunks(self):
         "Checks if file size is greater than the allocated memory with safety margin"
         file_size = os.path.getsize(self.intermediate_file)
         return file_size > (self.allocated_memory / self.chunking_safety_margin)
+
 
     def _get_fields_and_datatypes(self):
         # Read and combine byte tables to optimise reading of OBR txtfile
@@ -208,14 +212,15 @@ class Preprocessor:
         # Create dtype dict from combined fields
         return {field[0]: field[1] for field in combined_fields}
 
-    def open_text_file(self, memory) -> None:
+
+    def open_text_file(self) -> None:
         print("\nLoading intermediate text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
 
-        if self.should_load_in_chunks(memory):
-            self.df = self.read_file_in_chunks(dtype_dict, memory)
+        if self.should_load_in_chunks():
+            self.df = self.read_file_in_chunks(dtype_dict)
         else:
             # Read in as normal
             self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
@@ -266,6 +271,7 @@ class Preprocessor:
         # Take the modulus again to ensure the time is within the 0 to 23 hours range
         return np.mod(time_shifted, 24)
 
+
     def build_local_time(self) -> List:
         """
         Stores the local time Boolean indicating whether the current time is day or night.
@@ -276,6 +282,7 @@ class Preprocessor:
         # Store the Boolean indicating day (True) or night (False) in the DataFrame
         self.df['Local Time'] = (6 < local_time) & (local_time < 18)
         return
+
 
     def build_datetime(self) -> List:
         """

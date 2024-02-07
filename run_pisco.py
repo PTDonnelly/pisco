@@ -57,7 +57,7 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         pre = Preprocessor(ex, memory)
         
         # Read OBR textfiles and store to pandas DataFrame
-        pre.open_text_file(memory)
+        pre.open_text_file()
         if pre.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
             pre.fix_spectrum_columns()
