@@ -2,7 +2,7 @@ import commentjson
 import os
 
 class Configurer:
-    def __init__(self, path_to_config_file: str):
+    def __init__(self, path_to_config_file: str="inputs/config.jsonc"):
         self.data_level: str = ""
         self.datapath_out: str = None
 

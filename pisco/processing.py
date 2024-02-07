@@ -160,7 +160,7 @@ class Processor:
     def _create_merged_datapath(self):
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_merged, exist_ok=True)
-        self.output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products.pkl.gz")
+        self.output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products")
         return
 
     def combine_datasets(self) -> None:
@@ -190,8 +190,10 @@ class Processor:
             print(f"Saving compressed spectra to: {self.output_path}")
             
             # Compress and save using gzip
-            with gzip.open(self.output_path, 'wb') as f:
+            with gzip.open(f"{self.output_path}.pkl.gz", 'wb') as f:
                 pickle.dump(self.df, f)
+
+            self.df.to_csv(f"{self.output_path}.csv", sep='\t')
 
             if delete_tempfiles:
                 # Delete original csv files

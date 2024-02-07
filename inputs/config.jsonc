@@ -20,9 +20,6 @@
     // satellite_identifier: str, The IASI satellite to be analysed (A, B, or C) = "metopa" | "metopb" | "metopc"
     "satellite_identifier": "metopb",
 
-    // output_format: str, The format of the output file ("bin" or "txt")
-    "output_format": "txt",
-
     // quality_flags: str, Three Yes/No flags describing three levels of quality of the IASI data ("yyy" = only good data, "nnn" = all data)
     "quality_flags": "yyy",
 

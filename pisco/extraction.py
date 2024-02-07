@@ -5,15 +5,12 @@ from typing import List, Optional, Tuple
 from .configuration import Configurer
 
 class Extractor:
-    def __init__(self, path_to_config_file: str):
+    def __init__(self):
         """
         Initialize the Extractor class with given parameters.
-
-        Args:
-           path_to_config_file (str): Location of jsonc configuration file
         """
         # Instantiate the Config class and set_parameters() for analysis
-        self.config = Configurer(path_to_config_file)
+        self.config = Configurer()
         self.runpath: str = os.getcwd()
         self.channels: List[int] = None
         self.data_level: str = None

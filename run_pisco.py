@@ -54,54 +54,19 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
-        pre = Preprocessor(ex)
+        pre = Preprocessor(ex, memory)
         
-        if ex.config.output_format == "bin":
-            # Open binary file and extract metadata
-            pre.open_binary_file()
-            # Read common IASI record fields and store to pandas DataFrame
-            print(f"\nCommon Record Fields:")
-            pre.read_record_fields(pre.metadata._get_iasi_common_record_fields())
-
-            if pre.data_level == "l1c":
-                print("\nL1C Record Fields:")
-                # Read general L1C-specific record fields and add to DataFrame
-                pre.read_record_fields(pre.metadata._get_iasi_l1c_record_fields())
-                # Read L1C radiance spectrum field and add to DataFrame
-                pre.read_record_fields(pre.metadata._get_l1c_product_record_fields())
-            
-            if pre.data_level == "l2":
-                print("\nL2 Record Fields:")
-                # Read general L2-specific record fields and add to DataFrame
-                pre.read_record_fields(pre.metadata._get_iasi_l2_record_fields())
-                # Read L2 retrieved products
-                pre.read_l2_product_fields()
-                # Filter columns
-                filtered_columns = [col for col in pre.data_record_df.columns if "Cloud Phase" in col]
-                filtered_df = pre.data_record_df[filtered_columns]
-                # Print the head of the filtered DataFrame
-                print(filtered_df.head())
-            pre.close_binary_file()
-
-            # Construct Local Time column
-            pre.build_local_time()
-            # Construct Datetime column and remove individual time elements
-            pre.build_datetime()
-            # Save filtered DataFrame to CSV/HDF5
-            pre.save_observations()
-
-        elif ex.config.output_format == "txt":
-            # Read OBR textfiles and store to pandas DataFrame
-            pre.open_text_file(memory)
-            if pre.data_level == "l1c":
-                # Rename the spectral columns to contain "Spectrum"
-                pre.fix_spectrum_columns()
-            # Construct Local Time column
-            pre.build_local_time()
-            # Construct Datetime column and remove individual time elements
-            pre.build_datetime()
-            # Save filtered DataFrame to compressed pickle
-            pre.save_observations(delete_tempfiles=True)
+        # Read OBR textfiles and store to pandas DataFrame
+        pre.open_text_file(memory)
+        if pre.data_level == "l1c":
+            # Rename the spectral columns to contain "Spectrum"
+            pre.fix_spectrum_columns()
+        # Construct Local Time column
+        pre.build_local_time()
+        # Construct Datetime column and remove individual time elements
+        pre.build_datetime()
+        # Save filtered DataFrame to compressed pickle
+        pre.save_observations(delete_tempfiles=False)
         
         # Print the DataFrame
         print(pre.df.info())
@@ -135,14 +100,14 @@ def process_iasi(ex: Extractor):
         pro.combine_datasets()
 
         # Save merged and filtered DataFrame to compressed pickle
-        pro.save_merged_products(delete_tempfiles=True)
+        pro.save_merged_products(delete_tempfiles=False)
         
         print(pro.df.info())
     return
 
 
-def run_pisco(memory, metop, year, month, day, config):
-    ex = Extractor(config)
+def run_pisco(memory, metop, year, month, day):
+    ex = Extractor()
     ex.year = f"{year:04d}"
     ex.month = f"{month:02d}"
     ex.day = f"{day:02d}"
@@ -165,7 +130,6 @@ if __name__ == "__main__":
     parser.add_argument("year", type=int, help="Year to process")
     parser.add_argument("month", type=int, help="Month to process")
     parser.add_argument("day", type=int, help="Day to process")
-    parser.add_argument("config", type=str, help="Path to configuration file")
 
     args = parser.parse_args()
-    run_pisco(args.mem, args.metop, args.year, args.month, args.day, args.config)
+    run_pisco(args.mem, args.metop, args.year, args.month, args.day)

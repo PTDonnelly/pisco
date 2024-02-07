@@ -2,7 +2,6 @@ import gzip
 import os
 import numpy as np
 import pandas as pd
-import psutil
 from typing import List, Tuple, List, Dict
 
 import pickle
@@ -54,13 +53,14 @@ class Preprocessor:
     preprocess_files(year: str, month: str, day: str)
         Runs the entire preprocessing pipeline on the binary file.
     """
-    def __init__(self, ex: Extractor):
+    def __init__(self, ex: Extractor, allocated_memory: int, chunking_safety_margin=0.5):
         self.intermediate_file: str = ex.intermediate_file
         self.data_level: str = ex.data_level
-        self.latitude_range: Tuple[float] = ex.config.latitude_range
-        self.longitude_range: Tuple[float] = ex.config.longitude_range
         self.channels: List[int] = ex.channels
+        self.allocated_memory = allocated_memory * (1024 ** 3) # Convert from Gigabytes to Bytes
+        self.chunking_safety_margin = chunking_safety_margin
         self.df = None
+
 
     @staticmethod
     def _get_common_fields() -> List[Tuple]:
@@ -150,47 +150,31 @@ class Preprocessor:
             ]
         return fields
     
-    @staticmethod
-    def _get_memory_usage_per_type():
-        memory_dict = {
-            'uint8': 1,
-            'uint16': 2,
-            'uint32': 4,
-            'uint64': 8,
-            'float16': 2,
-            'float32': 4,
-            'float64': 8,
-            }
-        return memory_dict
-
-    @staticmethod
-    def calculate_chunk_size(dtype_dict: Dict, memory: int):
-        memory_dict = Preprocessor._get_memory_usage_per_type()
-        # Calculate memory per row based on dtype_dict
-        memory_per_row = sum(memory_dict[dtype] for dtype in dtype_dict.values())
-        # Add a 50% buffer for overhead from Python and pandas
-        overhead = 0.50
-        adjusted_memory_per_row = memory_per_row * (1 + overhead)
-
-        # Available memory
-        available_memory = memory * 1e9
+    def calculate_chunk_size(self, dtype_dict: Dict):       
+        # Open the first 100 rows of the csv to check memory usage of DataFrame
+        sample_df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, nrows=100)
+        memory_per_row = sample_df.memory_usage(deep=True).sum() / len(sample_df)
+        
+        # Add safety margin for memory overheads and non-DataFrame memory usage
+        available_memory = self.allocated_memory * (1 - self.chunking_safety_margin)
 
         # Calculate chunk size
-        chunk_size = int(available_memory / adjusted_memory_per_row)
+        chunk_size = int(available_memory / memory_per_row)
         
         print(f"Available memory: {available_memory} B")
-        print(f"Memory per row (+50% margin): {adjusted_memory_per_row} B")
+        print(f"Memory per row (+50% margin): {memory_per_row} B")
         print(f"Chunk size: {chunk_size} rows")
         return chunk_size
 
-    def read_file_in_chunks(self, dtype_dict: Dict, memory: int):
+    def read_file_in_chunks(self, dtype_dict: Dict):
         # Load in chunks
         print("Loading in chunks...")
+        
         # Initialize a list to hold processed chunks
         chunk_list = []
         
         # Specify the chunk size
-        chunk_size = Preprocessor.calculate_chunk_size(dtype_dict, memory)
+        chunk_size = self.calculate_chunk_size(dtype_dict, self.allocated_memory)
 
         # Iterate over the file in chunks
         for chunk in pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size):
@@ -201,11 +185,10 @@ class Preprocessor:
         # Concatenate all processed chunks at once
         return pd.concat(chunk_list, ignore_index=True)
     
-    @staticmethod
-    def should_load_in_chunks(file_path, memory):
-        "Checks if file size is greater than half the available memory (for conservative use of memory)"
-        file_size = os.path.getsize(file_path)
-        return file_size > (memory / 2)
+    def should_load_in_chunks(self):
+        "Checks if file size is greater than the allocated memory with safety margin"
+        file_size = os.path.getsize(self.intermediate_file)
+        return file_size > (self.allocated_memory / self.chunking_safety_margin)
 
     def _get_fields_and_datatypes(self):
         # Read and combine byte tables to optimise reading of OBR txtfile
@@ -231,7 +214,7 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
 
-        if Preprocessor.should_load_in_chunks(self.intermediate_file, memory):
+        if self.should_load_in_chunks(memory):
             self.df = self.read_file_in_chunks(dtype_dict, memory)
         else:
             # Read in as normal

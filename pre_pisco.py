@@ -2,9 +2,9 @@ import os
 import subprocess
 from pisco import Extractor
 
-def generate_slurm_script(metop, year, month, day, config_file):
+def generate_slurm_script(metop, year, month, day):
     # Memory request (in GB, used later for optimal file reading)
-    mem = 8
+    mem = 4
     
     # Format date integers to date strings
     year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
@@ -14,7 +14,7 @@ def generate_slurm_script(metop, year, month, day, config_file):
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
 #SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
-#SBATCH --time=04:00:00
+#SBATCH --time=01:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem={mem}GB
 
@@ -24,7 +24,7 @@ module purge
 # Load necessary modules
 module load python/meso-3.8
 
-python /data/pdonnelly/github/pisco/run_pisco.py {mem} {metop} {year} {month} {day} {config_file}
+python /data/pdonnelly/github/pisco/run_pisco.py {mem} {metop} {year} {month} {day}
 
 """
     with open(script_name, 'w') as file:
@@ -39,11 +39,8 @@ def main():
     developed by IASI team, then produce conveniently-formatted spatio-temporal data
     of IASI products: L1C calibrated spectra or L2 cloud products.
     """
-    # Location of jsonc configuration file
-    path_to_config_file = "inputs/config.jsonc"
-    
     # Instantiate an Extractor class to get data from raw binary files
-    ex = Extractor(path_to_config_file)
+    ex = Extractor()
     
     # The MetOp satellite identifier for these observations (metopa, metopb, or metopc)
     metop = ex.config.satellite_identifier
@@ -54,7 +51,7 @@ def main():
         for im, month in enumerate(month_range):
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[month-1] + 1)
             for day in day_range:
-                script = generate_slurm_script(metop, year, month, day, path_to_config_file)
+                script = generate_slurm_script(metop, year, month, day)
                 
                 # Set execute permissions on the script
                 subprocess.run(["chmod", "+x", script])
