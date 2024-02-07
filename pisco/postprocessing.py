@@ -174,15 +174,19 @@ class Postprocessor:
 
     def get_outgoing_longwave_radiation(self):
         """
-        Calculates OLR values for icy and clear-sky conditions from the DataFrame.
+        Calculates OLR values for all CloudPhase conditions from the DataFrame.
 
         Returns:
-        - tuple: OLR values for clear-sky and icy conditions.
+        - dict: Dictionary with OLR values for each CloudPhase condition.
         """
-        icy_olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == 2])
-        clear_olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == 4])
-        
-        return clear_olr, icy_olr
+        cloud_phase_names = {0: "Unknown", 1: "Water", 2: "Ice", 3: "Mixed", 4: "Clear", 5: "Reserved", 6: "Reserved"}
+        olr_values = {}
+
+        for phase, name in cloud_phase_names.items():
+            olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == phase])
+            olr_values[name] = olr
+
+        return olr_values
     
 
     def get_ice_fraction(self):
@@ -214,14 +218,15 @@ class Postprocessor:
         """
         for var in target_variables:
             if var == 'OLR':
-                result = self.get_outgoing_longwave_radiation()
+                olr_values = self.get_outgoing_longwave_radiation()
+                for name, value in olr_values.items():
+                    data_dict[f'{var}_{name}'].append(value)
             elif var == 'Ice Fraction':
                 result = self.get_ice_fraction()
+                data_dict[var].append(result)
             else:
                 print(f"Target variable not recognised: {var}")
                 continue
-            
-            data_dict[var].append(result)
 
 
     @staticmethod
@@ -246,15 +251,13 @@ class Postprocessor:
         - data_dict (dict): Dictionary containing the results for each target variable.
         - dates (list): List of dates corresponding to each entry in the data dictionary.
         - datapath (str): Path to save the CSV files.
-        - target_variables (list): List of target variables.
         """
         for var, results in data_dict.items():
             df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates)})
             if var == 'Ice Fraction':
-                df_to_save[var] = [result if not isinstance(result, (list, np.ndarray)) else result[0] for result in results]
-            elif var == 'OLR':
-                clear_sky, icy = zip(*results)
-                df_to_save[f'{var} Clear-Sky'] = clear_sky
-                df_to_save[f'{var} Icy'] = icy
+                df_to_save[var] = results
+            elif 'OLR' in var:  # Handles all OLR related variables
+                df_to_save[var] = results
 
-            df_to_save.to_csv(os.path.join(datapath, f"daily_{var.lower().replace(' ', '_')}.csv"), index=False)
+            filename = f"daily_{var.lower().replace(' ', '_')}.csv"
+            df_to_save.to_csv(os.path.join(datapath, filename), index=False)
