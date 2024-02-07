@@ -148,7 +148,7 @@ class Postprocessor:
         return extracted_wavenumbers
 
 
-    def calculate_olr_from_spectrum(self, sub_df):
+    def calculate_olr_from_spectrum(self, sub_df: pd.DataFrame):
         """
         Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
 
@@ -207,6 +207,13 @@ class Postprocessor:
             phase_fractions[name] = np.round(phase_count / total_measurements, 3) if total_measurements > 0 else 0
 
         return phase_fractions
+    
+    def get_tests(self):
+        tests = {}
+        test_reference = {'A': 1, 'B': 2, 'C': 3}
+        for key, value in test_reference.items():
+            tests[key] = value
+        return tests
 
 
     def process_target_variables(self, target_variables, data_dict):
@@ -223,14 +230,20 @@ class Postprocessor:
                 for name, value in olr_values.items():
                     data_dict[f'{var}_{name}'].append(value)
             
-            elif var == 'Phase Fraction':
+            if var == 'Phase Fraction':
                 phase_fractions = self.get_phase_fraction()
                 for name, fraction in phase_fractions.items():
                     data_dict[f'{var}_{name}'].append(fraction)
+
+            if var == 'Test':
+                tests = self.get_test_values()
+                for name, value in tests.items():
+                    data_dict[f'{var}_{name}'].append(value)
             
-            else:
-                print(f"Target variable not recognised: {var}")
-                continue
+            print(data_dict.keys)
+            # else:
+            #     print(f"Target variable not recognised: {var}")
+            #     continue
 
 
     @staticmethod
@@ -258,10 +271,12 @@ class Postprocessor:
         """
         for var, results in data_dict.items():
             df_to_save = pd.DataFrame({'Date': pd.to_datetime(dates)})
-            if var == 'Ice Fraction':
-                df_to_save[var] = results
-            elif 'OLR' in var:  # Handles all OLR related variables
-                df_to_save[var] = results
+            
+            # Expand each result (which is a dictionary) into separate columns
+            for key, measurements in results.items():
+                # Create a column for each measurement, appending the phase name to distinguish them
+                df_to_save[f'{var}_{key}'] = measurements
+            
 
             filename = f"daily_{var.lower().replace(' ', '_')}.csv"
             df_to_save.to_csv(os.path.join(datapath, filename), index=False)
