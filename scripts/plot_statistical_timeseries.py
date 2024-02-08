@@ -1,13 +1,25 @@
 # Standard library imports
+import numpy as np
 from typing import List
 
 # Third-party library imports
 import pandas as pd
 import seaborn as sns
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
 # Local application/library specific imports
 from pisco import Plotter, Postprocessor
+
+def convert_olr_units(df):
+    # Identify data columns (excluding 'Date')
+    data_columns = df.columns[df.columns != 'Date']
+
+    # Iterate through each data column to apply conversion
+    for column in data_columns:
+        # Apply conversion to units of mW m^2 only to values not equal to -1
+        df[column] = df[column].apply(lambda x: x * 1e6 if x != -1 else x)
+    return df
 
 def load_data(file_path, var):
     """
@@ -29,8 +41,7 @@ def load_data(file_path, var):
 
 
     if var == 'OLR':
-        # Convert outgoing longwave radiation to units of mW m^2
-        df.loc[:, df.columns != 'Date'] = df.loc[:, df.columns != 'Date'].where(df.loc[:, df.columns != 'Date'] == -1, df.loc[:, df.columns != 'Date'] * 1e6)
+        df = convert_olr_units(df)
 
     return df
 
@@ -73,10 +84,10 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
             ylabel = fr"{var} mW m$^{-2}$"
-            ylim = [-1.2e-2, 0]
-        elif var == 'Ice Fraction':
-            file_path = f"{plotter.datapath}daily_ice_fraction.csv"
-            ylabel = "Ice / Total"
+            ylim = [-0.8e-5, -0.4e-5]
+        elif var == 'Phase Fraction':
+            file_path = f"{plotter.datapath}daily_phase_fraction.csv"
+            ylabel = "Phase / Total"
             ylim = [0, 1]
 
         # Load csv data
@@ -113,26 +124,81 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
             df['Year'] = df.index.year
             df['Year-Month'] = df.index.strftime('%Y-%m')
 
-            # Calculate temporal averages
-            weekly_mean_df = df.resample('W').agg(['min', 'mean', 'max'])
-            monthly_mean_df = df.resample('M').agg(['min', 'mean', 'max'])
+            # Drop non-numeric columns before resampling
+            numeric_df = df.select_dtypes(include=[np.number])
+            # Resample and aggregate only numeric columns
+            weekly_mean_df = numeric_df.resample('W').agg(['min', 'mean', 'max'])
+            monthly_mean_df = numeric_df.resample('M').agg(['min', 'mean', 'max'])
+            # Fix time axis
             weekly_mean_df = make_date_axis_continuous(weekly_mean_df)
             monthly_mean_df = make_date_axis_continuous(monthly_mean_df, number_of_days=15)
+            # Drop NaNs (creates gaps between years to avoid unclear datarepresentation)
             weekly_mean_df.dropna(inplace=False)
             monthly_mean_df.dropna(inplace=False)
-            
-            print(weekly_mean_df.head())
 
-            exit()
+            # Generate a color palette with enough colors for each column
+            palette = sns.color_palette(n_colors=len(df.columns))
 
-            # Plot daily measurements
-            ax.scatter(df['Year-Month-Day'], df, label='Daily', s=1, color='grey')
-            # Plot temporal averages
-            ax.plot(weekly_mean_df['Year-Month-Day'], weekly_mean_df['mean'], label='Weekly Mean', ls='-', lw=1, color='black')
-            ax.plot(monthly_mean_df['Year-Month-Day'], monthly_mean_df['mean'], label='Monthly Mean', ls='-', lw=2, marker='o', markersize=4, color='red')
-            
+            # Track legend entries
+            legend_entries = []
+
+            # Plot daily measurements for each data column
+            for idx, column in enumerate(df.columns):
+                
+                # Filter columns to plot
+                if not column in ['Date', 'Year', 'Year-Month', 'Year-Month-Day']:  # Skip the 'Date' column
+                    if (df[column] == -1).all():
+                        continue
+                    
+                    # Assign a unique color from the palette
+                    color = palette[idx]
+
+                    # Scatter plot for daily measurements
+                    ax.scatter(df['Year-Month-Day'], df[column], label=f'Daily {column}', marker='.', s=1, color=color, alpha=0.75)
+
+                    # Line plot for weekly mean
+                    weekly_color = np.clip(np.array(color) * 0.9, 0, 1)  # Darken the color
+                    weekly_line = ax.plot(weekly_mean_df['Year-Month-Day'], weekly_mean_df[column]['mean'], label=f'Weekly Mean {column}', ls='-', lw=1, color=weekly_color)
+                    
+                    # Line plot for monthly mean
+                    monthly_color = np.clip(np.array(color) * 0.8, 0, 1)  # Darken the color further
+                    monthly_line = ax.plot(monthly_mean_df['Year-Month-Day'], monthly_mean_df[column]['mean'], label=f'Monthly Mean {column}', ls='-', lw=2, marker='o', markersize=4, color=monthly_color)
+                    
+                    # Add legend entry for this column
+                    legend_entries.append((weekly_line, monthly_line))
+
+            # Create custom legend handles
+            weekly_handle = mlines.Line2D([], [], color='black', linestyle='--', label='Weekly Mean')
+            monthly_handle = mlines.Line2D([], [], color='black', linestyle='-', marker='o', label='Monthly Mean')
+
+            # Add column color legend entries
+            column_handles = []
+
+            for entry in legend_entries:
+                print(entry)
+                # entry is a tuple containing line objects for a specific column
+                for obj in entry:  # Iterate over each object within the tuple
+                    if hasattr(obj, 'get_color') and hasattr(obj, 'get_linestyle') and hasattr(obj, 'get_label'):
+                        # Extract the properties from the line object to create a custom handle
+                        color = obj.get_color()
+                        linestyle = obj.get_linestyle()
+                        # The label might need to be adjusted depending on how you want it to appear
+                        label = obj.get_label().split()[0]  # Adjust this as needed
+
+                        # Create a custom legend handle for this line object
+                        handle = mlines.Line2D([], [], color=color, linestyle=linestyle, label=label)
+                        column_handles.append(handle)
+                        
+                        # Combine all legend handles
+                        all_handles = column_handles + [weekly_handle, monthly_handle]
+
+                        # Add the legend to the plot
+                        ax.legend(handles=all_handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+
+
+
+
             ax.set_xticks(df['Year'].unique())
-            ax.legend()
 
             # Add grey box for visual separation of every other year for enhanced readability
             add_grey_box(ax, df, plot_type)
