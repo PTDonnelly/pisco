@@ -202,7 +202,7 @@ class Processor:
             with gzip.open(f"{self.output_path}.pkl.gz", 'wb') as f:
                 pickle.dump(self.df, f)
 
-            # self.df.to_csv(f"{self.output_path}.csv", sep='\t')
+            self.df.to_csv(f"{self.output_path}.csv", sep='\t')
 
             if delete_tempfiles:
                 # Delete original csv files
