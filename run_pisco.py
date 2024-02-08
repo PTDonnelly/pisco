@@ -100,7 +100,7 @@ def process_iasi(ex: Extractor):
         pro.combine_datasets()
 
         # Save merged and filtered DataFrame to compressed pickle
-        pro.save_merged_products(delete_tempfiles=True)
+        pro.save_merged_products(delete_tempfiles=False)
         
         print(pro.df.info())
     return
