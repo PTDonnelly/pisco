@@ -21,18 +21,17 @@ def load_data(file_path, var):
     - df (pd.DataFrame): DataFrame containing Date and data entries
     """
     # Read .csv as DataFrame
-    data = pd.read_csv(file_path, sep=',')
-    df = pd.DataFrame(data, columns=['Date', var])
-    
+    df = pd.read_csv(file_path, sep=',')
+
     # Ensure 'Date' is set as the DataFrame index
     df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
 
-    # Drop empty days
-    df = df[df[var] != -1]
+
     if var == 'OLR':
-        # Convert outgoing longwave radiation to untis of mW m^2
-        df[var] *= 1e6
+        # Convert outgoing longwave radiation to units of mW m^2
+        df.loc[:, df.columns != 'Date'] = df.loc[:, df.columns != 'Date'].where(df.loc[:, df.columns != 'Date'] == -1, df.loc[:, df.columns != 'Date'] * 1e6)
+
     return df
 
 def add_grey_box(ax, df, plot_type):
@@ -115,18 +114,22 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
             df['Year-Month'] = df.index.strftime('%Y-%m')
 
             # Calculate temporal averages
-            weekly_mean_df = df[[var]].resample('W').agg(['min', 'mean', 'max'])
-            monthly_mean_df = df[[var]].resample('M').agg(['min', 'mean', 'max'])
+            weekly_mean_df = df.resample('W').agg(['min', 'mean', 'max'])
+            monthly_mean_df = df.resample('M').agg(['min', 'mean', 'max'])
             weekly_mean_df = make_date_axis_continuous(weekly_mean_df)
             monthly_mean_df = make_date_axis_continuous(monthly_mean_df, number_of_days=15)
             weekly_mean_df.dropna(inplace=False)
             monthly_mean_df.dropna(inplace=False)
+            
+            print(weekly_mean_df.head())
+
+            exit()
 
             # Plot daily measurements
-            ax.scatter(df['Year-Month-Day'], df[var], label='Daily', s=1, color='grey')
+            ax.scatter(df['Year-Month-Day'], df, label='Daily', s=1, color='grey')
             # Plot temporal averages
-            ax.plot(weekly_mean_df['Year-Month-Day'], weekly_mean_df[var]['mean'], label='Weekly Mean', ls='-', lw=1, color='black')
-            ax.plot(monthly_mean_df['Year-Month-Day'], monthly_mean_df[var]['mean'], label='Monthly Mean', ls='-', lw=2, marker='o', markersize=4, color='red')
+            ax.plot(weekly_mean_df['Year-Month-Day'], weekly_mean_df['mean'], label='Weekly Mean', ls='-', lw=1, color='black')
+            ax.plot(monthly_mean_df['Year-Month-Day'], monthly_mean_df['mean'], label='Monthly Mean', ls='-', lw=2, marker='o', markersize=4, color='red')
             
             ax.set_xticks(df['Year'].unique())
             ax.legend()

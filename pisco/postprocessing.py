@@ -6,8 +6,6 @@ import pandas as pd
 from collections import defaultdict
 from typing import List, Tuple, Dict, Union
 
-import pprint as pp
-
 from pisco import Processor
 
 class Postprocessor:
@@ -287,6 +285,6 @@ class Postprocessor:
             
             # Build filename and save to CSV
             filename = f"daily_{var.lower().replace(' ', '_')}.csv"
-            df_to_save.to_csv(os.path.join(datapath, filename), index=False)
+            df_to_save.to_csv(os.path.join(datapath, filename), sep="\t", index=False)
 
         return None

@@ -128,19 +128,28 @@ class Processor:
             return pd.DataFrame()
         else:
             # Define filter conditions
-            # Keep rows where 'CloudPhase1' is not -1 (-1 is a bad measurement indicator, throw these measurements)
-            condition_1 = df['CloudPhase1'] != -1
-            # Keep rows where 'CloudPhase1' is not 7 (7 is a missing value indicator, throw these measurements)
-            condition_2 = df['CloudPhase1'] != 7
-            # Keep rows where 'CloudPhase2' is -1 (throw measurements with multiple cloud phases)
-            condition_3 = df['CloudPhase2'] == -1
-            # Keep rows where 'CloudPhase3' is -1 (throw measurements with multiple cloud phases)
-            condition_4 = df['CloudPhase3'] == -1
-            # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
+            # # Keep rows where 'CloudPhase1' is not -1 (-1 is a bad measurement indicator, throw these measurements)
+            # condition_1 = df['CloudPhase1'] != -1
+            # # Keep rows where 'CloudPhase1' is not 7 (7 is a missing value indicator, throw these measurements)
+            # condition_2 = df['CloudPhase1'] != 7
+            # # Keep rows where 'CloudPhase2' is -1 (throw measurements with multiple cloud phases)
+            # condition_3 = df['CloudPhase2'] == -1
+            # # Keep rows where 'CloudPhase3' is -1 (throw measurements with multiple cloud phases)
+            # condition_4 = df['CloudPhase3'] == -1
+            # # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
+            # condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
+
+            # # Combine all conditions using the bitwise AND operator
+            # combined_conditions = condition_1 & condition_2 & condition_3 & condition_4 & condition_5
+
+
+            condition_2 = df['CloudPhase1'] > 3
+            condition_3 = df['CloudPhase2'] > 3
+            condition_4 = df['CloudPhase3'] > 3
             condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_1 & condition_2 & condition_3 & condition_4 & condition_5
+            combined_conditions = condition_2 & condition_3 & condition_4 & condition_5
            
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
