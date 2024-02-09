@@ -149,14 +149,11 @@ class Processor:
             condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_5
+            combined_conditions = condition_2 & condition_3 & condition_4 & condition_5
 
-            print(df['SatelliteZenithAngle'].head())
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
-            input()
-            print(filtered_df['SatelliteZenithAngle'].head())
-            input()
+
             # Check that DataFrame still contains data after filtering
             if filtered_df.empty:
                 print(f"No data remains after filtering: {self.output_path}")
