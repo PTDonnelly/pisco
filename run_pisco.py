@@ -26,6 +26,7 @@ def _clean_up_files(ex: Extractor, metop: str):
     move_file(source_sh, target_sh)
     move_file(source_log, target_log)
 
+
 def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     """
     This function is used to process IASI (Infrared Atmospheric Sounding Interferometer) data 
@@ -66,11 +67,12 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         # Construct Datetime column and remove individual time elements
         pre.build_datetime()
         # Save filtered DataFrame to compressed pickle
-        pre.save_observations(delete_tempfiles=True)
+        pre.save_observations()
         
         # Print the DataFrame
         print(pre.df.info())
         return
+
 
 def process_iasi(ex: Extractor):
     """
@@ -100,7 +102,7 @@ def process_iasi(ex: Extractor):
         pro.combine_datasets()
 
         # Save merged and filtered DataFrame to compressed pickle
-        pro.save_merged_products(delete_tempfiles=True)
+        pro.save_merged_products()
         
         print(pro.df.info())
     return

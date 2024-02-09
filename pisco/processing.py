@@ -12,6 +12,7 @@ class Processor:
         self.datapath_l1c = f"{ex.config.datapath}{ex.config.satellite_identifier}/l1c/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_l2 = f"{ex.config.datapath}{ex.config.satellite_identifier}/l2/{ex.year}/{ex.month}/{ex.day}/"
         self.datapath_merged = f"{ex.config.datapath}{ex.config.satellite_identifier}/{ex.year}/{ex.month}/{ex.day}/"
+        self.delete_intermediate_files = ex.config.delete_intermediate_files
         self.output_path: str = None
         self.df_l1c: object = None
         self.df_l2: object = None
@@ -193,7 +194,7 @@ class Processor:
         return
     
 
-    def save_merged_products(self, delete_tempfiles: bool = True) -> None:
+    def save_merged_products(self) -> None:
         if not self.df.empty:
             print(f"Saving compressed spectra to: {self.output_path}")
             
@@ -203,7 +204,7 @@ class Processor:
 
             self.df.to_csv(f"{self.output_path}.csv", sep='\t', index=False)
 
-            if delete_tempfiles:
+            if self.delete_intermediate_files:
                 # Delete original csv files
                 self._delete_intermediate_files()
         else:

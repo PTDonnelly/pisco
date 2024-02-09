@@ -55,6 +55,7 @@ class Preprocessor:
     """
     def __init__(self, ex: Extractor, allocated_memory: int, chunking_safety_margin=0.5):
         self.intermediate_file: str = ex.intermediate_file
+        self.delete_tempfiles = ex.config.delete_tempfiles
         self.data_level: str = ex.data_level
         self.channels: List[int] = ex.channels
         self.allocated_memory = allocated_memory * (1024 ** 3) # Convert from Gigabytes to Bytes
@@ -225,18 +226,12 @@ class Preprocessor:
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
-        
-        import pprint
-        pprint.pprint(dtype_dict, sort_dicts=False)
-        input()
-        
+
         if self.should_load_in_chunks():
             self.df = self.read_file_in_chunks(dtype_dict)
         else:
             # Read in as normal
             self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
-            print(self.df.info(verbose=True))
-            input()
         return
 
 
@@ -246,9 +241,6 @@ class Preprocessor:
 
         # Rename the columns using the mapping
         self.df.rename(columns=rename_mapping, inplace=True)
-
-        print(self.df.info(verbose=True))
-        exit()
         return
 
 
@@ -323,7 +315,7 @@ class Preprocessor:
         return
 
 
-    def save_observations(self, delete_tempfiles: bool = True) -> None:
+    def save_observations(self) -> None:
         """
         Saves the observation data to CSV/HDF5 file and deletes OBR output file.
         """  
@@ -339,6 +331,6 @@ class Preprocessor:
         self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
         
         # Delete intermediate OBR output file
-        if delete_tempfiles:
+        if self.delete_tempfiles:
             self._delete_intermediate_file()
         return
