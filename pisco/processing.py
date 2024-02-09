@@ -143,18 +143,16 @@ class Processor:
             # combined_conditions = condition_1 & condition_2 & condition_3 & condition_4 & condition_5
 
 
-            condition_2 = df['CloudPhase1'] > 3
+            # condition_2 = df['CloudPhase1'] > 3
             # condition_3 = df['CloudPhase2'] > 3
             # condition_4 = df['CloudPhase3'] > 3
             condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_2 & condition_5
+            combined_conditions = condition_5
            
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
-
-            print(filtered_df['CloudPhase1'].head(30), filtered_df['SatelliteZenithAngle'].head(30))
 
             # Check that DataFrame still contains data after filtering
             if filtered_df.empty:

@@ -146,7 +146,7 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
             for idx, column in enumerate(df.columns):
                 
                 # Filter columns to plot
-                if not column in ['Date', 'Year', 'Year-Month', 'Year-Month-Day']:  # Skip the 'Date' column
+                if column in ['Ice', 'Clear']:  # Skip the 'Date' column
                     if (df[column] == -1).all():
                         continue
                     
@@ -167,33 +167,33 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
                     # Add legend entry for this column
                     legend_entries.append((weekly_line, monthly_line))
 
-            # Create custom legend handles
-            weekly_handle = mlines.Line2D([], [], color='black', linestyle='--', label='Weekly Mean')
-            monthly_handle = mlines.Line2D([], [], color='black', linestyle='-', marker='o', label='Monthly Mean')
+            # # Create custom legend handles
+            # weekly_handle = mlines.Line2D([], [], color='black', linestyle='--', label='Weekly Mean')
+            # monthly_handle = mlines.Line2D([], [], color='black', linestyle='-', marker='o', label='Monthly Mean')
 
-            # Add column color legend entries
-            column_handles = []
+            # # Add column color legend entries
+            # column_handles = []
 
-            for entry in legend_entries:
-                print(entry)
-                # entry is a tuple containing line objects for a specific column
-                for obj in entry:  # Iterate over each object within the tuple
-                    if hasattr(obj, 'get_color') and hasattr(obj, 'get_linestyle') and hasattr(obj, 'get_label'):
-                        # Extract the properties from the line object to create a custom handle
-                        color = obj.get_color()
-                        linestyle = obj.get_linestyle()
-                        # The label might need to be adjusted depending on how you want it to appear
-                        label = obj.get_label().split()[0]  # Adjust this as needed
+            # for entry in legend_entries:
+            #     print(entry)
+            #     # entry is a tuple containing line objects for a specific column
+            #     for obj in entry:  # Iterate over each object within the tuple
+            #         if hasattr(obj, 'get_color') and hasattr(obj, 'get_linestyle') and hasattr(obj, 'get_label'):
+            #             # Extract the properties from the line object to create a custom handle
+            #             color = obj.get_color()
+            #             linestyle = obj.get_linestyle()
+            #             # The label might need to be adjusted depending on how you want it to appear
+            #             label = obj.get_label().split()[0]  # Adjust this as needed
 
-                        # Create a custom legend handle for this line object
-                        handle = mlines.Line2D([], [], color=color, linestyle=linestyle, label=label)
-                        column_handles.append(handle)
+            #             # Create a custom legend handle for this line object
+            #             handle = mlines.Line2D([], [], color=color, linestyle=linestyle, label=label)
+            #             column_handles.append(handle)
                         
-                        # Combine all legend handles
-                        all_handles = column_handles + [weekly_handle, monthly_handle]
+            #             # Combine all legend handles
+            #             all_handles = column_handles + [weekly_handle, monthly_handle]
 
-                        # Add the legend to the plot
-                        ax.legend(handles=all_handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+            #             # Add the legend to the plot
+            #             ax.legend(handles=all_handles, bbox_to_anchor=(1.05, 1), loc='upper left')
 
 
 
