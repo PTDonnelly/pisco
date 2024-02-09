@@ -149,7 +149,7 @@ class Processor:
             condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_2 & condition_3 & condition_4 & condition_5
+            combined_conditions = condition_2 & condition_5
 
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
