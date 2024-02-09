@@ -101,6 +101,8 @@ class Extractor:
         if (self.data_level == 'l1c'):
             # Set range of spectral channels to use (pass custom spectral range as arguments, defaults to channels 220-2220 in the main absorption band of water ice)
             self.channels = self.config.set_channels(self.config.channels_mode)
+            # Create a string of all channel IDs separated by commas
+            channel_map = ",".join(map(str, self.channels))
             
             list_of_parameters = [
                 f"-d {self.datapath_in}", # l1c data directory
@@ -109,7 +111,7 @@ class Extractor:
                 f"-mala {self.config.latitude_range[1]} ", # max_latitude
                 f"-milo {self.config.longitude_range[0]} ", # min_longitude
                 f"-malo {self.config.longitude_range[1]} ", # max_longitude
-                f"-c {self.channels[0]}-{self.channels[-1]}",  # spectral channels
+                f"-c {channel_map}",  # spectral channels
                 f"-qlt {self.config.quality_flags}",
                 f"-of txt"  # output file format
             ]

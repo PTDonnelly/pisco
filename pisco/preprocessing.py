@@ -226,6 +226,10 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
         
+        import pprint
+        pprint.pprint(dtype_dict, sort_dicts=False)
+        input()
+        
         if self.should_load_in_chunks():
             self.df = self.read_file_in_chunks(dtype_dict)
         else:
