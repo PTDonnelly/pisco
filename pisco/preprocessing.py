@@ -232,7 +232,7 @@ class Preprocessor:
         rename_mapping = {str(channel_id): f"Spectrum {channel_id}" for channel_id in self.channels}
 
         print(self.df.info(verbose=True))
-        input()()
+        input()
 
         # Rename the columns using the mapping
         self.df.rename(columns=rename_mapping, inplace=True)
