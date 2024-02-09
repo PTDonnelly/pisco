@@ -82,7 +82,7 @@ class Processor:
 
     @staticmethod
     def _get_reduced_fields() -> List[str]:
-        reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1"]
+        reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1", "CloudPhase2", "CloudPhase3"]
         return reduced_fields
     
     def reduce_fields(self, merged_df: pd.DataFrame):
