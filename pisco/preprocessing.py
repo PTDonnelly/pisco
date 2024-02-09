@@ -183,9 +183,6 @@ class Preprocessor:
             # Append the processed chunk to the list
             chunk_list.append(chunk)
 
-            print(chunk.info(verbose=True))
-            input()
-
         print(f"Number of chunks: {len(chunk_list)}")
 
         # Concatenate all processed chunks at once
@@ -234,6 +231,8 @@ class Preprocessor:
         else:
             # Read in as normal
             self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
+            print(self.df.info(verbose=True))
+            input()
         return
 
 
