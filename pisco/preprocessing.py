@@ -1,13 +1,16 @@
 import gzip
+import logging
 import os
 import numpy as np
 import pandas as pd
 from typing import List, Tuple, List, Dict, Optional
 
 import pickle
-import pprint as pp
 
 from pisco import Extractor
+
+# Obtain a logger for this module
+logger = logging.getLogger(__name__)
 
 class Preprocessor:
     """
@@ -163,15 +166,15 @@ class Preprocessor:
         # Calculate chunk size
         chunk_size = int(available_memory / memory_per_row)
         
-        print(f"Available memory: {available_memory} B")
-        print(f"Memory per row (+50% margin): {memory_per_row} B")
-        print(f"Chunk size: {chunk_size} rows")
+        logging.info(f"Available memory: {available_memory} B")
+        logging.info(f"Memory per row (+50% margin): {memory_per_row} B")
+        logging.info(f"Chunk size: {chunk_size} rows")
         return chunk_size
 
 
     def read_file_in_chunks(self, dtype_dict: Dict):
         # Load in chunks
-        print("Loading in chunks...")
+        logging.info("Loading in chunks...")
         
         # Initialize a list to hold processed chunks
         chunk_list = []
@@ -184,7 +187,7 @@ class Preprocessor:
             # Append the processed chunk to the list
             chunk_list.append(chunk)
 
-        print(f"Number of chunks: {len(chunk_list)}")
+        logging.info(f"Number of chunks: {len(chunk_list)}")
 
         # Concatenate all processed chunks at once
         concatenated_df = pd.concat(chunk_list, ignore_index=True)
@@ -222,7 +225,7 @@ class Preprocessor:
 
 
     def open_text_file(self) -> None:
-        print("\nLoading intermediate text file:")
+        logging.info("\nLoading intermediate text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
@@ -312,9 +315,16 @@ class Preprocessor:
 
     def _delete_intermediate_file(self) -> None:
         if self.delete_intermediate_files:
-            # If config.delete_intermediate_files is True, delete the intermediate OBR data file
-            os.remove(self.intermediate_file)
+            # If config.delete_intermediate_files is True, try deleting the intermediate OBR data file
+            try:
+                os.remove(self.intermediate_file)
+                logging.info(f"Deleted intermediate file: {self.intermediate_file}")
+            except OSError as e:
+                logging.error(f"Error deleting file: {e}")
+
+
         return
+
 
     def save_observations(self, delete_intermediate_files: Optional[bool]=None) -> None:
         """
@@ -323,7 +333,7 @@ class Preprocessor:
         # Split the intermediate file path into the root and extension, and give new extension
         file_root, _ = os.path.splitext(self.intermediate_file)
         outfile = f"{file_root}"
-        print(f"\nSaving DataFrame to: {outfile}")
+        logging.info(f"\nSaving DataFrame to: {outfile}")
 
         # Compress and save using gzip
         with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:

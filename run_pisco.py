@@ -1,6 +1,11 @@
 import argparse
+import logging
 import os
+
 from pisco import Extractor, Preprocessor, Processor
+
+# Configure logging at the module level
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def _clean_up_files(ex: Extractor, metop: str):
     
@@ -70,7 +75,7 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         pre.save_observations()
         
         # Print the DataFrame
-        print(pre.df.info())
+        logging.info(pre.df.info(verbose=True))
         return
 
 
@@ -104,11 +109,12 @@ def process_iasi(ex: Extractor):
         # Save merged and filtered DataFrame to compressed pickle
         pro.save_merged_products()
         
-        print(pro.df.info())
+        logging.info(pro.df.info(verbose=True))
     return
 
 
 def run_pisco(memory, metop, year, month, day):
+    # Instantiate an Extractor for this run
     ex = Extractor()
     ex.year = f"{year:04d}"
     ex.month = f"{month:02d}"

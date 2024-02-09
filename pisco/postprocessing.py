@@ -1,5 +1,6 @@
-import numpy as np
 import datetime
+import logging
+import numpy as np
 import os
 import re
 import pandas as pd
@@ -8,10 +9,13 @@ from typing import List, Tuple, Dict, Union
 
 from pisco import Processor
 
+# Obtain a logger for this module
+logger = logging.getLogger(__name__)
+
 class Postprocessor:
     def __init__(self, filepath: str):
         self.filepath = filepath
-        self.cloud_phase_names = {0: "Unknown", 1: "Water", 2: "Ice", 3: "Mixed", 4: "Clear", 5: "Reserved_1", 6: "Reserved_2"}
+        self.cloud_phase_names = {0: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}
         self.df: pd.DataFrame = None
     
     @staticmethod
@@ -116,7 +120,7 @@ class Postprocessor:
         # Retrieve the DataFrame contained in the file at the location filepath
         self.df = Postprocessor._get_dataframe(self.filepath)
         print(self.df.info(verbose=True))
-        
+
         # Check if DataFrame contains data and required columns are present
         required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
         df_good = Processor.check_df(self.filepath, self.df, required_columns)

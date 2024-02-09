@@ -1,4 +1,5 @@
 import gzip
+import logging
 import os
 import pandas as pd
 from typing import List, Optional
@@ -6,6 +7,9 @@ from typing import List, Optional
 import pickle
 
 from pisco import Extractor
+
+# Obtain a logger for this module
+logger = logging.getLogger(__name__)
 
 class Processor:
     def __init__(self, ex: Extractor):
@@ -34,13 +38,13 @@ class Processor:
         
         # Check if L1C and/or L2 data files exist
         if not os.path.exists(self.datafile_l1c) and not os.path.exists(self.datafile_l2):
-            print('Neither L1C nor L2 data files exist. Nothing to correlate.')
+            logging.info('Neither L1C nor L2 data files exist. Nothing to correlate.')
             return False
         elif not os.path.exists(self.datafile_l1c):
-            print('L1C data files do not exist. Cannot correlate.')
+            logging.info('L1C data files do not exist. Cannot correlate.')
             return False
         elif not os.path.exists(self.datafile_l2):
-            print('L2 data files do not exist. Cannot correlate.')
+            logging.info('L2 data files do not exist. Cannot correlate.')
             return False
         else:
             return True
@@ -57,7 +61,7 @@ class Processor:
         Uncompresses two pickled DataFrames loaded from the intermediate analysis data files.
         
         """
-        print("\nLoading L1C spectra and L2 cloud products:")
+        logging.info("\nLoading L1C spectra and L2 cloud products:")
         self.df_l1c = Processor.unpickle(self.datafile_l1c)
         self.df_l2 = Processor.unpickle(self.datafile_l2)
         return
@@ -102,16 +106,16 @@ class Processor:
     def check_df(filepath: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
-            print(f"DataFrame empty: {filepath}")      
+            logging.info(f"DataFrame empty: {filepath}")      
             return False     
 
         # Check for the presence of all required columns 
         if required_columns:
             missing_columns = [col for col in required_columns if col not in df.columns]
             if missing_columns:
-                print(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
+                logging.info(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
-        print(f"DataFrame processed: {filepath}")
+        logging.info(f"DataFrame processed: {filepath}")
         return True
 
 
@@ -152,7 +156,7 @@ class Processor:
 
             # Check that DataFrame still contains data after filtering
             if filtered_df.empty:
-                print(f"No data remains after filtering: {self.output_path}")
+                logging.info(f"No data remains after filtering: {self.output_path}")
                 return pd.DataFrame()
             else:
                 return filtered_df
@@ -195,7 +199,7 @@ class Processor:
 
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         if not self.df.empty:
-            print(f"Saving compressed spectra to: {self.output_path}")
+            logging.info(f"Saving compressed spectra to: {self.output_path}")
             
             # Compress and save using gzip
             with gzip.open(f"{self.output_path}.pkl.gz", 'wb') as f:
@@ -208,5 +212,5 @@ class Processor:
             # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
             self._delete_intermediate_files()
         else:
-            print((f"DataFrame empty for: {self.output_path}"))
+            logging.info((f"DataFrame empty for: {self.output_path}"))
         return

@@ -26,15 +26,15 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
         # Prepare DataFrame for analysis
         is_df_prepared = post.prepare_dataframe()
     
-        # if is_df_prepared:
-        #     post.process_target_variables(target_variables, data_dict)
-        # else:
-        #     Postprocessor.append_bad_values(target_variables, data_dict)
+        if is_df_prepared:
+            post.process_target_variables(target_variables, data_dict)
+        else:
+            Postprocessor.append_bad_values(target_variables, data_dict)
 
-        # date_to_append = post.df['Datetime'].dt.date.iloc[0] if is_df_prepared else Postprocessor.extract_date_from_filepath(filepath)
-        # dates.append(date_to_append)
+        date_to_append = post.df['Datetime'].dt.date.iloc[0] if is_df_prepared else Postprocessor.extract_date_from_filepath(filepath)
+        dates.append(date_to_append)
 
-    # Postprocessor.save_results(data_dict, dates, datapath)
+    Postprocessor.save_results(data_dict, dates, datapath)
 
 def main():
     """
