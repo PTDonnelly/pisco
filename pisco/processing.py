@@ -144,8 +144,8 @@ class Processor:
 
 
             condition_2 = df['CloudPhase1'] > 3
-            condition_3 = df['CloudPhase2'] > 3
-            condition_4 = df['CloudPhase3'] > 3
+            # condition_3 = df['CloudPhase2'] > 3
+            # condition_4 = df['CloudPhase3'] > 3
             condition_5 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
