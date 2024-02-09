@@ -336,8 +336,6 @@ class Preprocessor:
             # Compress and save using gzip
             with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:
                 pickle.dump(self.df, f)
-
-            self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
             
             # Output information on the final DataFrame
             logging.info(self.df.info())
