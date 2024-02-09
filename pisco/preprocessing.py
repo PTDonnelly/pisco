@@ -322,7 +322,6 @@ class Preprocessor:
             except OSError as e:
                 logging.error(f"Error deleting file: {e}")
 
-
         return
 
 
@@ -345,4 +344,6 @@ class Preprocessor:
         if delete_intermediate_files is None:
             # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
             self._delete_intermediate_file()
+        else:
+            logging.info((f"DataFrame empty for: {self.intermediate_file}"))
         return

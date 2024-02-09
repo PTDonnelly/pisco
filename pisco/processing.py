@@ -200,9 +200,14 @@ class Processor:
 
     def _delete_intermediate_files(self) -> None:
         if self.delete_intermediate_files:
-            # If config.delete_intermediate_files is True, delete the intermediate analysis data files used for correlating spectra and clouds
-            os.remove(self.datafile_l1c)
-            os.remove(self.datafile_l2)
+            try:
+                # If config.delete_intermediate_files is True, delete the intermediate analysis data files used for correlating spectra and clouds
+                os.remove(self.datafile_l1c)
+                os.remove(self.datafile_l2)
+                logging.info(f"Deleted intermediate file: {self.intermediate_file}")
+            except OSError as e:
+                logging.error(f"Error deleting file: {e}")
+
         return
     
 
@@ -220,6 +225,5 @@ class Processor:
         if delete_intermediate_files is None:
             # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
             self._delete_intermediate_files()
-        else:
-            logging.info((f"DataFrame empty for: {self.output_path}"))
+            
         return
