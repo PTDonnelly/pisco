@@ -228,8 +228,13 @@ class Preprocessor:
 
 
     def fix_spectrum_columns(self) -> None:
-        # Rename columns based on the integer list of channel IDs
-        rename_mapping = {str(self.channels[0] + i): f"Spectrum {channel_id}" for i, channel_id in enumerate(self.channels)}
+        # Create a renaming mapping by prepending "Spectrum " to each spectral channel column name
+        rename_mapping = {str(channel_id): f"Spectrum {channel_id}" for channel_id in self.channels}
+
+        print(self.df.info(verbose=True))
+        input()()
+
+        # Rename the columns using the mapping
         self.df.rename(columns=rename_mapping, inplace=True)
 
         print(self.df.info(verbose=True))
