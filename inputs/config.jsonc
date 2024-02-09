@@ -1,9 +1,9 @@
 {
     // L1C: bool, Specifies whether Level 1C data should be processed
-    "L1C": false,
+    "L1C": true,
 
     // L2: bool, Specifies whether Level 2 data should be processed
-    "L2": false,
+    "L2": true,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": true,
@@ -13,9 +13,6 @@
 
     // products: str, string containing desired IASI L2 products, separated by comma only (e.g. "clp,ozo,twt")
     "products": "clp",
-
-    // cloud_phase: int, The desired cloud phase from the L2 products
-    "cloud_phase": "all",
 
     // satellite_identifier: str, The IASI satellite to be analysed (A, B, or C) = "metopa" | "metopb" | "metopc"
     "satellite_identifier": "metopb",
@@ -27,13 +24,13 @@
     "datapath": "/data/pdonnelly/iasi/",
 
     // year_list: List[int], List of years for extraction
-    "year_list": [2015],
+    "year_list": [2013, 2014, 2015, 2016, 2017, 2018, 2019],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [3],
+    "month_list": [3, 4, 5],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
-    "day_list": [1],
+    "day_list": "all",
 
     // months_in_year: List[int], Calendar months in each year
     "months_in_year": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
