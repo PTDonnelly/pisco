@@ -218,10 +218,7 @@ class Preprocessor:
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
-
-        import pprint
-        pprint.pprint(dtype_dict)
-        exit()
+        
         if self.should_load_in_chunks():
             self.df = self.read_file_in_chunks(dtype_dict)
         else:
@@ -234,6 +231,9 @@ class Preprocessor:
         # Rename columns based on the integer list of channel IDs
         rename_mapping = {str(self.channels[0] + i): f"Spectrum {channel_id}" for i, channel_id in enumerate(self.channels)}
         self.df.rename(columns=rename_mapping, inplace=True)
+
+        print(self.df.info(verbose=True))
+        exit()
         return
 
 
