@@ -198,32 +198,32 @@ class Processor:
         return
     
 
-    def _delete_intermediate_files(self) -> None:
-        if self.delete_intermediate_files:
-            try:
-                # If config.delete_intermediate_files is True, delete the intermediate analysis data files used for correlating spectra and clouds
-                os.remove(self.datafile_l1c)
-                os.remove(self.datafile_l2)
-                logging.info(f"Deleted intermediate file: {self.intermediate_file}")
-            except OSError as e:
-                logging.error(f"Error deleting file: {e}")
-
+    def _delete_intermediate_file(self, filepath):
+        try:
+            os.remove(filepath)
+            logging.info(f"Deleted intermediate file: {filepath}")
+        except OSError as e:
+            logging.error(f"Error deleting file {filepath}: {e}")
         return
-    
 
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         if not self.df.empty:
-            logging.info(f"Saving compressed spectra to: {self.output_path}")
-            
-            # Compress and save using gzip
-            with gzip.open(f"{self.output_path}.pkl.gz", 'wb') as f:
-                pickle.dump(self.df, f)
+            try:
+                # Compress and save using gzip
+                with gzip.open(f"{self.output_path}.pkl.gz", 'wb') as f:
+                    pickle.dump(self.df, f)
 
-            self.df.to_csv(f"{self.output_path}.csv", sep='\t', index=False)
+                self.df.to_csv(f"{self.output_path}.csv", sep='\t', index=False)
+                
+                logging.info(f"Saved merged products to: {self.output_path}.pkl.gz")
 
-            # Delete intermediate OBR output file
-        if delete_intermediate_files is None:
+            except OSError as e:
+                logging.error(f"Error saving file: {e}")
+
+        # Delete Preprocessor files
+        if (delete_intermediate_files is None) and self.delete_intermediate_files:
             # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
-            self._delete_intermediate_files()
-            
+                self._delete_intermediate_file(self.datafile_l1c)
+                self._delete_intermediate_file(self.datafile_l2)
+
         return

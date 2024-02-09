@@ -313,14 +313,13 @@ class Preprocessor:
         return  
     
 
-    def _delete_intermediate_file(self) -> None:
-        if self.delete_intermediate_files:
-            # If config.delete_intermediate_files is True, try deleting the intermediate OBR data file
-            try:
-                os.remove(self.intermediate_file)
-                logging.info(f"Deleted intermediate file: {self.intermediate_file}")
-            except OSError as e:
-                logging.error(f"Error deleting file: {e}")
+    def _delete_intermediate_file(self, filepath) -> None:
+        # If config.delete_intermediate_files is True, try deleting the intermediate OBR data file
+        try:
+            os.remove(filepath)
+            logging.info(f"Deleted intermediate file: {filepath}")
+        except OSError as e:
+            logging.error(f"Error deleting file: {e}")
 
         return
 
@@ -332,18 +331,22 @@ class Preprocessor:
         # Split the intermediate file path into the root and extension, and give new extension
         file_root, _ = os.path.splitext(self.intermediate_file)
         outfile = f"{file_root}"
-        logging.info(f"Saving DataFrame to: {outfile}")
 
-        # Compress and save using gzip
-        with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:
-            pickle.dump(self.df, f)
+        try:
+            # Compress and save using gzip
+            with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:
+                pickle.dump(self.df, f)
 
-        self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
+            self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
+            
+            logging.info(f"Saved DataFrame to: {outfile}.pkl.gz")
+        
+        except OSError as e:
+            logging.error(f"Error saving file: {e}")
         
         # Delete intermediate OBR output file
-        if delete_intermediate_files is None:
+        if (delete_intermediate_files is None) and self.delete_intermediate_files:
             # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
-            self._delete_intermediate_file()
-        else:
-            logging.info((f"DataFrame empty for: {self.intermediate_file}"))
+            self._delete_intermediate_file(self.intermediate_file)
+
         return
