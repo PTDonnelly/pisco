@@ -225,7 +225,7 @@ class Preprocessor:
 
 
     def open_text_file(self) -> None:
-        logging.info("\nLoading intermediate text file:")
+        logging.info("Loading intermediate text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
@@ -333,7 +333,7 @@ class Preprocessor:
         # Split the intermediate file path into the root and extension, and give new extension
         file_root, _ = os.path.splitext(self.intermediate_file)
         outfile = f"{file_root}"
-        logging.info(f"\nSaving DataFrame to: {outfile}")
+        logging.info(f"Saving DataFrame to: {outfile}")
 
         # Compress and save using gzip
         with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:

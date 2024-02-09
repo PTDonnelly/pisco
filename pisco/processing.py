@@ -61,7 +61,7 @@ class Processor:
         Uncompresses two pickled DataFrames loaded from the intermediate analysis data files.
         
         """
-        logging.info("\nLoading L1C spectra and L2 cloud products:")
+        logging.info("Loading L1C spectra and L2 cloud products:")
         self.df_l1c = Processor.unpickle(self.datafile_l1c)
         self.df_l2 = Processor.unpickle(self.datafile_l2)
         return
@@ -91,7 +91,8 @@ class Processor:
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
             "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
-            "Pressure1", "TemperatureOrDryBulbTemperature1", "CloudPhase1", "CloudAmountInSegment1"]
+            "Pressure1", "TemperatureOrDryBulbTemperature1", "CloudAmountInSegment1",
+            "CloudPhase1", "CloudPhase2", "CloudPhase3"]
         
         return reduced_fields
 

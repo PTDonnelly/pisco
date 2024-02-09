@@ -1,8 +1,12 @@
+import logging
 import os
 import subprocess
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from .configuration import Configurer
+
+# Obtain a logger for this module
+logger = logging.getLogger(__name__)
 
 class Extractor:
     def __init__(self):
@@ -156,7 +160,7 @@ class Extractor:
         """
         # Build the command string to execute the binary script
         command = self._get_command()
-        print(f"\n{command}")
+        logging.info(f"{command}")
 
         try:
             # Initiate the subprocess with Popen.
@@ -177,7 +181,7 @@ class Extractor:
                     break
                 if current_output_line:
                     # Print the line and also save it to command_output list
-                    print(current_output_line.strip())
+                    logging.info(current_output_line.strip())
                     command_output.append(current_output_line.strip())
 
             # At this point, the subprocess has finished. Check its return code.
@@ -204,7 +208,7 @@ class Extractor:
 
         # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
         if "No L1C data files found" in result.stdout or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
-            print(result.stdout)
+            logging.info(result.stdout)
             os.remove(self.intermediate_file)
             return False
         else:
