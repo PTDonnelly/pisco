@@ -2,7 +2,7 @@ import gzip
 import os
 import numpy as np
 import pandas as pd
-from typing import List, Tuple, List, Dict
+from typing import List, Tuple, List, Dict, Optional
 
 import pickle
 import pprint as pp
@@ -55,7 +55,7 @@ class Preprocessor:
     """
     def __init__(self, ex: Extractor, allocated_memory: int, chunking_safety_margin=0.5):
         self.intermediate_file: str = ex.intermediate_file
-        self.delete_tempfiles = ex.config.delete_tempfiles
+        self.delete_intermediate_files = ex.config.delete_intermediate_files
         self.data_level: str = ex.data_level
         self.channels: List[int] = ex.channels
         self.allocated_memory = allocated_memory * (1024 ** 3) # Convert from Gigabytes to Bytes
@@ -311,11 +311,12 @@ class Preprocessor:
     
 
     def _delete_intermediate_file(self) -> None:
-        os.remove(self.intermediate_file)
+        if self.delete_intermediate_files:
+            # If config.delete_intermediate_files is True, delete the intermediate OBR data file
+            os.remove(self.intermediate_file)
         return
 
-
-    def save_observations(self) -> None:
+    def save_observations(self, delete_intermediate_files: Optional[bool]=None) -> None:
         """
         Saves the observation data to CSV/HDF5 file and deletes OBR output file.
         """  
@@ -331,6 +332,7 @@ class Preprocessor:
         self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
         
         # Delete intermediate OBR output file
-        if self.delete_tempfiles:
+        if delete_intermediate_files is None:
+            # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
             self._delete_intermediate_file()
         return

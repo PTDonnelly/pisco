@@ -186,15 +186,14 @@ class Processor:
     
 
     def _delete_intermediate_files(self) -> None:
-        """
-        Delete the intermediate analysis data files used for correlating spectra and clouds.
-        """
-        os.remove(self.datafile_l1c)
-        os.remove(self.datafile_l2)
+        if self.delete_intermediate_files:
+            # If config.delete_intermediate_files is True, delete the intermediate analysis data files used for correlating spectra and clouds
+            os.remove(self.datafile_l1c)
+            os.remove(self.datafile_l2)
         return
     
 
-    def save_merged_products(self) -> None:
+    def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         if not self.df.empty:
             print(f"Saving compressed spectra to: {self.output_path}")
             
@@ -204,9 +203,10 @@ class Processor:
 
             self.df.to_csv(f"{self.output_path}.csv", sep='\t', index=False)
 
-            if self.delete_intermediate_files:
-                # Delete original csv files
-                self._delete_intermediate_files()
+            # Delete intermediate OBR output file
+        if delete_intermediate_files is None:
+            # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
+            self._delete_intermediate_files()
         else:
             print((f"DataFrame empty for: {self.output_path}"))
         return
