@@ -318,7 +318,7 @@ class Preprocessor:
         with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:
             pickle.dump(self.df, f)
 
-        self.df.to_csv(f"{outfile}.csv", sep='\t')
+        self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
         
         # Delete intermediate OBR output file
         if delete_tempfiles:

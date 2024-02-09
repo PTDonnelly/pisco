@@ -207,7 +207,7 @@ class Postprocessor:
             filtered_df = self.df[self.df[['CloudPhase1', 'CloudAmountInSegment1']] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
             print(phase, name)
             print(filtered_df.head())
-            exit()
+            input()
             olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == phase])
             olr_values[name] = olr
 
