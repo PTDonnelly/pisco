@@ -182,10 +182,20 @@ class Preprocessor:
         for chunk in pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, chunksize=chunk_size):
             # Append the processed chunk to the list
             chunk_list.append(chunk)
+
+            print(chunk.info(verbose=True))
+            input()
+
         print(f"Number of chunks: {len(chunk_list)}")
 
         # Concatenate all processed chunks at once
-        return pd.concat(chunk_list, ignore_index=True)
+        concatenated_df = pd.concat(chunk_list, ignore_index=True)
+        
+        # Ensure all columns have the correct data types
+        for column, dtype in dtype_dict.items():
+            concatenated_df[column] = concatenated_df[column].astype(dtype)
+
+        return concatenated_df
 
 
     def should_load_in_chunks(self):
@@ -230,9 +240,6 @@ class Preprocessor:
     def fix_spectrum_columns(self) -> None:
         # Create a renaming mapping by prepending "Spectrum " to each spectral channel column name
         rename_mapping = {str(channel_id): f"Spectrum {channel_id}" for channel_id in self.channels}
-
-        print(self.df.info(verbose=True))
-        input()
 
         # Rename the columns using the mapping
         self.df.rename(columns=rename_mapping, inplace=True)
