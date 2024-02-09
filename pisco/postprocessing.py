@@ -173,9 +173,21 @@ class Postprocessor:
             radiance_si = radiance_df.values * 1e-3  # Convert from mW to W
             
             # Integrate the radiance over the wavelength for each measurement
-            olr_integrals = np.trapz(radiance_si, wavelengths, axis=1)
+            integrated_spectrum = np.trapz(radiance_si, wavelengths, axis=1)
 
-            return np.float32(np.mean(olr_integrals))
+            # Extract the cloud fraction in the spectrum
+            cloud_fraction = sub_df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
+
+            # Weight OLR integrals by cloud fraction
+            weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
+            
+            # # Compute the weighted average OLR, considering only non-zero cloud fractions
+            # if np.sum(cloud_fraction) > 0:
+            #     return np.float32(np.sum(weighted_olr) / np.sum(cloud_fraction))
+            # else:
+            #     return -1
+
+            return np.float32(np.mean(weighted_integrated_spectrum))
 
 
 
@@ -191,6 +203,11 @@ class Postprocessor:
 
         # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
+            # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
+            filtered_df = self.df[self.df[['CloudPhase1', 'CloudAmountInSegment1']] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
+            print(phase, name)
+            print(filtered_df.head())
+            exit()
             olr = self.calculate_olr_from_spectrum(self.df[self.df['CloudPhase1'] == phase])
             olr_values[name] = olr
 
