@@ -110,8 +110,6 @@ class Preprocessor:
     def _get_l1c_product_fields(channels: List[int]) -> List[Tuple]:
         # Format of spectral fields (field_name, data_type) where field_name is the channel ID
         fields = [(str(channel_id), 'float32') for channel_id in channels]
-        print(fields)
-        exit()
         return fields
       
     @staticmethod
@@ -221,6 +219,9 @@ class Preprocessor:
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
 
+        import pprint
+        pprint.pprint(dtype_dict)
+        exit()
         if self.should_load_in_chunks():
             self.df = self.read_file_in_chunks(dtype_dict)
         else:
