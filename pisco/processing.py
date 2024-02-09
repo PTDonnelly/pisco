@@ -16,7 +16,8 @@ class Processor:
         self.df_l1c: object = None
         self.df_l2: object = None
         self.df: object = None
-        
+
+
     def _get_intermediate_analysis_data_paths(self) -> None:
         """
         Defines the paths to the intermediate analysis data files.
@@ -25,6 +26,7 @@ class Processor:
         self.datafile_l2 = f"{self.datapath_l2}cloud_products.pkl.gz"
         return
     
+
     def check_l1c_l2_data_exist(self):
         
         self._get_intermediate_analysis_data_paths()
@@ -48,6 +50,7 @@ class Processor:
             df = pickle.load(f)
         return df
     
+
     def load_data(self) -> None:
         """
         Uncompresses two pickled DataFrames loaded from the intermediate analysis data files.
@@ -65,7 +68,8 @@ class Processor:
         missing_headers_l2 = [header for header in required_headers if header not in self.df_l2.columns]
         if missing_headers_l1c or missing_headers_l2:
             raise ValueError(f"Missing required headers in df_l1c: {missing_headers_l1c} or df_l2: {missing_headers_l2}")
-        
+
+
     def correlate_datasets(self) -> None:
         """
         Create a single DataFrame for all contemporaneous observations
@@ -78,12 +82,15 @@ class Processor:
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
         return
 
-
     @staticmethod
     def _get_reduced_fields() -> List[str]:
-        reduced_fields = ["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "CloudPhase1", "CloudAmountInSegment1"]
+        reduced_fields = [
+            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
+            "Pressure1", "TemperatureOrDryBulbTemperature1", "CloudPhase1", "CloudAmountInSegment1"]
+        
         return reduced_fields
-    
+
+
     def reduce_fields(self, merged_df: pd.DataFrame):
         # Keep only columns containing variables present in reduced_fields and spectral channels
         reduced_fields = Processor._get_reduced_fields()
@@ -105,7 +112,8 @@ class Processor:
                 return False
         print(f"DataFrame processed: {filepath}")
         return True
-        
+
+
     def filter_observations(self, df, maximum_zenith_angle=5):
         """
         Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
@@ -147,17 +155,20 @@ class Processor:
                 return pd.DataFrame()
             else:
                 return filtered_df
-            
+
+
     def merge_datasets(self) -> None:
         # Merge two DataFrames based on latitude, longitude and datetime,
         # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
         return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
+
 
     def _create_merged_datapath(self):
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_merged, exist_ok=True)
         self.output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products")
         return
+
 
     def combine_datasets(self) -> None:
         self._create_merged_datapath()
@@ -181,6 +192,7 @@ class Processor:
         os.remove(self.datafile_l2)
         return
     
+
     def save_merged_products(self, delete_tempfiles: bool = True) -> None:
         if not self.df.empty:
             print(f"Saving compressed spectra to: {self.output_path}")
