@@ -33,12 +33,11 @@ def load_data(file_path, var):
     - df (pd.DataFrame): DataFrame containing Date and data entries
     """
     # Read .csv as DataFrame
-    df = pd.read_csv(file_path, sep=',')
-
+    df = pd.read_csv(file_path, sep='\t')
+    
     # Ensure 'Date' is set as the DataFrame index
     df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
-
 
     if var == 'OLR':
         df = convert_olr_units(df)
@@ -146,7 +145,7 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
             for idx, column in enumerate(df.columns):
                 
                 # Filter columns to plot
-                if column in ['Ice', 'Clear']:  # Skip the 'Date' column
+                if column in ['Clear', 'Ice']:  # Skip the 'Date' column
                     if (df[column] == -1).all():
                         continue
                     

@@ -44,7 +44,7 @@ def main():
     # datapath = "/data/pdonnelly/iasi/metopb_reduced/"
 
     # Define temporal range to plot
-    target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_years = [2015]#, 2014, 2015, 2016, 2017, 2018, 2019]
     target_months = [3, 4, 5]
     target_days = [day for day in range(1, 32)] # Search all days in each month
     target_range = (target_years, target_months, target_days)

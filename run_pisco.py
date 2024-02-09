@@ -64,19 +64,19 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         
         # Read OBR textfiles and store to pandas DataFrame
         pre.open_text_file()
+        
         if pre.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
             pre.fix_spectrum_columns()
+        
         # Construct Local Time column
         pre.build_local_time()
+        
         # Construct Datetime column and remove individual time elements
         pre.build_datetime()
+        
         # Save filtered DataFrame to compressed pickle
         pre.save_observations()
-        
-        # Print the DataFrame
-        logging.info(pre.df.info())
-        logging.info(pre.df.head())
         return
 
 
@@ -109,9 +109,6 @@ def process_iasi(ex: Extractor):
 
         # Save merged and filtered DataFrame to compressed pickle
         pro.save_merged_products()
-        
-        logging.info(pro.df.info())
-        logging.info(pro.df.head())
     return
 
 

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class Postprocessor:
     def __init__(self, filepath: str):
         self.filepath = filepath
-        self.cloud_phase_names = {0: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}
+        self.cloud_phase_names = {-1: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}
         self.df: pd.DataFrame = None
     
     @staticmethod
@@ -119,7 +119,6 @@ class Postprocessor:
         """
         # Retrieve the DataFrame contained in the file at the location filepath
         self.df = Postprocessor._get_dataframe(self.filepath)
-        print(self.df.info(verbose=True))
 
         # Check if DataFrame contains data and required columns are present
         required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
@@ -189,7 +188,6 @@ class Postprocessor:
             return np.float32(np.mean(weighted_integrated_spectrum))
 
 
-
     def get_outgoing_longwave_radiation(self) -> Dict[str, Union[float, int]]:
         """
         Calculates OLR values for all CloudPhase conditions from the DataFrame.
@@ -251,7 +249,7 @@ class Postprocessor:
             elif var == 'Phase Fraction':
                 values = self.get_phase_fraction()
             else:
-                print(f"Target variable not recognised: {var}")
+                logging.info(f"Target variable not recognised: {var}")
                 values = Postprocessor.set_as_invalid()
 
             for key, value in values.items():

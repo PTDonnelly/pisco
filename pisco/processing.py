@@ -93,7 +93,6 @@ class Processor:
             "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
             "Pressure1", "TemperatureOrDryBulbTemperature1", "CloudAmountInSegment1",
             "CloudPhase1", "CloudPhase2", "CloudPhase3"]
-        
         return reduced_fields
 
 
@@ -133,32 +132,24 @@ class Processor:
         pd.DataFrame: Filtered and processed DataFrame.
         """
         # Check if DataFrame contains data and required columns are present
-        filtering_columns = ['CloudPhase1', 'CloudPhase2', 'CloudPhase3', 'SatelliteZenithAngle']
-        df_good = Processor.check_df(self.output_path, df, filtering_columns)
+        reduced_fields = Processor._get_reduced_fields()
+        df_good = Processor.check_df(self.output_path, df, reduced_fields)
         
         if not df_good:
             # If Dataframe is missing values or columns, return empty dataframe
             return pd.DataFrame()
         else:
-            # # Keep rows where 'CloudPhase1' is not -1 (-1 is a bad measurement indicator, throw these measurements)
-            # condition_1 = df['CloudPhase1'] != -1
-            # # Keep rows where 'CloudPhase2' is -1 (throw measurements with multiple cloud phases)
-            # condition_2 = df['CloudPhase2'] == -1
-            # # Keep rows where 'CloudPhase3' is -1 (throw measurements with multiple cloud phases)
-            # condition_3 = df['CloudPhase3'] == -1
-            # # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
-            # condition_4 = df['SatelliteZenithAngle'] < maximum_zenith_angle
-
-            # # Combine all conditions using the bitwise AND operator
-            # combined_conditions = condition_1 & condition_2 & condition_3 & condition_4
-
-            # Keep rows where 'CloudPhase1' is not -1 (-1 is a bad measurement indicator, throw these measurements)
-
+            # Discard measurements where clouds are in liquid phase
+            condition_1 = df['CloudPhase1'] != 2
+            
+            # Discard measurements where clouds are in mixed phase
+            condition_2 = df['CloudPhase1'] != 3
+            
             # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
-            condition_4 = df['SatelliteZenithAngle'] < maximum_zenith_angle
+            condition_3 = df['SatelliteZenithAngle'] < maximum_zenith_angle
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_4
+            combined_conditions = condition_1 & condition_2 & condition_3
 
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
@@ -206,6 +197,7 @@ class Processor:
             logging.error(f"Error deleting file {filepath}: {e}")
         return
 
+
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         if not self.df.empty:
             try:
@@ -215,6 +207,9 @@ class Processor:
 
                 self.df.to_csv(f"{self.output_path}.csv", sep='\t', index=False)
                 
+                # Output information on the final DataFrame
+                logging.info(self.df.info())
+                logging.info(self.df.head())
                 logging.info(f"Saved merged products to: {self.output_path}.pkl.gz")
 
             except OSError as e:

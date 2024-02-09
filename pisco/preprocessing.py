@@ -225,7 +225,7 @@ class Preprocessor:
 
 
     def open_text_file(self) -> None:
-        logging.info("Loading intermediate text file:")
+        logging.info("Loading intermediate OBR text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
@@ -339,6 +339,9 @@ class Preprocessor:
 
             self.df.to_csv(f"{outfile}.csv", sep='\t', index=False)
             
+            # Output information on the final DataFrame
+            logging.info(self.df.info())
+            logging.info(self.df.head())
             logging.info(f"Saved DataFrame to: {outfile}.pkl.gz")
         
         except OSError as e:
