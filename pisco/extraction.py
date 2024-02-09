@@ -160,7 +160,6 @@ class Extractor:
         """
         # Build the command string to execute the binary script
         command = self._get_command()
-        logging.info(f"{command}")
 
         try:
             # Initiate the subprocess with Popen.
@@ -207,7 +206,7 @@ class Extractor:
         products = self._get_l2_products_for_file_check(self.config.products)
 
         # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
-        if "No L1C data files found" in result.stdout or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
+        if ("No L1C data files found" in result.stdout) or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
             logging.info(result.stdout)
             os.remove(self.intermediate_file)
             return False
