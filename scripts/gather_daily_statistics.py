@@ -1,9 +1,13 @@
 # Standard library imports
 from collections import defaultdict
+import logging
 from typing import List
 
 # Local application/library specific imports
 from pisco import Postprocessor
+
+# Configure logging at the module level
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def gather_daily_statistics(datapath: str, filepaths: List[str], target_variables: List[str]):
     """

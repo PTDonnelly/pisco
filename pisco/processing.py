@@ -114,6 +114,7 @@ class Processor:
             if missing_columns:
                 logging.info(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
+        
         logging.info(f"DataFrame processed: {filepath}")
         return True
 
