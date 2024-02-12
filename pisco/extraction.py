@@ -14,7 +14,7 @@ class Extractor:
         Initialize the Extractor class with given parameters.
         """
         # Instantiate a Configurer and set parameters for analysis
-        self.config = Configurer()
+        self.config = Configurer().setup()
         self.runpath: str = os.getcwd()
         self.channels: List[int] = None
         self.data_level: str = None
@@ -40,7 +40,7 @@ class Extractor:
             str: Output data path.
         """
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
-            return f"{self.config.datapath_out}{self.data_level}/{self.year}/{self.month}/{self.day}/"
+            return os.path.join(self.config.datapath, self.config.satellite_identifier, self.data_level, self.year, self.month, self.day)
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -58,7 +58,7 @@ class Extractor:
         # Check the data level
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
-            return f"/bdd/{self.config.satellite_identifier}/{self.data_level}/iasi/"
+            return os.path.join("bdd",self.config.satellite_identifier, self.data_level, "iasi")
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -91,7 +91,7 @@ class Extractor:
         
         # Create the output directory if it doesn't exist
         os.makedirs(self.datapath_out, exist_ok=True)
-        return f"{self.datapath_out}{self.datafile_out}"
+        return os.path.join(self.datapath_out, self.datafile_out)
 
 
     def _build_parameters(self) -> str:
@@ -145,7 +145,7 @@ class Extractor:
         """
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Define the path to the run executable
-            full_runpath = f"{self.runpath}/bin/obr_v4"
+            full_runpath = os.path.join(self.runpath, "bin", "obr_v4")
             # Get the command parameters
             parameters = self._build_parameters()
             # Return the complete command

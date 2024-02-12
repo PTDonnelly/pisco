@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 class Processor:
     def __init__(self, ex: Extractor):
-        self.datapath_l1c = f"{ex.config.datapath}{ex.config.satellite_identifier}/l1c/{ex.year}/{ex.month}/{ex.day}/"
-        self.datapath_l2 = f"{ex.config.datapath}{ex.config.satellite_identifier}/l2/{ex.year}/{ex.month}/{ex.day}/"
-        self.datapath_merged = f"{ex.config.datapath}{ex.config.satellite_identifier}/{ex.year}/{ex.month}/{ex.day}/"
+        self.datapath_l1c = os.path.join(ex.config.datapath, ex.config.satellite_identifier,'l1c', ex.year, ex.month, ex.day)
+        self.datapath_l2 = os.path.join(ex.config.datapath, ex.config.satellite_identifier,'l2', ex.year, ex.month, ex.day)
+        self.datapath_merged = os.path.join(ex.config.datapath, ex.config.satellite_identifier, ex.year, ex.month, ex.day)
         self.delete_intermediate_files = ex.config.delete_intermediate_files
         self.output_path: str = None
         self.df_l1c: object = None
@@ -27,8 +27,8 @@ class Processor:
         """
         Defines the paths to the intermediate analysis data files.
         """
-        self.datafile_l1c = f"{self.datapath_l1c}extracted_spectra.pkl.gz"
-        self.datafile_l2 = f"{self.datapath_l2}cloud_products.pkl.gz"
+        self.datafile_l1c = os.path.join(self.datapath_l1c, "extracted_spectra.pkl.gz")
+        self.datafile_l2 =  os.path.join(self.datapath_l2, "cloud_products.pkl.gz")
         return
     
 
@@ -201,14 +201,15 @@ class Processor:
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         if not self.df.empty:
             try:
+                output_file = os.path.join(self.output_path, ".pkl.gz")
                 # Compress and save using gzip
-                with gzip.open(f"{self.output_path}.pkl.gz", 'wb') as f:
+                with gzip.open(output_file, 'wb') as f:
                     pickle.dump(self.df, f)
                 
                 # Output information on the final DataFrame
                 logging.info(self.df.info())
                 logging.info(self.df.head())
-                logging.info(f"Saved merged products to: {self.output_path}.pkl.gz")
+                logging.info(f"Saved merged products to: {output_file}")
 
             except OSError as e:
                 logging.error(f"Error saving file: {e}")

@@ -3,18 +3,20 @@ import os
 
 class Configurer:
     def __init__(self, path_to_config_file: str="inputs/config.jsonc"):
-        self.data_level: str = ""
-        self.datapath_out: str = None
+        self.path_to_config_file = path_to_config_file
 
+    def setup(self):    
         # Initialise the Config class with your JSON configuration file
-        with open(path_to_config_file, 'r') as file:
+        with open(self.path_to_config_file, 'r') as file:
             # Access the parameters directly as attributes of the class. 
             self.__dict__ = commentjson.load(file)
             
         # Perform any necessary post-processing before executing
-        self.latitude_range, self.longitude_range = tuple(self.latitude_range), tuple(self.longitude_range)
-        self.datapath_out = f"{self.datapath}{self.satellite_identifier}/"
+        self.latitude_range = tuple(self.latitude_range)
+        self.longitude_range = tuple(self.longitude_range)
         os.makedirs(self.datapath_out, exist_ok=True)
+        
+        return
     
     @staticmethod
     def set_channels(mode, start_channel=220, end_channel=2220):

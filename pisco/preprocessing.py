@@ -330,17 +330,17 @@ class Preprocessor:
         """  
         # Split the intermediate file path into the root and extension, and give new extension
         file_root, _ = os.path.splitext(self.intermediate_file)
-        outfile = f"{file_root}"
+        output_file = os.path.join(file_root, ".pkl.gz")
 
         try:
             # Compress and save using gzip
-            with gzip.open(f"{outfile}.pkl.gz", 'wb') as f:
+            with gzip.open(output_file, 'wb') as f:
                 pickle.dump(self.df, f)
             
             # Output information on the final DataFrame
             logging.info(self.df.info())
             logging.info(self.df.head())
-            logging.info(f"Saved DataFrame to: {outfile}.pkl.gz")
+            logging.info(f"Saved DataFrame to: {output_file}")
         
         except OSError as e:
             logging.error(f"Error saving file: {e}")
