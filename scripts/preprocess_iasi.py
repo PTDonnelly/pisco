@@ -29,22 +29,22 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames
-        pre = Preprocessor(ex, memory)
+        preprocessor = Preprocessor(ex, memory)
         
         # Read OBR textfiles and store to pandas DataFrame
-        pre.open_text_file()
+        preprocessor.open_text_file()
         
-        if pre.data_level == "l1c":
+        if preprocessor.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
-            pre.fix_spectrum_columns()
+            preprocessor.fix_spectrum_columns()
         
         # Construct Local Time column
-        pre.build_local_time()
+        preprocessor.build_local_time()
         
         # Construct Datetime column and remove individual time elements
-        pre.build_datetime()
+        preprocessor.build_datetime()
         
         # Save filtered DataFrame to compressed pickle
-        pre.save_observations()
+        preprocessor.save_observations()
         
     return
