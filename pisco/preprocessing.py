@@ -16,45 +16,16 @@ class Preprocessor:
     """
     A class used to handle the preprocessing of IASI data.
 
-    This class is responsible for opening the binary files that contain the raw data,
-    reading and structuring the data into a pandas DataFrame, and then doing a number
-    of transformations on this data to prepare it for further analysis.
+    This class is responsible for reading the texfile outputs from OBR,
+    reading and structuring the data into a pandas DataFrame, and doing some manipulations
+    to prepare it for further analysis.
 
     Attributes:
     ----------
-    intermediate_file : str
-        The path to the binary file to be processed.
-    data_level : str
-        The level of the data to be processed ("l1c" or "l2").
-    f : BinaryIO
-        The binary file that is currently being processed.
-    metadata : Metadata
-        The metadata of the binary file that is currently being processed.
-    data_record_df : pd.DataFrame
-        The pandas DataFrame that stores the data extracted from the binary file.
-
+    
     Methods:
     -------
-    open_binary_file()
-        Opens the binary file and extracts the metadata.
-    close_binary_file()
-        Closes the currently open binary file.
-    flag_observations_to_keep(fields: List[Tuple])
-        Creates a List of indices to sub-sample the main data set.
-    read_record_fields(fields: List[Tuple])
-        Reads the specified fields from the binary file and stores them in the DataFrame.
-    read_spectral_radiance(fields: List[Tuple])
-        Reads the spectral radiance data from the binary file and stores them in the DataFrame.
-    build_local_time()
-        Calculates and stores the local time at each point in the DataFrame.
-    build_datetime()
-        Combines the date and time fields into a single datetime field in the DataFrame.
-    filter_bad_spectra(date: datetime)
-        Filters out bad data based on IASI quality flags and overwrites the existing DataFrame.
-    save_observations()
-        Saves the observations in the DataFrame to a CSV file and deletes the intermediate binary file.
-    preprocess_files(year: str, month: str, day: str)
-        Runs the entire preprocessing pipeline on the binary file.
+   
     """
     def __init__(self, ex: Extractor, allocated_memory: int, chunking_safety_margin=0.5):
         self.intermediate_file: str = ex.intermediate_file
@@ -199,14 +170,13 @@ class Preprocessor:
         return concatenated_df
 
 
-    def should_load_in_chunks(self):
+    def should_load_in_chunks(self) -> bool:
         "Checks if file size is greater than the allocated memory with safety margin"
-        print(f"B: {self.intermediate_file}")
         file_size = os.path.getsize(self.intermediate_file)
         return file_size > (self.allocated_memory / self.chunking_safety_margin)
 
 
-    def _get_fields_and_datatypes(self):
+    def _get_fields_and_datatypes(self) -> Dict[str, str]:
         # Read and combine byte tables to optimise reading of OBR txtfile
         if self.data_level == 'l1c':
             combined_fields = (
@@ -331,12 +301,8 @@ class Preprocessor:
         """  
         # Split the intermediate file path into the root and extension, and give new extension
         file_root, _ = os.path.splitext(self.intermediate_file)
-        output_file = os.path.join(file_root, ".pkl.gz")
-
-        print(file_root)
-        print(output_file)
-
-        exit()
+        output_file = file_root + ".pkl.gz"
+        
         try:
             # Compress and save using gzip
             with gzip.open(output_file, 'wb') as f:

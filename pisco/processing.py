@@ -181,10 +181,7 @@ class Processor:
             try:
                 # Split the intermediate file path into the root and extension, and give new extension
                 file_root, _ = os.path.splitext(self.output_path)
-                output_file = os.path.join(file_root, ".pkl.gz")
-
-                print(file_root)
-                print(output_file)
+                output_file = file_root + ".pkl.gz"
 
                 # Compress and save using gzip
                 with gzip.open(output_file, 'wb') as f:
