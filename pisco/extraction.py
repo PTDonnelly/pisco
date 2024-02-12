@@ -75,13 +75,15 @@ class Extractor:
         self.datapath_out = self._get_datapath_out()
 
 
-    def create_intermediate_filepath(self) -> str:
+    def build_intermediate_filepath(self) -> str:
         """
         Creates the directory to save the output files.
         
         Returns:
             intermediate_file (str): the full path to the intermediate file produced by IASI extraction script.
         """
+        self.get_datapaths()
+
         if self.data_level == 'l1c':
             self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
@@ -151,7 +153,7 @@ class Extractor:
             # Get the command parameters
             parameters = self._build_parameters()
             # Return the complete command
-            return f"{full_runpath} {parameters} -out {self.datapath_out}{self.datafile_out}"
+            return f"{full_runpath} {parameters} -out {self.intermediate_file}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -223,7 +225,7 @@ class Extractor:
         Preprocesses the IASI data.
         """
         # Create the output directory and point to intermediate file (L1C: OBR, L2: BUFR)
-        self.intermediate_file = self.create_intermediate_filepath()
+        self.intermediate_file = self.build_intermediate_filepath()
         # Run the command to extract the data
         result = self.run_command()
         # Check if files are produced. If not, skip processing.

@@ -201,7 +201,7 @@ class Preprocessor:
 
     def should_load_in_chunks(self):
         "Checks if file size is greater than the allocated memory with safety margin"
-        print(self.intermediate_file)
+        print(f"B: {self.intermediate_file}")
         file_size = os.path.getsize(self.intermediate_file)
         return file_size > (self.allocated_memory / self.chunking_safety_margin)
 
