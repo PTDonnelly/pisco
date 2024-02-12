@@ -45,19 +45,21 @@ def main():
     # Instantiate a Configurer to get data from config.json
     config = Configurer()
 
-    # # The path to the directory that contains the data files
-    # datapath = "D:\\Data\\iasi\\"
-    # # Define temporal range to plot
-    # target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
-    # target_months = [3, 4, 5]
-    # target_days = [day for day in range(1, 32)] # Search all days in each month
-    # target_range = (target_years, target_months, target_days)
-    
     # The path to the directory that contains the data files
-    datapath = config.datapath_out
-
+    datapath = "D:\\Data\\iasi\\"
+    data = "/data/pdonnelly/iasi/metopb_reduced/"
+    
     # Define temporal range to plot
-    target_range = Postprocessor.get_target_time_range(config)
+    target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    target_months = [3, 4, 5]
+    target_days = [day for day in range(1, 32)] # Search all days in each month
+    target_range = (target_years, target_months, target_days)
+    
+    # # The path to the directory that contains the data files
+    # datapath = config.datapath_out
+
+    # # Define temporal range to plot
+    # target_range = Postprocessor.get_target_time_range(config)
 
     # Find and sort data files
     files_by_date = Postprocessor.organise_files_by_date(datapath)
