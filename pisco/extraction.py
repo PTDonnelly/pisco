@@ -14,7 +14,7 @@ class Extractor:
         Initialize the Extractor class with given parameters.
         """
         # Instantiate a Configurer and set parameters for analysis
-        self.config = Configurer().setup()
+        self.config = Configurer()
         self.runpath: str = os.getcwd()
         self.channels: List[int] = None
         self.data_level: str = None
@@ -45,6 +45,7 @@ class Extractor:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
 
+
     def _get_datapath_in(self) -> str:
         """
         Gets the data path for the input based on the data level, year, month, and day.
@@ -62,6 +63,7 @@ class Extractor:
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
+
 
     def get_datapaths(self) -> None:
         """
@@ -133,6 +135,7 @@ class Extractor:
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
 
+
     def _get_command(self) -> str:
         """
         Builds the command to extract IASI data based on the data level.
@@ -153,6 +156,7 @@ class Extractor:
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
+
 
     def run_command(self) -> object:
         """
@@ -202,6 +206,7 @@ class Extractor:
     def _get_l2_products_for_file_check(products):
         return products.split(',')
 
+
     def check_extracted_files(self, result: object) -> bool:
         products = self._get_l2_products_for_file_check(self.config.products)
 
@@ -212,6 +217,7 @@ class Extractor:
             return False
         else:
             return True
+
 
     def extract_files(self) -> Tuple[bool, str]:
         """
