@@ -35,7 +35,10 @@ def main():
     config = Configurer()
 
     # Paths for the find command, constructed from config data
-    paths = [os.path.join(config.datapath, config.satellite_identifier, "l1c"), os.path.join(config.datapath, config.satellite_identifier, "l2")]
+    paths = [
+        os.path.join(config.datapath, config.satellite_identifier, "l1c"),
+        os.path.join(config.datapath, config.satellite_identifier, "l2")
+        ]
 
     # Delete empty directories and list non-empty directories
     delete_empty_dirs(paths)
