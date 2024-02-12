@@ -59,7 +59,7 @@ class Extractor:
         # Check the data level
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
-            return os.path.join("bdd",self.config.satellite_identifier, self.data_level, "iasi")
+            return os.path.join("/bdd",self.config.satellite_identifier, self.data_level, "iasi")
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
