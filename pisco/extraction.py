@@ -83,7 +83,6 @@ class Extractor:
             intermediate_file (str): the full path to the intermediate file produced by IASI extraction script.
         """
         if self.data_level == 'l1c':
-            # Get the output file name from the input file name
             self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
             self.datafile_out = f"cloud_products.txt"
@@ -225,6 +224,8 @@ class Extractor:
         """
         # Create the output directory and point to intermediate file (L1C: OBR, L2: BUFR)
         self.intermediate_file = self.create_intermediate_filepath()
+        print(self.intermediate_file)
+        exit()
         # Run the command to extract the data
         result = self.run_command()
         # Check if files are produced. If not, skip processing.
