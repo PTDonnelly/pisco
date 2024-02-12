@@ -23,7 +23,7 @@ def move_job_files(ex: Extractor, metop: str):
         try:
             os.makedirs(os.path.dirname(target), exist_ok=True)  # Ensure target directory exists
             os.replace(source, target)
-            logger.info(f"Moved job file to: {output_file}")
+            logger.info(f"Moved job file to: {target}")
         except Exception as e:
             logger.error(f"Error moving file: {e}")
 

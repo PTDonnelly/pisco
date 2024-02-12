@@ -1,6 +1,6 @@
 {   
     // submit_job: bool, Specifies if run should be submitted to SLURM (True) or run a login node (False)
-    "submit_job": false, 
+    "submit_job": true, 
     
     // L1C: bool, Specifies whether Level 1C data should be processed
     "L1C": true,
@@ -30,13 +30,13 @@
     "delete_intermediate_files": true,
 
     // year_list: List[int], List of years for extraction
-    "year_list": [2013],
+    "year_list": [2013, 2014, 2015, 2016, 2017, 2018, 2019],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [3],
+    "month_list": [3, 4, 5],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
-    "day_list": [1],
+    "day_list": "all",
 
     // months_in_year: List[int], Calendar months in each year
     "months_in_year": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
