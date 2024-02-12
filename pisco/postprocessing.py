@@ -130,7 +130,7 @@ class Postprocessor:
         
         if not df_good:
             # Build date from filepath and report that Dataframe is empty
-            self.df['Datetime'] = Postprocessor.extract_date_from_filepath(self.filepath)
+            self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
             self.is_df_prepared = False
             return
         else:
