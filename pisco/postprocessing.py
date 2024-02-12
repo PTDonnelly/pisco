@@ -264,7 +264,7 @@ class Postprocessor:
             elif var == 'Phase Fraction':
                 values = self.get_phase_fraction()
             else:
-                logging.info(f"Target variable not recognised: {var}")
+                logger.info(f"Target variable not recognised: {var}")
                 values = Postprocessor.set_as_invalid()
 
             for key, value in values.items():

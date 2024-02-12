@@ -166,15 +166,15 @@ class Preprocessor:
         # Calculate chunk size
         chunk_size = int(available_memory / memory_per_row)
         
-        logging.info(f"Available memory: {available_memory} B")
-        logging.info(f"Memory per row (+50% margin): {memory_per_row} B")
-        logging.info(f"Chunk size: {chunk_size} rows")
+        logger.info(f"Available memory: {available_memory} B")
+        logger.info(f"Memory per row (+50% margin): {memory_per_row} B")
+        logger.info(f"Chunk size: {chunk_size} rows")
         return chunk_size
 
 
     def read_file_in_chunks(self, dtype_dict: Dict):
         # Load in chunks
-        logging.info("Loading in chunks...")
+        logger.info("Loading in chunks...")
         
         # Initialize a list to hold processed chunks
         chunk_list = []
@@ -187,7 +187,7 @@ class Preprocessor:
             # Append the processed chunk to the list
             chunk_list.append(chunk)
 
-        logging.info(f"Number of chunks: {len(chunk_list)}")
+        logger.info(f"Number of chunks: {len(chunk_list)}")
 
         # Concatenate all processed chunks at once
         concatenated_df = pd.concat(chunk_list, ignore_index=True)
@@ -226,7 +226,7 @@ class Preprocessor:
 
 
     def open_text_file(self) -> None:
-        logging.info("Loading intermediate OBR text file:")
+        logger.info("Loading intermediate OBR text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
@@ -318,9 +318,9 @@ class Preprocessor:
         # If config.delete_intermediate_files is True, try deleting the intermediate OBR data file
         try:
             os.remove(filepath)
-            logging.info(f"Deleted intermediate file: {filepath}")
+            logger.info(f"Deleted intermediate file: {filepath}")
         except OSError as e:
-            logging.error(f"Error deleting file: {e}")
+            logger.error(f"Error deleting file: {e}")
 
         return
 
@@ -339,12 +339,12 @@ class Preprocessor:
                 pickle.dump(self.df, f)
             
             # Output information on the final DataFrame
-            logging.info(self.df.info())
-            logging.info(self.df.head())
-            logging.info(f"Saved DataFrame to: {output_file}")
+            logger.info(self.df.info())
+            logger.info(self.df.head())
+            logger.info(f"Saved DataFrame to: {output_file}")
         
         except OSError as e:
-            logging.error(f"Error saving file: {e}")
+            logger.error(f"Error saving file: {e}")
         
         # Delete intermediate OBR output file
         if (delete_intermediate_files is None) and self.delete_intermediate_files:

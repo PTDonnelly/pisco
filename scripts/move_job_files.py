@@ -1,6 +1,10 @@
+import logging
 import os
 
 from pisco import Extractor
+
+# Obtain a logger for this module
+logger = logging.getLogger(__name__)
 
 def move_job_files(ex: Extractor, metop: str):
     
@@ -19,8 +23,9 @@ def move_job_files(ex: Extractor, metop: str):
         try:
             os.makedirs(os.path.dirname(target), exist_ok=True)  # Ensure target directory exists
             os.replace(source, target)
+            logger.info(f"Moved job file to: {output_file}")
         except Exception as e:
-            print(f"Error moving file: {e}")
+            logger.error(f"Error moving file: {e}")
 
     # Move .sh and .log files
     move_file(source_sh, target_sh)

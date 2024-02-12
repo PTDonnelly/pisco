@@ -38,13 +38,13 @@ class Processor:
         
         # Check if L1C and/or L2 data files exist
         if not os.path.exists(self.datafile_l1c) and not os.path.exists(self.datafile_l2):
-            logging.info('Neither L1C nor L2 data files exist. Nothing to correlate.')
+            logger.info('Neither L1C nor L2 data files exist. Nothing to correlate.')
             return False
         elif not os.path.exists(self.datafile_l1c):
-            logging.info('L1C data files do not exist. Cannot correlate.')
+            logger.info('L1C data files do not exist. Cannot correlate.')
             return False
         elif not os.path.exists(self.datafile_l2):
-            logging.info('L2 data files do not exist. Cannot correlate.')
+            logger.info('L2 data files do not exist. Cannot correlate.')
             return False
         else:
             return True
@@ -61,32 +61,11 @@ class Processor:
         Uncompresses two pickled DataFrames loaded from the intermediate analysis data files.
         
         """
-        logging.info("Loading L1C spectra and L2 cloud products:")
+        logger.info("Loading L1C spectra and L2 cloud products:")
         self.df_l1c = Processor.unpickle(self.datafile_l1c)
         self.df_l2 = Processor.unpickle(self.datafile_l2)
         return
     
-
-    def _check_headers(self):
-        required_headers = ['Latitude', 'Longitude', 'Datetime', 'Local Time']
-        missing_headers_l1c = [header for header in required_headers if header not in self.df_l1c.columns]
-        missing_headers_l2 = [header for header in required_headers if header not in self.df_l2.columns]
-        if missing_headers_l1c or missing_headers_l2:
-            raise ValueError(f"Missing required headers in df_l1c: {missing_headers_l1c} or df_l2: {missing_headers_l2}")
-
-
-    def correlate_datasets(self) -> None:
-        """
-        Create a single DataFrame for all contemporaneous observations
-        """
-        # Check that latitude, longitude, datetime, and local time are present in both file headers 
-        self._check_headers()
-
-        # Latitude and longitude values are rounded to 4 decimal places.
-        self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
-        self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
-        return
-
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
@@ -105,7 +84,7 @@ class Processor:
     def check_df(filepath: str, df: pd.DataFrame = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
-            logging.info(f"DataFrame empty: {filepath}")      
+            logger.info(f"DataFrame empty: {filepath}")      
             return False     
 
         # Check for the presence of all required columns
@@ -113,10 +92,10 @@ class Processor:
         if required_columns:
             missing_columns = [col for col in required_columns if col not in df.columns]
             if missing_columns:
-                logging.info(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
+                logger.info(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
         
-        logging.info(f"DataFrame processed: {filepath}")
+        logger.info(f"DataFrame processed: {filepath}")
         return True
 
 
@@ -156,15 +135,14 @@ class Processor:
 
             # Check that DataFrame still contains data after filtering
             if filtered_df.empty:
-                logging.info(f"No data remains after filtering: {self.output_path}")
+                logger.info(f"No data remains after filtering: {self.output_path}")
                 return pd.DataFrame()
             else:
                 return filtered_df
 
 
     def merge_datasets(self) -> None:
-        # Merge two DataFrames based on latitude, longitude and datetime,
-        # rows from df_l1c that do not have a corresponding row in df_l2 are dropped.
+        # Merge two DataFrames based on spatial and temporal parameters
         return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
 
 
@@ -192,9 +170,9 @@ class Processor:
     def _delete_intermediate_file(self, filepath):
         try:
             os.remove(filepath)
-            logging.info(f"Deleted intermediate file: {filepath}")
+            logger.info(f"Deleted intermediate file: {filepath}")
         except OSError as e:
-            logging.error(f"Error deleting file {filepath}: {e}")
+            logger.error(f"Error deleting file {filepath}: {e}")
         return
 
 
@@ -204,18 +182,21 @@ class Processor:
                 # Split the intermediate file path into the root and extension, and give new extension
                 file_root, _ = os.path.splitext(self.output_path)
                 output_file = os.path.join(file_root, ".pkl.gz")
-                
+
+                print(file_root)
+                print(output_file)
+
                 # Compress and save using gzip
                 with gzip.open(output_file, 'wb') as f:
                     pickle.dump(self.df, f)
                 
                 # Output information on the final DataFrame
-                logging.info(self.df.info())
-                logging.info(self.df.head())
-                logging.info(f"Saved merged products to: {output_file}")
+                logger.info(self.df.info())
+                logger.info(self.df.head())
+                logger.info(f"Saved merged products to: {output_file}")
 
             except OSError as e:
-                logging.error(f"Error saving file: {e}")
+                logger.error(f"Error saving file: {e}")
 
         # Delete Preprocessor files
         if (delete_intermediate_files is None) and self.delete_intermediate_files:
