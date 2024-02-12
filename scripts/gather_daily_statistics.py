@@ -68,9 +68,6 @@ def main():
     # Define second-order target variables to calculate and plot
     target_variables=['OLR', 'Phase Fraction']
 
-    print(filepaths)
-    exit()
-
     # Process data files and collect time series for each target variable 
     gather_daily_statistics(datapath, filepaths, target_variables)
 
