@@ -333,6 +333,10 @@ class Preprocessor:
         file_root, _ = os.path.splitext(self.intermediate_file)
         output_file = os.path.join(file_root, ".pkl.gz")
 
+        print(file_root)
+        print(output_file)
+
+        exit()
         try:
             # Compress and save using gzip
             with gzip.open(output_file, 'wb') as f:

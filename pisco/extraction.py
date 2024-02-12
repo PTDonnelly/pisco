@@ -185,7 +185,7 @@ class Extractor:
                     break
                 if current_output_line:
                     # Print the line and also save it to command_output list
-                    logging.info(current_output_line.strip())
+                    logger.info(current_output_line.strip())
                     command_output.append(current_output_line.strip())
 
             # At this point, the subprocess has finished. Check its return code.
@@ -213,7 +213,7 @@ class Extractor:
 
         # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
         if ("No L1C data files found" in result.stdout) or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
-            logging.info(result.stdout)
+            logger.info(result.stdout)
             os.remove(self.intermediate_file)
             return False
         else:
