@@ -126,11 +126,13 @@ class Postprocessor:
         
         if not df_good:
             # Report if Dataframe is missing values or columns
-            return False
+            self.is_df_prepared = False
+            return
         else:
             # Proceed with DataFrame manipulations if all required columns are present
             self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
-            return True
+            self.is_df_prepared = True
+            return
 
 
     @staticmethod
@@ -200,10 +202,13 @@ class Postprocessor:
 
         # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
-            # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
-            filtered_df = self.df[self.df['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
-            olr = self.calculate_olr_from_spectrum(filtered_df)
-            olr_values[name] = olr
+            if not self.is_df_prepared:
+                olr_values[name] = -1
+            else:
+                # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
+                filtered_df = self.df[self.df['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
+                olr = self.calculate_olr_from_spectrum(filtered_df)
+                olr_values[name] = olr
 
         return olr_values
     
@@ -226,11 +231,15 @@ class Postprocessor:
 
         # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
-            # Check if the phase exists in the DataFrame and sum its values, or default to 0
-            phase_count = pivot_df[phase].sum() if phase in pivot_df.columns else 0
-            
-            # Set fraction to 0 if either total or count is 0, otherwise calculate the fraction
-            phase_fractions[name] = 0 if (total_measurements == 0) or (phase_count == 0) else np.round(phase_count / total_measurements, 3)
+            if not self.is_df_prepared:
+                # Bad value flag to represent missing data
+                phase_fractions[name] = -1
+            else:
+                # Check if the phase exists in the DataFrame and sum its values, or default to 0
+                phase_count = pivot_df[phase].sum() if phase in pivot_df.columns else 0
+                
+                # Set fraction to 0 if either total or count is 0, otherwise calculate the fraction
+                phase_fractions[name] = 0 if (total_measurements == 0) or (phase_count == 0) else np.round(phase_count / total_measurements, 3)
 
         return phase_fractions
     
@@ -254,20 +263,6 @@ class Postprocessor:
 
             for key, value in values.items():
                 data_dict[var][key].append(value)
-
-        return None
-
-    @staticmethod
-    def append_bad_values(target_variables, data_dict) -> None:
-        """
-        Appends bad values for each target variable in the data dictionary.
-
-        Parameters:
-        - target_variables (list): List of target variables.
-        - data_dict (dict): Dictionary to store the results.
-        """
-        for var in target_variables:
-            data_dict[var].append([-1, -1])  # Assuming [-1, -1] represents bad or missing data
 
         return None
        

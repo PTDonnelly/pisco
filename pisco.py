@@ -23,7 +23,7 @@ module purge
 # Load necessary modules
 module load python/meso-3.8
 
-python /data/pdonnelly/github/pisco/run_pisco.py {mem} {metop} {year} {month} {day}
+python /data/pdonnelly/github/pisco/scripts/run_pisco.py {mem} {metop} {year} {month} {day}
 
 """
     with open(script_name, 'w') as file:
@@ -47,16 +47,22 @@ def main():
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)
     for year in ex.config.year_list:
         month_range = ex.config.month_list if (not ex.config.month_list == "all") else range(1, 13)
+        
         for im, month in enumerate(month_range):
             day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[month-1] + 1)
+            
             for day in day_range:
                 script = generate_slurm_script(metop, year, month, day)
                 
                 # Set execute permissions on the script
                 subprocess.run(["chmod", "+x", script])
 
-                # Submit the batch script to SLURM using sbatch
-                subprocess.run(["sbatch", script])
+                if ex.config.submit_job:
+                    # Submit the batch script to SLURM using sbatch
+                    subprocess.run(["sbatch", script])
+                # else:
+                #     # Run on command line on login node
+                #     subprocess.run([script])
 
 if __name__ == "__main__":
     main()
