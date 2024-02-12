@@ -139,17 +139,17 @@ class Processor:
             # If Dataframe is missing values or columns, return empty dataframe
             return pd.DataFrame()
         else:
-            # Discard measurements where clouds are in liquid phase
-            condition_1 = df['CloudPhase1'] != 2
-            
-            # Discard measurements where clouds are in mixed phase
-            condition_2 = df['CloudPhase1'] != 3
-            
             # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
-            condition_3 = df['SatelliteZenithAngle'] < maximum_zenith_angle
+            include_nadir = df['SatelliteZenithAngle'] < maximum_zenith_angle
+
+            # # Discard measurements where clouds are in liquid phase
+            # exclude_liquid = df['CloudPhase1'] != 2
+            
+            # # Discard measurements where clouds are in mixed phase
+            # exclude_mixed = df['CloudPhase1'] != 3
 
             # Combine all conditions using the bitwise AND operator
-            combined_conditions = condition_1 & condition_2 & condition_3
+            combined_conditions = include_nadir
 
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
