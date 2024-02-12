@@ -43,7 +43,7 @@ def main():
     """
     """
     # Instantiate a Configurer to get data from config.json
-    config = Configurer().setup()
+    config = Configurer()
 
     # # The path to the directory that contains the data files
     # # datapath = "D:\\Data\\iasi\\"

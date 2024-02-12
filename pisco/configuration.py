@@ -5,7 +5,6 @@ class Configurer:
     def __init__(self, path_to_config_file: str="inputs/config.jsonc"):
         self.path_to_config_file = path_to_config_file
 
-    def setup(self):    
         # Initialise the Config class with your JSON configuration file
         with open(self.path_to_config_file, 'r') as file:
             # Access the parameters directly as attributes of the class. 
