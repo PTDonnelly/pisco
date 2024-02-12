@@ -201,7 +201,10 @@ class Processor:
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         if not self.df.empty:
             try:
-                output_file = os.path.join(self.output_path, ".pkl.gz")
+                # Split the intermediate file path into the root and extension, and give new extension
+                file_root, _ = os.path.splitext(self.output_path)
+                output_file = os.path.join(file_root, ".pkl.gz")
+                
                 # Compress and save using gzip
                 with gzip.open(output_file, 'wb') as f:
                     pickle.dump(self.df, f)

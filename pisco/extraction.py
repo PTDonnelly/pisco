@@ -224,7 +224,7 @@ class Extractor:
         """
         Preprocesses the IASI data.
         """
-        # Create the output directory and point to intermediate file (L1C: OBR, L2: BUFR)
+        # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
         # Run the command to extract the data
         result = self.run_command()
