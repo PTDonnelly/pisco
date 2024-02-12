@@ -46,9 +46,9 @@ def main():
     config = Configurer()
 
     # The path to the directory that contains the data files
-    datapath = "D:\\Data\\iasi\\"
-    data = "/data/pdonnelly/iasi/metopb_reduced/"
-    
+    # datapath = "D:\\Data\\iasi\\"
+    datapath = "/data/pdonnelly/iasi/metopb_reduced/"
+
     # Define temporal range to plot
     target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
     target_months = [3, 4, 5]
