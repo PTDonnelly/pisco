@@ -105,7 +105,11 @@ class Postprocessor:
 
     @staticmethod
     def _get_dataframe(filepath) -> pd.DataFrame:
-        return Processor.unpickle(filepath)
+        df = Processor.unpickle(filepath)
+        if not df.empty:
+            return df
+        else:
+            return pd.DataFrame
 
 
     def prepare_dataframe(self) -> bool:
@@ -125,12 +129,13 @@ class Postprocessor:
         df_good = Processor.check_df(self.filepath, self.df, required_columns)
         
         if not df_good:
-            # Report if Dataframe is missing values or columns
+            # Build date from filepath and report that Dataframe is empty
+            self.df['Datetime'] = Postprocessor.extract_date_from_filepath(self.filepath)
             self.is_df_prepared = False
             return
         else:
             # Proceed with DataFrame manipulations if all required columns are present
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d')
             self.is_df_prepared = True
             return
 

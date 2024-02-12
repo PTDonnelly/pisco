@@ -20,7 +20,7 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
     # Initialise a defaultdict of defaultdicts, stores data dynamically based on desired column headers, automatically handles missing keys
     data_dict = defaultdict(lambda: defaultdict(list))
     
-    # Create empty list to store datetime objects
+    # Create empty list to store date objects
     dates = []
 
     for filepath in filepaths:
@@ -33,8 +33,8 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
         # Gather results for target variables
         post.process_target_variables(target_variables, data_dict)
 
-        # Build date from filepath
-        date_to_append = Postprocessor.extract_date_from_filepath(filepath)
+        # Append date to list
+        date_to_append = post.df['Datetime'].dt.date.iloc[0]
         dates.append(date_to_append)
 
     Postprocessor.save_results(data_dict, dates, datapath)
