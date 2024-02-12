@@ -7,7 +7,7 @@ import pandas as pd
 from collections import defaultdict
 from typing import List, Tuple, Dict, Union
 
-from pisco import Processor
+from pisco import Configurer, Processor
 
 # Obtain a logger for this module
 logger = logging.getLogger(__name__)
@@ -17,6 +17,11 @@ class Postprocessor:
         self.filepath = filepath
         self.cloud_phase_names = {-1: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}
         self.df: pd.DataFrame = None
+    
+    @staticmethod
+    def get_target_time_range(config: Configurer):
+        day_list = config.day_list if not config.day_list == "all" else range(1, 32)
+        return (config.year_list, config.month_list, day_list)
     
     @staticmethod
     def organise_files_by_date(datapath) -> Dict[Tuple[str, str, str], List[str]]:

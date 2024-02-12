@@ -13,7 +13,7 @@ class Extractor:
         """
         Initialize the Extractor class with given parameters.
         """
-        # Instantiate the Config class and set_parameters() for analysis
+        # Instantiate a Configurer and set parameters for analysis
         self.config = Configurer()
         self.runpath: str = os.getcwd()
         self.channels: List[int] = None

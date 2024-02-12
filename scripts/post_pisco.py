@@ -28,7 +28,7 @@ def list_non_empty_dirs(path):
 
 def main():
     """Clean up the pisco run by deleting empty directories and listing non-empty ones."""
-    # Instantiate a Configurer class to get data from configuration
+    # Instantiate a Configurer class to get data from config.json
     config = Configurer()
 
     # Path for the find command, constructed from config data

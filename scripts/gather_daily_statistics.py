@@ -4,7 +4,7 @@ import logging
 from typing import List
 
 # Local application/library specific imports
-from pisco import Postprocessor
+from pisco import Configurer, Postprocessor
 
 # Configure logging at the module level
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,22 +42,29 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
 def main():
     """
     """
-    # The path to the directory that contains the data files
+    # Instantiate a Configurer to get data from config.json
+    config = Configurer()
+
+    # # The path to the directory that contains the data files
     # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb/"
+    # # Define temporal range to plot
+    # target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    # target_months = [3, 4, 5]
+    # target_days = [day for day in range(1, 32)] # Search all days in each month
+    # target_range = (target_years, target_months, target_days)
+    
+    # The path to the directory that contains the data files
+    datapath = config.datapath_out
 
     # Define temporal range to plot
-    target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
-    target_months = [3, 4, 5]
-    target_days = [day for day in range(1, 32)] # Search all days in each month
-    target_range = (target_years, target_months, target_days)
-    
-    # Define second-order target variables to calculate and plot
-    target_variables=['OLR', 'Phase Fraction']
+    target_range = Postprocessor.get_target_time_range(config)
 
     # Find and sort data files
     files_by_date = Postprocessor.organise_files_by_date(datapath)
     filepaths = Postprocessor.select_files(target_range, files_by_date)
+
+    # Define second-order target variables to calculate and plot
+    target_variables=['OLR', 'Phase Fraction']
 
     print(filepaths)
     exit()
