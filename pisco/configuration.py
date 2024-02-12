@@ -13,7 +13,7 @@ class Configurer:
         # Perform any necessary post-processing before executing
         self.latitude_range = tuple(self.latitude_range)
         self.longitude_range = tuple(self.longitude_range)
-        os.makedirs(self.datapath_out, exist_ok=True)
+        os.makedirs(os.path.join(self.datapath, self.satellite_identifier), exist_ok=True)
         
         return
     
