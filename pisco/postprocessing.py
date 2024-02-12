@@ -237,7 +237,7 @@ class Postprocessor:
             pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
 
             # Calculate total number of measurements for the entire day
-            total_measurements = pivot_df.to_numpy().sum()
+            total_measurements = pivot_df.sum(axis=1).sum()
 
             # Iterate over each CloudPhase category and calculate fractions
             for phase, name in self.cloud_phase_names.items():
@@ -245,7 +245,6 @@ class Postprocessor:
                 phase_fractions[name] = 0 if total_measurements == 0 else np.round(phase_count / total_measurements, 3)
 
         return phase_fractions
-        
 
     def process_target_variables(self, target_variables, data_dict) -> None:
         """
