@@ -45,31 +45,28 @@ def main():
     # Instantiate a Configurer to get data from config.json
     config = Configurer()
 
-    # The path to the directory that contains the data files
-    # datapath = "D:\\Data\\iasi\\"
-    datapath = "/data/pdonnelly/iasi/metopb_reduced/"
-
-    # Define temporal range to plot
-    target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
-    target_months = [3, 4, 5]
-    target_days = [day for day in range(1, 32)] # Search all days in each month
-    target_range = (target_years, target_months, target_days)
-    
     # # The path to the directory that contains the data files
-    # datapath = config.datapath_out
+    # # datapath = "D:\\Data\\iasi\\"
+    # datapath = "/data/pdonnelly/iasi/metopb/"
 
     # # Define temporal range to plot
-    # target_range = Postprocessor.get_target_time_range(config)
+    # target_years = [2013, 2014, 2015, 2016, 2017, 2018, 2019]
+    # target_months = [3, 4, 5]
+    # target_days = [day for day in range(1, 32)] # Search all days in each month
+    # target_time_range = (target_years, target_months, target_days)
+
+    # Define temporal range to post-process
+    target_time_range = Postprocessor.get_target_time_range(config)
 
     # Find and sort data files
-    files_by_date = Postprocessor.organise_files_by_date(datapath)
-    filepaths = Postprocessor.select_files(target_range, files_by_date)
+    files_by_date = Postprocessor.organise_files_by_date(config.datapath_out)
+    filepaths = Postprocessor.select_files(target_time_range, files_by_date)
 
     # Define second-order target variables to calculate and plot
     target_variables=['OLR', 'Phase Fraction']
 
     # Process data files and collect time series for each target variable 
-    gather_daily_statistics(datapath, filepaths, target_variables)
+    gather_daily_statistics(config.datapath_out, filepaths, target_variables)
 
 if __name__ == "__main__":
     main()

@@ -129,9 +129,8 @@ class Postprocessor:
         # Retrieve the DataFrame contained in the file at the location filepath
         self.df = Postprocessor._get_dataframe(self.filepath)
 
-        # Check if DataFrame contains data and required columns are present
-        required_columns = Processor._get_reduced_fields()
-        df_good = Processor.check_df(self.filepath, self.df, required_columns)
+        # Check if DataFrame contains data and required columns
+        df_good = Processor.check_df(self.filepath, self.df)
         
         if not df_good:
             # Build date from filepath and report that Dataframe is empty

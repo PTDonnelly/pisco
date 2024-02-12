@@ -102,13 +102,14 @@ class Processor:
         return merged_df.filter(reduced_fields + spectrum_columns)
     
     @staticmethod
-    def check_df(filepath: str, df: pd.DataFrame, required_columns: Optional[List[str]] = None) -> bool:
+    def check_df(filepath: str, df: pd.DataFrame = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
             logging.info(f"DataFrame empty: {filepath}")      
             return False     
 
-        # Check for the presence of all required columns 
+        # Check for the presence of all required columns
+        required_columns = Processor._get_reduced_fields()
         if required_columns:
             missing_columns = [col for col in required_columns if col not in df.columns]
             if missing_columns:
@@ -131,9 +132,8 @@ class Processor:
         Returns:
         pd.DataFrame: Filtered and processed DataFrame.
         """
-        # Check if DataFrame contains data and required columns are present
-        reduced_fields = Processor._get_reduced_fields()
-        df_good = Processor.check_df(self.output_path, df, reduced_fields)
+        # Check if DataFrame contains data and required columns
+        df_good = Processor.check_df(self.output_path, df)
         
         if not df_good:
             # If Dataframe is missing values or columns, return empty dataframe
