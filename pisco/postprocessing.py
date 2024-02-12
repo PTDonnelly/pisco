@@ -225,29 +225,27 @@ class Postprocessor:
         Returns:
         - dict: A dictionary with CloudPhase names as keys and their corresponding fractions as values.
         """
-        # Pivot the DataFrame to get the individual counts of each Cloud Phase, and collapse Datetimesto single row
-        pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
-
-        # Calculate total number of measurements for the entire day (ensure total_measurements is a scalar by summing over the Series)
-        total_measurements = pivot_df.sum(axis=1).sum()
-
         # Initialize an empty dictionary to store values.
         phase_fractions = {}
 
-        # Iterate over each category and store values
-        for phase, name in self.cloud_phase_names.items():
-            if not self.is_df_prepared:
-                # Bad value flag to represent missing data
+        if not self.is_df_prepared:
+            # DataFrame is not prepared, assign default value for missing data
+            for name in self.cloud_phase_names.values():
                 phase_fractions[name] = -1
-            else:
-                # Check if the phase exists in the DataFrame and sum its values, or default to 0
-                phase_count = pivot_df[phase].sum() if phase in pivot_df.columns else 0
-                
-                # Set fraction to 0 if either total or count is 0, otherwise calculate the fraction
-                phase_fractions[name] = 0 if (total_measurements == 0) or (phase_count == 0) else np.round(phase_count / total_measurements, 3)
+        else:
+            # Pivot the DataFrame once to get the individual counts of each Cloud Phase
+            pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
+
+            # Calculate total number of measurements for the entire day
+            total_measurements = pivot_df.to_numpy().sum()
+
+            # Iterate over each CloudPhase category and calculate fractions
+            for phase, name in self.cloud_phase_names.items():
+                phase_count = pivot_df.get(phase, pd.Series()).sum()  # Use .get() to avoid KeyError
+                phase_fractions[name] = 0 if total_measurements == 0 else np.round(phase_count / total_measurements, 3)
 
         return phase_fractions
-    
+        
 
     def process_target_variables(self, target_variables, data_dict) -> None:
         """
