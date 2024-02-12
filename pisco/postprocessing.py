@@ -130,7 +130,7 @@ class Postprocessor:
         self.df = Postprocessor._get_dataframe(self.filepath)
 
         # Check if DataFrame contains data and required columns are present
-        required_columns = ['CloudPhase1', 'SatelliteZenithAngle', 'Datetime']
+        required_columns = Processor._get_reduced_fields()
         df_good = Processor.check_df(self.filepath, self.df, required_columns)
         
         if not df_good:
