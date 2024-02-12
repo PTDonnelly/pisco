@@ -173,6 +173,10 @@ class Processor:
 
 
     def merge_datasets(self) -> None:
+        # Latitude and longitude values are rounded to 4 decimal places.
+        self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
+        self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
+
         # Merge two DataFrames based on spatial and temporal parameters
         return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
 
