@@ -9,6 +9,39 @@ from .configuration import Configurer
 logger = logging.getLogger(__name__)
 
 class Extractor:
+    """Handles the extraction of IASI data for further analysis.
+
+    This class manages the extraction process of IASI (Infrared Atmospheric Sounding Interferometer) data
+    based on the configured parameters. It supports the extraction of Level 1C (L1C) and Level 2 (L2) data,
+    organizing file paths, and running the necessary extraction commands.
+
+    Attributes:
+        config (Configurer): An instance of the Configurer class to access configuration settings.
+        runpath (str): The current working directory where the script is executed.
+        channels (List[int]): List of spectral channels to be extracted.
+        data_level (str): The level of data to be extracted ('l1c' or 'l2').
+        year (str): Year of the data to be extracted.
+        month (str): Month of the data to be extracted.
+        day (str): Day of the data to be extracted.
+        datapath_in (str): Input data path.
+        datapath_out (str): Output data path where extracted files will be stored.
+        datafile_in (str): Name of the input data file.
+        datafile_out (str): Name of the output data file.
+        intermediate_file (str): Path to the intermediate file produced by the extraction process.
+        intermediate_file_check (bool): Flag indicating whether the intermediate file has been successfully produced.
+
+    Methods:
+        _get_datapath_out(): Determines the output data path based on data level and date.
+        _get_datapath_in(): Determines the input data path based on data level.
+        get_datapaths(): Retrieves both input and output data paths.
+        build_intermediate_filepath(): Creates the path for the intermediate file and ensures the output directory exists.
+        _build_parameters(): Constructs the parameter string for the extraction command.
+        _get_command(): Builds the full command to be executed for data extraction.
+        run_command(): Executes the extraction command and handles its output.
+        _get_l2_products_for_file_check(products): Parses the products string for file checking.
+        check_extracted_files(result): Checks the extraction process's result and verifies the intermediate file's presence.
+        extract_files(): Orchestrates the data extraction process, including running the extraction command and checking the output.
+    """
     def __init__(self):
         """
         Initialize the Extractor class with given parameters.

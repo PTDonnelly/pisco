@@ -12,6 +12,37 @@ from pisco import Extractor
 logger = logging.getLogger(__name__)
 
 class Processor:
+    """Processes and merges L1C spectra and L2 cloud product data for IASI.
+
+    This class is responsible for managing the data processing pipeline for IASI data, including loading,
+    merging, and filtering data from L1C and L2 products based on spatial and temporal parameters. It also
+    handles the reduction of dataset fields and the saving of the merged products.
+
+    Attributes:
+        datapath_l1c (str): Path to L1C data files.
+        datapath_l2 (str): Path to L2 data files.
+        datapath_merged (str): Path for saving merged data files.
+        delete_intermediate_files (bool): Flag to indicate whether intermediate files should be deleted after processing.
+        output_path (str): Path for the output file, determined during processing.
+        df_l1c (pd.DataFrame or None): DataFrame containing L1C data.
+        df_l2 (pd.DataFrame or None): DataFrame containing L2 data.
+        df (pd.DataFrame or None): DataFrame containing the merged and processed L1C and L2 data.
+
+    Methods:
+        _get_intermediate_analysis_data_paths(): Sets the paths for intermediate analysis data files.
+        check_l1c_l2_data_exist(): Checks the existence of L1C and L2 data files.
+        unpickle(file): Uncompresses and loads a DataFrame from a pickled file.
+        load_data(): Loads L1C spectra and L2 cloud products data into DataFrames.
+        _get_reduced_fields(): Returns a list of fields to retain in the reduced dataset.
+        reduce_fields(merged_df): Reduces the merged DataFrame to specified fields and spectral channels.
+        check_df(filepath, df): Validates the DataFrame for data presence and required columns.
+        filter_observations(df, maximum_zenith_angle): Filters observations based on zenith angle and cloud phase.
+        merge_datasets(): Merges L1C and L2 DataFrames on spatial and temporal parameters.
+        _create_merged_datapath(): Creates the output directory for merged products if it does not exist.
+        combine_datasets(): Merges, filters, and reduces datasets, and sets the final DataFrame.
+        _delete_intermediate_file(filepath): Deletes the specified intermediate file if required.
+        save_merged_products(delete_intermediate_files): Saves the merged products to a file and optionally deletes intermediate files.
+    """
     def __init__(self, ex: Extractor):
         self.datapath_l1c = os.path.join(ex.config.datapath, ex.config.satellite_identifier,'l1c', ex.year, ex.month, ex.day)
         self.datapath_l2 = os.path.join(ex.config.datapath, ex.config.satellite_identifier,'l2', ex.year, ex.month, ex.day)

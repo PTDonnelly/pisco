@@ -13,6 +13,34 @@ from pisco import Configurer, Processor
 logger = logging.getLogger(__name__)
 
 class Postprocessor:
+    """Processes and analyzes atmospheric data post-extraction.
+
+    This class is designed to further process and analyze extracted atmospheric data.
+    It is modular and designed to be changed. It currently supports data organization, selection based on dates,
+    and calculation of target variables (such as OLR and cloud phase fractions).
+
+    Attributes:
+        filepath (str): Path to the file containing the extracted data.
+        cloud_phase_names (Dict[int, str]): Mapping of cloud phase integer codes to descriptive names.
+        df (pd.DataFrame or None): DataFrame containing the processed data.
+
+    Methods:
+        get_target_time_range(config): Determines the target time range for analysis based on configuration.
+        organise_files_by_date(datapath): Organizes .pkl.gz files in the data directory by date.
+        _format_target_date_range(target_range): Formats elements of the target date range as strings.
+        select_files(target_range, files_by_date): Selects files based on a target date range from the organized files.
+        extract_date_from_filepath(filepath): Extracts the date from a file path using a regular expression.
+        _get_dataframe(filepath): Retrieves a DataFrame from a given filepath.
+        prepare_dataframe(): Prepares the DataFrame for analysis by filtering and checking its contents.
+        _get_iasi_spectral_grid(): Retrieves the IASI spectral grid from a file.
+        get_dataframe_spectral_grid(): Extracts the spectral grid from the DataFrame's columns.
+        set_as_invalid(): Returns a structure indicating invalid data.
+        calculate_olr_from_spectrum(sub_df): Calculates the OLR from spectral data for a given day.
+        get_outgoing_longwave_radiation(): Calculates OLR values for all cloud phase conditions.
+        get_phase_fraction(): Calculates the fraction of measurements for each cloud phase.
+        process_target_variables(target_variables, data_dict): Processes each target variable and appends the results to a data dictionary.
+        save_results(data_dict, dates, datapath): Saves the processed results into CSV files.
+    """
     def __init__(self, filepath: str):
         self.filepath = filepath
         self.cloud_phase_names = {-1: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}

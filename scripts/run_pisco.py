@@ -11,6 +11,8 @@ from scripts.move_job_files import move_job_files
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def run_pisco(memory, metop, year, month, day):
+    """Executes PISCO for a given date, with all settings configured in the config.json.
+    """
     # Instantiate an Extractor for this run
     ex = Extractor()
     ex.year = f"{year:04d}"

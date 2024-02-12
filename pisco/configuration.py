@@ -2,6 +2,25 @@ import commentjson
 import os
 
 class Configurer:
+    """Configures and initializes parameters for data processing from a JSON configuration file.
+
+    This class reads a configuration file and initializes various processing parameters.
+    It also supports setting the range of spectral channels based on the specified mode.
+
+    Attributes:
+        path_to_config_file (str): Path to the JSON configuration file.
+        latitude_range (Tuple[float, float]): Tuple representing the minimum and maximum latitude range for data extraction.
+        longitude_range (Tuple[float, float]): Tuple representing the minimum and maximum longitude range for data extraction.
+        satellite_identifier (str): Identifier for the satellite to process data from.
+        datapath (str): Base path where data files are stored or will be stored.
+        Other attributes as defined in the configuration file.
+
+    Methods:
+        set_channels(mode, start_channel=220, end_channel=2220): Determines the list of spectral channels to use based on the specified mode. Modes include 'all', 'all_reduced', 'range', and 'flag'.
+
+    Raises:
+        ValueError: If the mode is 'range' and either start_channel or end_channel is not specified, or if an invalid mode is provided.
+    """
     def __init__(self, path_to_config_file: str="inputs/config.jsonc"):
         self.path_to_config_file = path_to_config_file
 

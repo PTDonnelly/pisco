@@ -32,11 +32,40 @@ python /data/pdonnelly/github/pisco/scripts/run_pisco.py {mem} {metop} {year} {m
     return script_name
 
 def main():
-    """PISCO: Package for IASI Spectra and Cloud Observations
+    """PISCO: Package for IASI Spectra and Cloud Observations. Main script for launching the IASI data extraction and processing pipeline.
 
-    For each date specified, open raw binary files, reduce into intermediate files using optimised C scripts
-    developed by IASI team, then produce conveniently-formatted spatio-temporal data
-    of IASI products: L1C calibrated spectra or L2 cloud products.
+    This script serves as the entry point for running the complete workflow,
+    which includes data extraction, processing, and post-processing steps for 
+    IASI (Infrared Atmospheric Sounding Interferometer) data.
+    It utilizes the `Configurer` class to initialize settings from a JSON configuration file,
+    the `Extractor` and `Preprocessor` classes to extract data based on those settings, and
+    the `Processor` class to process the extracted data.
+
+    The workflow is as follows:
+    1. Configuration: Reads and applies settings from a specified JSON configuration file, including data paths, satellite identifiers, and processing parameters.
+    2. Data Extraction: Extracts Level 1C (L1C) or Level 2 (L2) data for the specified date range and satellite, based on the configuration.
+    3. Data Processing: Processes the extracted data, potentially including cleaning, merging, and reducing data fields.
+
+    Dependencies:
+    - commentjson: Used for loading the configuration file that may include comments.
+    - os: Used for file and directory operations.
+    - subprocess: Used in the `Extractor` class to run external commands for data extraction.
+    - pandas, numpy: Used for data manipulation and analysis.
+
+    Usage:
+    To run the script, ensure that a valid configuration file is in place and execute the script from the command line.
+    The configuration file path can be set within the script or specified as a command-line argument. The default use case
+    can be seen below, where pisco is executed on a day-by-day basis.
+    
+    If the value of submit_job in the config.json is `true`, the script will automatically submit the jobs to the SLURM
+    job scheduler for each day (make sure to adapt the generate_slurm_script above).
+    
+    If the value of submit_job in the config.json is `false`, then it will generate the same script but will not execute them, allowing the user
+    to execute one-by-one if they desire (useful for testing).
+    
+    If one wishes to simple execute pisco directly on the command line, one needs to specify the necessary arguments to build and execute the function.
+    
+    The code is currently optimised for SLURM submission, if another use case is desired, feel free to fork the repository and adapt to your needs.
     """
     # Instantiate an Extractor class to get data from raw binary files
     ex = Extractor()

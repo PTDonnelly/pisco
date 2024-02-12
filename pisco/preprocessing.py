@@ -13,27 +13,42 @@ from pisco import Extractor
 logger = logging.getLogger(__name__)
 
 class Preprocessor:
-    """
-    A class used to handle the preprocessing of IASI data.
+    """Handles preprocessing of IASI data for analysis.
 
-    This class is responsible for reading the texfile outputs from OBR,
-    reading and structuring the data into a pandas DataFrame, and doing some manipulations
-    to prepare it for further analysis.
+    This class is designed to read text file outputs from OBR,
+    structure the data into a pandas DataFrame,
+    and perform data manipulations to prepare it for further analysis.
+    It supports handling large datasets by chunking and efficiently manages memory usage during the process.
 
     Attributes:
-    ----------
-    
+        intermediate_file (str): Path to the intermediate file containing raw OBR data.
+        delete_intermediate_files (bool): Indicates whether intermediate files should be deleted after processing.
+        data_level (str): Specifies the data processing level, e.g., 'l1c' or 'l2'.
+        channels (List[int]): Channels to be included in the processing.
+        allocated_memory (int): Memory allocated for processing data, in bytes.
+        memory_safety_margin (float): Fraction of allocated memory used as a safety margin during chunking.
+        df (pd.DataFrame or None): DataFrame holding processed data, initialized as None.
+
     Methods:
-    -------
-   
+        calculate_chunk_size(dtype_dict): Calculates optimal chunk size for file reading.
+        read_file_in_chunks(dtype_dict): Reads file in calculated chunks and merges into a DataFrame.
+        should_load_in_chunks(): Checks if file needs to be loaded in chunks based on size and memory.
+        _get_fields_and_datatypes(): Generates a dictionary of field names and their data types for file reading.
+        open_text_file(): Opens and reads the intermediate file, either as a whole or in chunks.
+        fix_spectrum_columns(): Renames spectrum columns for clarity.
+        _calculate_local_time(): Calculates local time to determine day or night.
+        build_local_time(): Adds a column indicating day or night based on local time.
+        build_datetime(): Combines date and time columns into a single datetime column.
+        _delete_intermediate_file(filepath): Deletes the specified intermediate file if required.
+        save_observations(delete_intermediate_files=None): Saves processed data to a file and optionally deletes the intermediate file.
     """
-    def __init__(self, ex: Extractor, allocated_memory: int, chunking_safety_margin=0.5):
+    def __init__(self, ex: Extractor, allocated_memory: int, memory_safety_margin=0.5):
         self.intermediate_file: str = ex.intermediate_file
         self.delete_intermediate_files = ex.config.delete_intermediate_files
         self.data_level: str = ex.data_level
         self.channels: List[int] = ex.channels
         self.allocated_memory = allocated_memory * (1024 ** 3) # Convert from Gigabytes to Bytes
-        self.chunking_safety_margin = chunking_safety_margin
+        self.memory_safety_margin = memory_safety_margin
         self.df = None
 
 
@@ -132,7 +147,7 @@ class Preprocessor:
         memory_per_row = sample_df.memory_usage(deep=True).sum() / len(sample_df)
         
         # Add safety margin for memory overheads and non-DataFrame memory usage
-        available_memory = self.allocated_memory * (1 - self.chunking_safety_margin)
+        available_memory = self.allocated_memory * (1 - self.memory_safety_margin)
 
         # Calculate chunk size
         chunk_size = int(available_memory / memory_per_row)
@@ -173,7 +188,7 @@ class Preprocessor:
     def should_load_in_chunks(self) -> bool:
         "Checks if file size is greater than the allocated memory with safety margin"
         file_size = os.path.getsize(self.intermediate_file)
-        return file_size > (self.allocated_memory / self.chunking_safety_margin)
+        return file_size > (self.allocated_memory / self.memory_safety_margin)
 
 
     def _get_fields_and_datatypes(self) -> Dict[str, str]:
