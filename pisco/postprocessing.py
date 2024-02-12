@@ -135,12 +135,12 @@ class Postprocessor:
         
         if not df_good:
             # Build date from filepath and report that Dataframe is empty
-            self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
+            self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d%h%M')
             self.is_df_prepared = False
             return
         else:
             # Proceed with DataFrame manipulations if all required columns are present
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d')
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%h%M')
             self.is_df_prepared = True
             return
 
