@@ -3,6 +3,7 @@ import subprocess
 
 from pisco import Configurer
 
+
 def delete_empty_dirs(paths):
     """Deletes empty directories recursively from given paths."""
     for path in paths:
@@ -12,6 +13,7 @@ def delete_empty_dirs(paths):
             print(f"Empty directories deleted successfully in {path}.")
         except subprocess.CalledProcessError as e:
             print(f"An error occurred while deleting empty directories in {path}: {e}")
+
 
 def list_non_empty_dirs(paths):
     """Lists non-empty directories for given paths."""
@@ -29,6 +31,21 @@ def list_non_empty_dirs(paths):
         except subprocess.CalledProcessError as e:
             print(f"An error occurred while listing non-empty directories in {path}: {e}")
 
+
+def print_log_tail(dir_paths, log_filename="run.log"):
+    """Prints the last 50 lines of the log file in each given directory."""
+    for dir_path in dir_paths:
+        log_path = os.path.join(dir_path, log_filename)
+        if os.path.exists(log_path):
+            print(f"\nLast 50 lines of the log file in {dir_path}:")
+            try:
+                subprocess.run(["tail", "-n", "50", log_path], check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"An error occurred while reading the log file in {dir_path}: {e}")
+        else:
+            print(f"No log file found in {dir_path}")
+
+
 def main():
     """Clean up the pisco run by deleting empty directories and listing non-empty ones."""
     # Instantiate a Configurer class to get data from config.json
@@ -40,9 +57,10 @@ def main():
         os.path.join(config.datapath, config.satellite_identifier, "l2")
         ]
 
-    # Delete empty directories and list non-empty directories
+    # Delete empty directories, then list non-empty directories and print the tail of their log files
     delete_empty_dirs(paths)
-    list_non_empty_dirs(paths)
+    non_empty_dirs = list_non_empty_dirs(paths)
+    print_log_tail(non_empty_dirs)
 
 if __name__ == "__main__":
     main()

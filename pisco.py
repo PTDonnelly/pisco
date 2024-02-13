@@ -1,35 +1,10 @@
-import subprocess
-from pisco import Extractor
+import logging
 
-def generate_slurm_script(metop, year, month, day):
-    # Memory request (in GB, used later for optimal file reading)
-    mem = 8
-    
-    # Format date integers to date strings
-    year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
-    
-    # Prepare SLURM submission script
-    script_name = f"/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.sh"
-    script_content = f"""#!/bin/bash
-#SBATCH --job-name=pisco_{metop}_{year}_{month}_{day}
-#SBATCH --output=/data/pdonnelly/iasi/pisco_{metop}_{year}_{month}_{day}.log
-#SBATCH --time=04:00:00
-#SBATCH --ntasks=1
-#SBATCH --mem={mem}GB
+from pisco import Configurer
+from scripts import prepare_job_submission as job
 
-# Purge all modules to prevent conflict with current environnement
-module purge
-
-# Load necessary modules
-module load python/meso-3.8
-
-python /data/pdonnelly/github/pisco/scripts/run_pisco.py {mem} {metop} {year} {month} {day}
-
-"""
-    with open(script_name, 'w') as file:
-        file.write(script_content)
-
-    return script_name
+# Configure logging at the module level
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main():
     """PISCO: Package for IASI Spectra and Cloud Observations. Main script for launching the IASI data extraction and processing pipeline.
@@ -67,31 +42,26 @@ def main():
     
     The code is currently optimised for SLURM submission, if another use case is desired, feel free to fork the repository and adapt to your needs.
     """
-    # Instantiate an Extractor class to get data from raw binary files
-    ex = Extractor()
-    
-    # The MetOp satellite identifier for these observations (metopa, metopb, or metopc)
-    metop = ex.config.satellite_identifier
+    # Instantiate an Configurer to create output directories and generate job files
+    config = Configurer()
 
     # Scan years, months, days (specific days or all calendar days, dependent on Config attributes)
-    for year in ex.config.year_list:
-        month_range = ex.config.month_list if (not ex.config.month_list == "all") else range(1, 13)
+    for year in config.year_list:
+        month_range = config.month_list if (not config.month_list == "all") else range(1, 13)
         
         for im, month in enumerate(month_range):
-            day_range = ex.config.day_list if (not ex.config.day_list == "all") else range(1, ex.config.days_in_months[month-1] + 1)
+            day_range = config.day_list if (not config.day_list == "all") else range(1, config.days_in_months[month-1] + 1)
             
             for day in day_range:
-                script = generate_slurm_script(metop, year, month, day)
-                
-                # Set execute permissions on the script
-                subprocess.run(["chmod", "+x", script])
+                # Create output directory
+                output_path = job.create_output_directory(config.datapath, config.satellite_identifier, year, month, day)
 
-                if ex.config.submit_job:
+                # Create SLURM shell script and log file, and place them in the output folder
+                script_name = job.create_job_file(output_path, year, month, day)
+
+                if config.submit_job:
                     # Submit the batch script to SLURM using sbatch
-                    subprocess.run(["sbatch", script])
-                # else:
-                #     # Run on command line on login node
-                #     subprocess.run([script])
+                    job.submit_job_file(script_name)
 
 if __name__ == "__main__":
     main()
