@@ -57,13 +57,13 @@ def main():
                 year, month, day = job.format_date_elements(year, month, day)
                 print([type(i) for i in [year, month, day]])
                 output_path = job.create_output_directory(config.datapath, config.satellite_identifier, year, month, day)
-
+                print('')
                 # Create SLURM shell script and log file, and place them in the output folder
                 script_name = job.create_job_file(output_path, year, month, day)
 
-                if config.submit_job:
-                    # Submit the batch script to SLURM using sbatch
-                    job.submit_job_file(script_name)
+                # if config.submit_job:
+                #     # Submit the batch script to SLURM using sbatch
+                #     job.submit_job_file(script_name)
 
 if __name__ == "__main__":
     main()
