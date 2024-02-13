@@ -1,12 +1,13 @@
 import logging
 import os
 import subprocess
+from typing import Tuple
 
-def format_date_elements(year: int, month: int, day: int):
-    year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
-    return year, month, day
+def format_date_elements(year: int, month: int, day: int) -> Tuple[str, str, str]:
+    return (f"{year:04d}", f"{month:02d}", f"{day:02d}")
 
 def create_output_directory(datapath: str, satellite_identifier: str, year: str, month: str, day: str) -> str:
+    print([type(i) for i in [datapath, satellite_identifier, year, month, day]])
     output_path = os.path.join(datapath, satellite_identifier, year, month, day)
     try:
         os.makedirs(output_path, exist_ok=True)
@@ -19,7 +20,7 @@ def create_output_directory(datapath: str, satellite_identifier: str, year: str,
 def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
     # Memory request (in GB, used later for optimal file reading)
     mem = 8
-    
+
     # Prepare SLURM submission script
     script_name = f"{output_path}pisco.sh"
     
