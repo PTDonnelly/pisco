@@ -7,7 +7,7 @@ def format_date_elements(year: int, month: int, day: int) -> Tuple[str, str, str
     return (f"{year:04d}", f"{month:02d}", f"{day:02d}")
 
 def create_output_directory(datapath: str, satellite_identifier: str, year: str, month: str, day: str) -> str:
-    print([type(i) for i in [year, month, day]])
+    year, month, day = format_date_elements(year, month, day)
     output_path = os.path.join(datapath, satellite_identifier, year, month, day)
     try:
         os.makedirs(output_path, exist_ok=True)
@@ -18,8 +18,10 @@ def create_output_directory(datapath: str, satellite_identifier: str, year: str,
 
 
 def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
+    year, month, day = format_date_elements(year, month, day)
+    
     # Memory request (in GB, used later for optimal file reading)
-    mem = 8
+    allocated_memory = 8
 
     # Prepare SLURM submission script
     script_name = f"{output_path}pisco.sh"
@@ -29,7 +31,7 @@ def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
 #SBATCH --output={output_path}pisco.log
 #SBATCH --time=04:00:00
 #SBATCH --ntasks=1
-#SBATCH --mem={mem}GB
+#SBATCH --mem={allocated_memory}GB
 
 # Purge all modules to prevent conflict with current environnement
 module purge
@@ -37,7 +39,7 @@ module purge
 # Load necessary modules
 module load python/meso-3.8
 
-python /data/pdonnelly/github/pisco/scripts/run_pisco.py {mem} {year} {month} {day}
+python /data/pdonnelly/github/pisco/scripts/run_pisco.py {allocated_memory} {year} {month} {day}
 
 """
     with open(script_name, 'w') as file:
