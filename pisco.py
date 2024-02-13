@@ -59,9 +59,9 @@ def main():
                 # Create SLURM shell script and log file, and place them in the output folder
                 script_name = job.create_job_file(output_path, year, month, day)
 
-                # if config.submit_job:
-                #     # Submit the batch script to SLURM using sbatch
-                #     job.submit_job_file(script_name)
+                if config.submit_job:
+                    # Submit the batch script to SLURM using sbatch
+                    job.submit_job_file(script_name)
 
 if __name__ == "__main__":
     main()
