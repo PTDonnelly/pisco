@@ -54,6 +54,8 @@ def main():
             
             for day in day_range:
                 # Create output directory
+                year, month, day = job.format_date_elements(year, month, day)
+                print([type(i) for i in [year, month, day]])
                 output_path = job.create_output_directory(config.datapath, config.satellite_identifier, year, month, day)
 
                 # Create SLURM shell script and log file, and place them in the output folder
