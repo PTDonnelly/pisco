@@ -2,6 +2,10 @@ import logging
 import os
 import subprocess
 
+def format_date_elements(year: int, month: int, day: int):
+    year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
+    return year, month, day
+
 def create_output_directory(datapath: str, satellite_identifier: str, year: str, month: str, day: str) -> str:
     output_path = os.path.join(datapath, satellite_identifier, year, month, day)
     try:
@@ -15,9 +19,6 @@ def create_output_directory(datapath: str, satellite_identifier: str, year: str,
 def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
     # Memory request (in GB, used later for optimal file reading)
     mem = 8
-    
-    # Format date integers to date strings
-    year, month, day = f"{year:04d}", f"{month:02d}", f"{day:02d}"
     
     # Prepare SLURM submission script
     script_name = f"{output_path}pisco.sh"
