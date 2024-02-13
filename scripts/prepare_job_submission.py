@@ -7,7 +7,7 @@ def format_date_elements(year: int, month: int, day: int) -> Tuple[str, str, str
     return (f"{year:04d}", f"{month:02d}", f"{day:02d}")
 
 def create_output_directory(datapath: str, satellite_identifier: str, year: str, month: str, day: str) -> str:
-    # print([type(i) for i in [datapath, satellite_identifier, year, month, day]])
+    print([type(i) for i in [year, month, day]])
     output_path = os.path.join(datapath, satellite_identifier, year, month, day)
     try:
         os.makedirs(output_path, exist_ok=True)
