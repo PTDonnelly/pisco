@@ -212,23 +212,22 @@ class Processor:
 
 
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
-        if not self.df.empty:
-            try:
-                # Split the intermediate file path into the root and extension, and give new extension
-                file_root, _ = os.path.splitext(self.output_path)
-                output_file = file_root + ".pkl.gz"
+        try:
+            # Split the intermediate file path into the root and extension, and give new extension
+            file_root, _ = os.path.splitext(self.output_path)
+            output_file = file_root + ".pkl.gz"
 
-                # Compress and save using gzip
-                with gzip.open(output_file, 'wb') as f:
-                    pickle.dump(self.df, f)
-                
-                # Output information on the final DataFrame
-                logger.info(self.df.info())
-                logger.info(self.df.head())
-                logger.info(f"Saved merged products to: {output_file}")
+            # Compress and save using gzip
+            with gzip.open(output_file, 'wb') as f:
+                pickle.dump(self.df, f)
+            
+            # Output information on the final DataFrame
+            logger.info(self.df.info())
+            logger.info(self.df.head())
+            logger.info(f"Saved merged products to: {output_file}")
 
-            except OSError as e:
-                logger.error(f"Error saving file: {e}")
+        except OSError as e:
+            logger.error(f"Error saving file: {e}")
 
         # Delete Preprocessor files
         if (delete_intermediate_files is None) and self.delete_intermediate_files:
