@@ -32,18 +32,19 @@ def list_non_empty_dirs(paths):
             print(f"An error occurred while listing non-empty directories in {path}: {e}")
 
 
-def print_log_tail(dir_paths, log_filename="run.log"):
+def print_log_tail(dir_paths, log_filename="pisco.log"):
     """Prints the last 50 lines of the log file in each given directory."""
-    for dir_path in dir_paths:
-        log_path = os.path.join(dir_path, log_filename)
-        if os.path.exists(log_path):
-            print(f"\nLast 50 lines of the log file in {dir_path}:")
-            try:
-                subprocess.run(["tail", "-n", "50", log_path], check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"An error occurred while reading the log file in {dir_path}: {e}")
-        else:
-            print(f"No log file found in {dir_path}")
+    if dir_paths:
+        for dir_path in dir_paths:
+            log_path = os.path.join(dir_path, log_filename)
+            if os.path.exists(log_path):
+                print(f"\nLast 50 lines of the log file in {dir_path}:")
+                try:
+                    subprocess.run(["tail", "-n", "50", log_path], check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"An error occurred while reading the log file in {dir_path}: {e}")
+            else:
+                print(f"No log file found in {dir_path}")
 
 
 def main():
