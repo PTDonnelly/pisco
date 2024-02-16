@@ -4,14 +4,25 @@ import subprocess
 from pisco import Configurer
 
 def delete_empty_dirs(paths):
-    """Deletes empty directories recursively from given paths."""
+    """Deletes empty directories recursively from given paths and prints the deleted directories."""
     for path in paths:
-        command = ["find", path, "-type", "d", "-empty", "-delete"]
+        # Command to find empty directories
+        command = ["find", path, "-type", "d", "-empty"]
         try:
-            subprocess.run(command, check=True)
-            print(f"Empty directories deleted successfully in {path}.")
+            # Execute the command and capture the output
+            empty_dirs = subprocess.check_output(command, text=True).strip().split('\n')
+            if empty_dirs and empty_dirs[0]:  # Check if there is at least one non-empty string in the list
+                for dir in empty_dirs:
+                    try:
+                        os.rmdir(dir)  # Remove the directory
+                        print(f"Deleted empty directory: {dir}")
+                    except OSError as e:
+                        print(f"Failed to delete {dir}: {e}")
+                print(f"Empty directories deleted successfully in {path}.")
+            else:
+                print(f"No empty directories found in {path}.")
         except subprocess.CalledProcessError as e:
-            print(f"An error occurred while deleting empty directories in {path}: {e}")
+            print(f"An error occurred while finding empty directories in {path}: {e}")
 
 def list_non_empty_dirs(paths):
     """Lists non-empty directories for given paths and returns them."""
