@@ -133,11 +133,10 @@ class Postprocessor:
         normalised_filepath = os.path.normpath(filepath)
         date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
         match = re.search(date_pattern, normalised_filepath)
-
-        print(normalised_filepath, date_pattern, match)
-
+        
         if match:
             year, month, day = map(int, match.groups())
+            print(year, month, day)
             return datetime.date(year, month, day)
         else:
             raise ValueError(f"Date not found in file path: {filepath}")
