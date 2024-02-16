@@ -34,8 +34,6 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
         # Gather results for target variables
         post.process_target_variables(target_variables, data_dict)
 
-        print(post.df.head())
-
         # Append date to list
         date_to_append = post.df['Datetime'].dt.date.iloc[0]
         dates.append(date_to_append)
@@ -71,7 +69,7 @@ def main():
     target_variables=['OLR', 'Phase Fraction']
 
     # Process data files and collect time series for each target variable 
-    gather_daily_statistics(output_path, filepaths, target_variables, save_files=False)
+    gather_daily_statistics(output_path, filepaths, target_variables)
 
 if __name__ == "__main__":
     main()

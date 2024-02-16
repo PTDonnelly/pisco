@@ -169,7 +169,7 @@ class Postprocessor:
             # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
             # # habit of OBR extraction code not updating cloud phase for clear sky measurements)
             # reduced_fields = Processor._get_reduced_fields()
-            
+            ### UNDER CONSTRUCTION
             return
         else:
             # Create a new DataFrame with the datetime value
@@ -178,7 +178,6 @@ class Postprocessor:
 
             # Concatenate the new row to the existing DataFrame
             self.df = pd.concat([self.df, dummy_df], ignore_index=True)
-            print(self.df.head())
             return
 
 
@@ -287,6 +286,7 @@ class Postprocessor:
                 phase_fractions[name] = -1
 
         return phase_fractions
+
 
     def process_target_variables(self, target_variables, data_dict) -> None:
         """
