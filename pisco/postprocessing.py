@@ -159,15 +159,23 @@ class Postprocessor:
         - tuple: A boolean indicating if the DataFrame is prepared.
         """
         # Retrieve the DataFrame contained in the file at the location filepath
+        print(type(self.df))
         self.df = Postprocessor._get_dataframe(self.filepath)
-
+        print(type(self.df))
         # Check if DataFrame contains data and required columns
-        df_good = Processor.check_df(self.filepath, self.df)
-        
-        if not df_good:
-            # Report that DataFrame is empty and create a dummy DataFrame
-            self.is_df_prepared = False
-
+        self.is_df_prepared = Processor.check_df(self.filepath, self.df)
+        print(type(self.df))
+        if self.is_df_prepared:
+            # Format datetime string as a dattime object
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d')
+            
+            # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
+            # # habit of OBR extraction code not updating cloud phase for clear sky measurements)
+            # reduced_fields = Processor._get_reduced_fields()
+            
+            return
+        else:
+            print(type(self.df))
             # Create a new DataFrame with the datetime value
             datetime_value = pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
             dummy_df = pd.DataFrame({'Datetime': [datetime_value]})
@@ -176,19 +184,8 @@ class Postprocessor:
 
             # Append the new row to self.df
             self.df = self.df.append(dummy_df, ignore_index=True)
-            print(self.df.head())
-            return
-        else:
-             # Report that DataFrame contains data and proceed with analysis
-            self.is_df_prepared = True
-
-            # Format datetime string as a dattime object
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d')
-            
-            # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
-            # # habit of OBR extraction code not updating cloud phase for clear sky measurements)
-            # reduced_fields = Processor._get_reduced_fields()
-            
+            print(type(self.df))
+            # print(self.df.head())
             return
 
 
@@ -259,13 +256,13 @@ class Postprocessor:
 
         # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
-            if not self.is_df_prepared:
-                olr_values[name] = -1
-            else:
+            if self.is_df_prepared:
                 # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
                 filtered_df = self.df[self.df['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
                 olr = self.calculate_olr_from_spectrum(filtered_df)
                 olr_values[name] = olr
+            else:
+                olr_values[name] = -1
 
         return olr_values
     
@@ -280,11 +277,7 @@ class Postprocessor:
         # Initialize an empty dictionary to store values.
         phase_fractions = {}
 
-        if not self.is_df_prepared:
-            # DataFrame is not prepared, assign default value for missing data
-            for name in self.cloud_phase_names.values():
-                phase_fractions[name] = -1
-        else:
+        if self.is_df_prepared:
             # Pivot the DataFrame once to get the individual counts of each Cloud Phase
             pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
 
@@ -295,6 +288,10 @@ class Postprocessor:
             for phase, name in self.cloud_phase_names.items():
                 phase_count = pivot_df.get(phase, pd.Series(dtype="int32")).sum()  # Use .get() to avoid KeyError
                 phase_fractions[name] = 0 if total_measurements == 0 else np.round(phase_count / total_measurements, 3)
+        else:
+            # DataFrame is not prepared, assign default value for missing data
+            for name in self.cloud_phase_names.values():
+                phase_fractions[name] = -1
 
         return phase_fractions
 
