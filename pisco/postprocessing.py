@@ -180,12 +180,9 @@ class Postprocessor:
             datetime_value = pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
             dummy_df = pd.DataFrame({'Datetime': [datetime_value]})
 
-            print(dummy_df.head())
-
-            # Append the new row to self.df
-            # self.df = self.df.append(dummy_df, ignore_index=True)
-            print(type(self.df))
-            # print(self.df.head())
+            # Concatenate the new row to the existing DataFrame
+            self.df = pd.concat([self.df, dummy_df], ignore_index=True)
+            print(self.df.head())
             return
 
 
