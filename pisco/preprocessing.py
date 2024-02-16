@@ -300,27 +300,11 @@ class Preprocessor:
     
 
     def _delete_intermediate_file(self, filepath) -> None:
-        """Deletes the specified intermediate file and its empty parent directories up to the data level."""
+        """Deletes the specified intermediate file."""
         # If config.delete_intermediate_files is True, try deleting the intermediate OBR data file
         try:
             os.remove(filepath)
             logger.info(f"Deleted intermediate file: {filepath}")
-
-            # Starting from the file's parent directory
-            current_dir = os.path.dirname(filepath)
-
-            # Check and remove up to 4 levels of parent directories if they are empty (day, month, year, data level)
-            for _ in range(4):
-                # Check if the current directory is empty
-                if not os.listdir(current_dir):
-                    # Remove the directory if it's empty
-                    os.rmdir(current_dir)
-                    logger.info(f"Deleted empty directory: {current_dir}")
-                    # Move up to the parent directory
-                    current_dir = os.path.dirname(current_dir)
-                else:
-                    # Stop checking if the current directory is not empty
-                    break
 
         except OSError as e:
             logger.error(f"Error deleting file: {e}")

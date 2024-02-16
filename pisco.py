@@ -60,8 +60,14 @@ def main():
                 script_name = job.create_job_file(output_path, year, month, day)
 
                 if config.submit_job:
-                    # Submit the batch script to SLURM using sbatch
-                    job.submit_job_file(script_name)
+                    # Submit the batch script to SLURM using sbatch and capture the last job ID
+                    job_id = job.submit_job_file(script_name)
+                    if job_id:
+                        last_job_id = job_id  # Update last_job_id with the latest submitted job ID
+
+    # After all processing jobs are submitted, submit a cleanup job with dependency
+    if last_job_id and config.submit_job:
+        job.cleanup_job_files(last_job_id)
 
 if __name__ == "__main__":
     main()
