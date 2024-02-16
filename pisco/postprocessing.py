@@ -134,6 +134,8 @@ class Postprocessor:
         date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
         match = re.search(date_pattern, normalised_filepath)
 
+        print(normalised_filepath, date_pattern, match)
+
         if match:
             year, month, day = map(int, match.groups())
             return datetime.date(year, month, day)
