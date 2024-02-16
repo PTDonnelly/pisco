@@ -133,10 +133,9 @@ class Postprocessor:
         normalised_filepath = os.path.normpath(filepath)
         date_pattern = r'(\d{4})[/\\](\d{2})[/\\](\d{2})'
         match = re.search(date_pattern, normalised_filepath)
-        
+
         if match:
             year, month, day = map(int, match.groups())
-            print(year, month, day)
             return datetime.date(year, month, day)
         else:
             raise ValueError(f"Date not found in file path: {filepath}")
@@ -167,7 +166,7 @@ class Postprocessor:
         
         if not df_good:
             # Build date from filepath and report that Dataframe is empty
-            self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d%H%M')
+            self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
             self.is_df_prepared = False
             return
         else:
@@ -175,7 +174,7 @@ class Postprocessor:
             self.is_df_prepared = True
 
             # Format datetime string as a dattime object
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d')
             
             # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
             # # habit of OBR extraction code not updating cloud phase for clear sky measurements)
