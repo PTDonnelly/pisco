@@ -165,17 +165,17 @@ class Postprocessor:
         df_good = Processor.check_df(self.filepath, self.df)
         
         if not df_good:
-            print(type(self.df))
-            exit()
             # Report that DataFrame is empty and create a dummy DataFrame
             self.is_df_prepared = False
 
             # Create a new DataFrame with the datetime value
             datetime_value = pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
-            dummy_datetime = pd.DataFrame({'Datetime': [datetime_value]})
+            dummy_df = pd.DataFrame({'Datetime': [datetime_value]})
+
+            print(dummy_df.df.head())
 
             # Append the new row to self.df
-            self.df = self.df.append(dummy_datetime, ignore_index=True)
+            self.df = self.df.append(dummy_df, ignore_index=True)
             print(self.df.head())
             return
         else:
