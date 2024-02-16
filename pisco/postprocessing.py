@@ -183,7 +183,7 @@ class Postprocessor:
             print(dummy_df.head())
 
             # Append the new row to self.df
-            self.df = self.df.append(dummy_df, ignore_index=True)
+            # self.df = self.df.append(dummy_df, ignore_index=True)
             print(type(self.df))
             # print(self.df.head())
             return
