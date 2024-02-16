@@ -98,7 +98,7 @@ class Preprocessor:
     
     @staticmethod
     def _get_l1c_product_fields(channels: List[int]) -> List[Tuple]:
-        # Format of spectral fields (field_name, data_type) where field_name is the channel ID
+        # Format of spectral fields (field_name, data_type) where field_name is the channel ID (values are radiance in native IASI units of mW.m-2.st-1.(cm-1)-1)
         fields = [(str(channel_id), 'float32') for channel_id in channels]
         return fields
       

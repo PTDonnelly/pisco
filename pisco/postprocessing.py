@@ -218,6 +218,8 @@ class Postprocessor:
         else:
             # Retrieve IASI spectral grid and radiance from the DataFrame
             wavenumbers = self.get_dataframe_spectral_grid()
+
+            # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
             radiance = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]].values
             
             # Integrate the radiance over the wavelength for each measurement (calculate OLR)

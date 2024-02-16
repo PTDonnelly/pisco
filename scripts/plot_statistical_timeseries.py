@@ -11,16 +11,6 @@ import matplotlib.pyplot as plt
 # Local application/library specific imports
 from pisco import Plotter
 
-def convert_olr_units(df):
-    # Identify data columns (excluding 'Date')
-    data_columns = df.columns[df.columns != 'Date']
-
-    # Iterate through each data column to apply conversion
-    for column in data_columns:
-        # Apply conversion to units of mW m^2 only to values not equal to -1
-        df[column] = df[column].apply(lambda x: x * 1e6 if x != -1 else x)
-    return df
-
 def load_data(file_path, var):
     """
     Loads and sorts data from a .npy file.
@@ -41,13 +31,9 @@ def load_data(file_path, var):
 
     # Identify rows where all column values are -1
     rows_to_drop = df.index[(df == -1).all(axis=1)]
-
     # Drop these rows from the DataFrame
     df = df.drop(rows_to_drop)
-
-    if var == 'OLR':
-        df = convert_olr_units(df)
-
+    
     return df
 
 def add_grey_box(ax, df, plot_type):
