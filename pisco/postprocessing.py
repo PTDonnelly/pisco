@@ -172,7 +172,7 @@ class Postprocessor:
             datetime_value = pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
             dummy_df = pd.DataFrame({'Datetime': [datetime_value]})
 
-            print(dummy_df.df.head())
+            print(dummy_df.head())
 
             # Append the new row to self.df
             self.df = self.df.append(dummy_df, ignore_index=True)
