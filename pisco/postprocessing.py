@@ -159,15 +159,12 @@ class Postprocessor:
         - tuple: A boolean indicating if the DataFrame is prepared.
         """
         # Retrieve the DataFrame contained in the file at the location filepath
-        print(type(self.df))
         self.df = Postprocessor._get_dataframe(self.filepath)
-        print(type(self.df))
         # Check if DataFrame contains data and required columns
         self.is_df_prepared = Processor.check_df(self.filepath, self.df)
-        print(type(self.df))
         if self.is_df_prepared:
             # Format datetime string as a dattime object
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d')
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
             
             # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
             # # habit of OBR extraction code not updating cloud phase for clear sky measurements)
@@ -175,9 +172,8 @@ class Postprocessor:
             
             return
         else:
-            print(type(self.df))
             # Create a new DataFrame with the datetime value
-            datetime_value = pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
+            datetime_value = pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d%H%M')
             dummy_df = pd.DataFrame({'Datetime': [datetime_value]})
 
             # Concatenate the new row to the existing DataFrame
