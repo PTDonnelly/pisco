@@ -26,39 +26,44 @@ def list_non_empty_dirs(paths):
             print(f"An error occurred while listing non-empty directories in {path}: {e}")
     return non_empty_dirs
 
-def print_log_tail(dir_paths, config):
-    """Prints the last 50 lines of the pisco.log file located in the parent directory of the non-empty l1c or l2 directories."""
+def print_log_tail_interactively(dir_paths, config):
+    """Interactively prints the last 50 lines of the pisco.log file located in the parent directory of the non-empty l1c or l2 directories."""
+    print("Do you want to print the tails of the log files? [y/n]: ", end="")
+    response = input().strip().lower()
+    if response != 'y':
+        return
+
     for dir_path in dir_paths:
-        # Remove 'l1c' or 'l2' from the dir_path and append 'pisco.log'
         base_dir = dir_path.replace("/l1c", "").replace("/l2", "")
         log_path = os.path.join(base_dir, "pisco.log")
 
         if os.path.exists(log_path):
-            print(f"\nLast 50 lines of the log file in {base_dir}:")
+            print(f"\nFull path of the log file: {log_path}")
+            print(f"Last 50 lines of the log file in {base_dir}:")
             try:
-                subprocess.run(["tail", "-n", "50", log_path], check=True, text=True, capture_output=True)
                 output = subprocess.check_output(["tail", "-n", "50", log_path], text=True)
                 print(output)
             except subprocess.CalledProcessError as e:
                 print(f"An error occurred while reading the log file in {base_dir}: {e}")
+            print("Press enter to continue to the next logfile, or type 'exit' to stop: ", end="")
+            if input().strip().lower() == 'exit':
+                break
         else:
             print(f"No log file found in {base_dir}")
 
 def main():
-    """Main function to orchestrate the directory clean-up and log file tail printing."""
+    """Main function to orchestrate the directory clean-up and interactive log file tail printing."""
     config = Configurer()
 
-    # Define paths to l1c and l2 directories
     paths = [
         os.path.join(config.datapath, config.satellite_identifier, "l1c"),
         os.path.join(config.datapath, config.satellite_identifier, "l2")
     ]
 
-    # Obtain a list of non-empty directories within the l1c and l2 paths
+    delete_empty_dirs(paths)
     non_empty_dirs = list_non_empty_dirs(paths)
 
-    # Print the last 50 lines of the pisco.log file for each non-empty directory
-    print_log_tail(non_empty_dirs, config)
+    print_log_tail_interactively(non_empty_dirs, config)
 
 if __name__ == "__main__":
     main()
