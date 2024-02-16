@@ -116,7 +116,7 @@ class Processor:
         # Ensure the dataframe is not empty
         if df.empty:
             logger.info(f"DataFrame empty: {filepath}")      
-            return False     
+            return False
 
         # Check for the presence of all required columns
         required_columns = Processor._get_reduced_fields()

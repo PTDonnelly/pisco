@@ -146,7 +146,7 @@ class Postprocessor:
         if not df.empty:
             return df
         else:
-            return pd.DataFrame
+            return pd.DataFrame()
 
 
     def prepare_dataframe(self) -> bool:
@@ -165,6 +165,8 @@ class Postprocessor:
         df_good = Processor.check_df(self.filepath, self.df)
         
         if not df_good:
+            # Report that DataFrame is empty and create empty DataFrame
+            self.is_df_prepared = False
             # Build date from filepath and report that Dataframe is empty
             self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
             self.is_df_prepared = False
