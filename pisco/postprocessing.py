@@ -218,14 +218,10 @@ class Postprocessor:
         else:
             # Retrieve IASI spectral grid and radiance from the DataFrame
             wavenumbers = self.get_dataframe_spectral_grid()
-            radiance_df = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]]
-            # Convert wavenumbers to wavelengths in meters
-            wavelengths = 1e-2 / np.array(wavenumbers)  # Conversion from cm^-1 to m
-            # Convert radiance to SI units: W/m^2/sr/m
-            radiance_si = radiance_df.values * 1e-3  # Convert from mW to W
+            radiance = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]].values
             
             # Integrate the radiance over the wavelength for each measurement (calculate OLR)
-            integrated_spectrum = np.trapz(radiance_si, wavelengths, axis=1)
+            integrated_spectrum = np.trapz(radiance, wavenumbers, axis=1)
 
             # Extract the cloud fraction in the spectrum
             cloud_fraction = sub_df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction

@@ -9,7 +9,7 @@ import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
 # Local application/library specific imports
-from pisco import Plotter, Postprocessor
+from pisco import Plotter
 
 def convert_olr_units(df):
     # Identify data columns (excluding 'Date')
@@ -38,6 +38,12 @@ def load_data(file_path, var):
     # Ensure 'Date' is set as the DataFrame index
     df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
+
+    # Identify rows where all column values are -1
+    rows_to_drop = df.index[(df == -1).all(axis=1)]
+
+    # Drop these rows from the DataFrame
+    df = df.drop(rows_to_drop)
 
     if var == 'OLR':
         df = convert_olr_units(df)
@@ -83,7 +89,7 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
             ylabel = fr"{var} mW m$^{-2}$"
-            ylim = [-0.8e-5, -0.4e-5]
+            ylim = [3e-5, 6e-5]
         elif var == 'Phase Fraction':
             file_path = f"{plotter.datapath}daily_phase_fraction.csv"
             ylabel = "Phase / Total"
