@@ -34,6 +34,8 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
         # Gather results for target variables
         post.process_target_variables(target_variables, data_dict)
 
+        print(post.df.head())
+
         # Append date to list
         date_to_append = post.df['Datetime'].dt.date.iloc[0]
         dates.append(date_to_append)
