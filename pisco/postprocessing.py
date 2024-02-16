@@ -43,8 +43,12 @@ class Postprocessor:
     """
     def __init__(self, filepath: str):
         self.filepath = filepath
-        self.cloud_phase_names = {-1: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}
+        self.cloud_phase_names = Postprocessor.get_cloud_phase_dict()
         self.df: pd.DataFrame = None
+    
+    @staticmethod
+    def get_cloud_phase_dict():
+        return {-1: "Clear", 1: "Water", 2: "Ice", 3: "Mixed"}
     
     @staticmethod
     def get_target_time_range(config: Configurer):
@@ -167,8 +171,15 @@ class Postprocessor:
             return
         else:
             # Proceed with DataFrame manipulations if all required columns are present
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
             self.is_df_prepared = True
+
+            # Format datetime string as a dattime object
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+            
+            # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
+            # # habit of OBR extraction code not updating cloud phase for clear sky measurements)
+            # reduced_fields = Processor._get_reduced_fields()
+            
             return
 
 
@@ -273,7 +284,7 @@ class Postprocessor:
 
             # Iterate over each CloudPhase category and calculate fractions
             for phase, name in self.cloud_phase_names.items():
-                phase_count = pivot_df.get(phase, pd.Series()).sum()  # Use .get() to avoid KeyError
+                phase_count = pivot_df.get(phase, pd.Series(dtype="int32")).sum()  # Use .get() to avoid KeyError
                 phase_fractions[name] = 0 if total_measurements == 0 else np.round(phase_count / total_measurements, 3)
 
         return phase_fractions

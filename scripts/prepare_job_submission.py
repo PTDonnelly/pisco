@@ -29,7 +29,7 @@ def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
     script_content = f"""#!/bin/bash
 #SBATCH --job-name=pisco
 #SBATCH --output={output_path}/pisco.log
-#SBATCH --time=04:00:00
+#SBATCH --time=01:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem={allocated_memory}GB
 
