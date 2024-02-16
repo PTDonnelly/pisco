@@ -169,6 +169,7 @@ class Postprocessor:
             self.is_df_prepared = False
             # Build date from filepath and report that Dataframe is empty
             self.df['Datetime'] =  pd.to_datetime(Postprocessor.extract_date_from_filepath(self.filepath), format='%Y%m%d')
+            print(self.df.head())
             return
         else:
              # Report that DataFrame contains data and proceed with analysis
