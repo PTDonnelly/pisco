@@ -129,15 +129,30 @@ class Processor:
         logger.info(f"DataFrame processed: {filepath}")
         return True
 
-
-    def filter_observations(self, df, maximum_zenith_angle=5):
+    @staticmethod
+    def build_filter_conditions(df: pd.DataFrame, maximum_zenith_angle: int=5):
         """
-        Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
-        removing missing data, and filtering for SatelliteZenithAngle less than 5 degrees.
-        
+        Defines and combines multiple filtering conditions for creation of
+        final merged dataset.
+
         Parameters:
         df (pd.DataFrame): Input DataFrame containing satellite data.
         maximum_zenith_angle (int): Maximum satellite zenith angle considered (<5 degrees is considered nadir-viewing)
+        """
+        # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
+        include_nadir = df['SatelliteZenithAngle'] < maximum_zenith_angle
+
+        
+        # Combine all conditions using the bitwise AND operator (e.g. condition1 & condition2 etc.)
+        combined_conditions = include_nadir
+        return combined_conditions
+    
+    def filter_observations(self, df):
+        """Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
+        removing missing data, and filtering based on conditions.
+        
+        Parameters:
+        df (pd.DataFrame): Input DataFrame containing satellite data.
 
         Returns:
         pd.DataFrame: Filtered and processed DataFrame.
@@ -149,17 +164,8 @@ class Processor:
             # If Dataframe is missing values or columns, return empty dataframe
             return pd.DataFrame()
         else:
-            # Keep rows where 'SatelliteZenithAngle' is less than the specified maximum zenith angle (default = 5 degrees, considered to be nadir)
-            include_nadir = df['SatelliteZenithAngle'] < maximum_zenith_angle
-
-            # # Discard measurements where clouds are in liquid phase
-            # exclude_liquid = df['CloudPhase1'] != 2
-            
-            # # Discard measurements where clouds are in mixed phase
-            # exclude_mixed = df['CloudPhase1'] != 3
-
-            # Combine all conditions using the bitwise AND operator
-            combined_conditions = include_nadir
+            # Build filtering conditions for data set
+            combined_conditions = Processor.build_filter_conditions(df)
 
             # Filter the DataFrame based on the combined conditions
             filtered_df = df[combined_conditions]
