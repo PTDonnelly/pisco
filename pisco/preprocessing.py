@@ -304,6 +304,15 @@ class Preprocessor:
         try:
             os.remove(filepath)
             logger.info(f"Deleted intermediate file: {filepath}")
+
+            # Remove temporary directory (corresponding to the day)
+
+            # If parent directory is empty, remove it (corresponding to the month)
+
+            # If parent/parent directory is empty, remove it (corresponding to the year)
+
+            # If parent/parent/parent directory is empty, remove it (corresponding to the data level, l1c or l2)
+
         except OSError as e:
             logger.error(f"Error deleting file: {e}")
 
