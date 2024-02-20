@@ -74,9 +74,41 @@ def submit_job_file(script_name: str) -> str:
         return None
     
 
-def cleanup_job_files(last_job_id: str) -> None:
-    cleanup_script_name = "./scripts/cleanup_job.sh"
-    result = subprocess.run(["sbatch", "--dependency=afterok:" + last_job_id, cleanup_script_name], capture_output=True, text=True)
+def cleanup_job_files(datapath: str, last_job_id: str) -> None:
+    script_name = "cleanup_job.sh"
+
+    script_content = f"""#!/bin/bash
+# SLURM job script for cleaning up empty directories after a job completes
+
+# Load jq module if necessary
+module load jq
+
+# Check if datapath was successfully read
+if [ -z {datapath} ]; then
+    echo "Failed to read datapath from config.json"
+    exit 1
+fi
+
+# Navigate to the datapath directory
+cd {datapath}
+
+# Check if cd command was successful
+if [ $? -ne 0 ]; then
+    echo "Failed to navigate to datapath: {datapath}"
+    exit 1
+fi
+
+# Recursively delete all empty directories within datapath
+echo "Deleting all empty directories within {datapath}..."
+find . -type d -empty -delete
+
+# Log completion message
+echo "Cleanup of empty directories completed successfully at $(date)"
+"""
+    with open(script_name, 'w') as file:
+        file.write(script_content)
+
+    result = subprocess.run(["sbatch", "--dependency=afterok:" + last_job_id, script_name], capture_output=True, text=True)
     
     # Check if the command was successful
     if result.returncode == 0:
