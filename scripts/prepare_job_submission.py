@@ -78,16 +78,14 @@ def cleanup_job_files(datapath: str, last_job_id: str) -> None:
     script_name = "cleanup_job.sh"
 
     script_content = f"""#!/bin/bash
-# SLURM job script for cleaning up empty directories after a job completes
+#SBATCH --job-name=pisco
+#SBATCH --output={datapath}/pisco_cleanup.log
+#SBATCH --time=00:10:00
+#SBATCH --ntasks=1
+#SBATCH --mem=1GB
 
-# Load jq module if necessary
-module load jq
-
-# Check if datapath was successfully read
-if [ -z {datapath} ]; then
-    echo "Failed to read datapath from config.json"
-    exit 1
-fi
+# Purge all modules to prevent conflict with current environnement
+module purge
 
 # Navigate to the datapath directory
 cd {datapath}
