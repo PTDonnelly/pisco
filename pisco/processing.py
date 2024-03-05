@@ -261,7 +261,6 @@ class Processor:
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
 
         # Group by the new lat-lon bins and calculate mean of measurements for each bin
-        # You can adjust the aggregation as needed, here we use mean for example purposes
         grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
 
         # Reset index to turn grouped DataFrame back into a format similar to the original df
@@ -273,10 +272,13 @@ class Processor:
         # Replace the original DataFrame with the binned version
         self.df = df_binned
 
+        print(self.df.columns)
+
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
         self.df = self.df.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
         return
     
+
     def combine_datasets(self) -> None:
         self._create_merged_datapath()
         
