@@ -269,11 +269,12 @@ class Processor:
         df_binned = grouped.reset_index()
 
         # Extract just the date part from the 'Datetime' column at the start
-        # df_binned['Date'] = pd.to_datetime(self.df['Datetime'])
-        self.df['Datetime'] = self.df['Datetime'].date
-        print(self.df['Datetime'].head())
-        self.df['Datetime'] = self.df['Datetime'].dt.date
-        print(self.df['Datetime'].head())
+        # Convert 'Datetime' strings to datetime objects
+        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+
+        # Extract just the date part from the 'Datetime' column
+        self.df['Date'] = self.df['Datetime'].dt.date
+        print(self.df['Date'].head())
 
         exit()
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
