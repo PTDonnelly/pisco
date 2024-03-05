@@ -23,6 +23,7 @@ class Postprocessor:
         filepath (str): Path to the file containing the extracted data.
         cloud_phase_names (Dict[int, str]): Mapping of cloud phase integer codes to descriptive names.
         df (pd.DataFrame or None): DataFrame containing the processed data.
+        df_binned (pd.DataFrame or None): DataFrame containing the processed data, downsampled and averaged onto coarse spatial grid.
 
     Methods:
         get_target_time_range(config): Determines the target time range for analysis based on configuration.
@@ -42,6 +43,7 @@ class Postprocessor:
         self.filepath = filepath
         self.cloud_phase_names = Postprocessor.get_cloud_phase_dict()
         self.df: pd.DataFrame = None
+        self.df_binned: pd.DataFrame = None
     
     @staticmethod
     def get_cloud_phase_dict():
@@ -177,6 +179,25 @@ class Postprocessor:
             self.df = pd.concat([self.df, dummy_df], ignore_index=True)
             return
 
+
+    def downsample_spatial_grid(self):
+        """
+        Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
+        the measurements within each bin.
+        """
+        # Round latitude and longitude to nearest whole number to create grid bins
+        self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
+        self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
+
+        # Group by the new lat-lon bins and calculate mean of measurements for each bin
+        # You can adjust the aggregation as needed, here we use mean for example purposes
+        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
+
+        # Reset index to turn grouped DataFrame back into a format similar to the original df
+        self.df_binned = grouped.reset_index()
+        return
+
+
     @staticmethod
     def set_as_invalid():
         # Return a dictionary with a specific structure or flag to indicate invalid data
@@ -197,8 +218,8 @@ class Postprocessor:
         for phase, name in self.cloud_phase_names.items():
             if self.is_df_prepared:
                 # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
-                filtered_df = self.df[self.df['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
-                olr = filtered_df['OLR'] #self.calculate_olr_from_spectrum(filtered_df)
+                filtered_df = self.df_binned[self.df_binned['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df_binned.columns if 'Spectrum' in col]]
+                olr = filtered_df['OLR']
                 olr_values[name] = olr
             else:
                 olr_values[name] = -1
@@ -218,7 +239,7 @@ class Postprocessor:
 
         if self.is_df_prepared:
             # Pivot the DataFrame once to get the individual counts of each Cloud Phase
-            pivot_df = self.df.pivot_table(index=self.df['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
+            pivot_df = self.df_binned.pivot_table(index=self.df_binned['Datetime'].dt.date, columns='CloudPhase1', aggfunc='size', fill_value=0)
 
             # Calculate total number of measurements for the entire day
             total_measurements = pivot_df.sum(axis=1).sum()
@@ -257,24 +278,6 @@ class Postprocessor:
 
         return None
     
-
-    def spatial_binning(self):
-        """
-        Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
-        the measurements within each bin.
-        """
-        # Round latitude and longitude to nearest whole number to create grid bins
-        self.df['Lat_bin'] = self.df['Latitude'].round().astype(int)
-        self.df['Lon_bin'] = self.df['Longitude'].round().astype(int)
-
-        # Group by the new lat-lon bins and calculate mean of measurements for each bin
-        # You can adjust the aggregation as needed, here we use mean for example purposes
-        grouped = self.df.groupby(['Lat_bin', 'Lon_bin']).mean()
-
-        # Reset index to turn grouped DataFrame back into a format similar to the original df
-        self.df_binned = grouped.reset_index()
-        return
-
     @staticmethod
     def save_results(data_dict, dates, datapath) -> None:
         """

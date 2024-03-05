@@ -31,6 +31,9 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
         # Prepare DataFrame for analysis
         post.prepare_dataframe()
 
+        # Downsample measurements on to 1x1 degree spatial grid
+        post.downsample_spatial_grid()
+        
         # Gather results for target variables
         post.process_target_variables(target_variables, data_dict)
 
