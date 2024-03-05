@@ -214,11 +214,14 @@ class Postprocessor:
         # Initialize an empty dictionary to store values.
         olr_values = {}
 
+        print(self.df_binned.head())
+
         # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
             if self.is_df_prepared:
                 # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
                 filtered_df = self.df_binned[self.df_binned['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df_binned.columns if 'Spectrum' in col]]
+                print(filtered_df.columns)
                 olr = filtered_df['OLR']
                 olr_values[name] = olr
             else:

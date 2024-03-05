@@ -33,7 +33,7 @@ def gather_daily_statistics(datapath: str, filepaths: List[str], target_variable
 
         # Downsample measurements on to 1x1 degree spatial grid
         post.downsample_spatial_grid()
-        
+
         # Gather results for target variables
         post.process_target_variables(target_variables, data_dict)
 
@@ -50,6 +50,7 @@ def main():
     # Instantiate a Configurer to get data from config.json
     config = Configurer()
 
+    ### FOR TESTING
     # # The path to the directory that contains the data files
     # config.datapath = "D:\\Data\\iasi\\"
     # datapath = "/data/pdonnelly/iasi/metopb/"
@@ -59,7 +60,8 @@ def main():
     # target_months = [3, 4, 5]
     # target_days = [day for day in range(1, 32)] # Search all days in each month
     # target_time_range = (target_years, target_months, target_days)
-
+    #####
+    
     # Define temporal range to post-process
     target_time_range = Postprocessor.get_target_time_range(config)
 
