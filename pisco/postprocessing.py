@@ -256,7 +256,25 @@ class Postprocessor:
                 data_dict[var][key].append(value)
 
         return None
-       
+    
+
+    def spatial_binning(self):
+        """
+        Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
+        the measurements within each bin.
+        """
+        # Round latitude and longitude to nearest whole number to create grid bins
+        self.df['Lat_bin'] = self.df['Latitude'].round().astype(int)
+        self.df['Lon_bin'] = self.df['Longitude'].round().astype(int)
+
+        # Group by the new lat-lon bins and calculate mean of measurements for each bin
+        # You can adjust the aggregation as needed, here we use mean for example purposes
+        grouped = self.df.groupby(['Lat_bin', 'Lon_bin']).mean()
+
+        # Reset index to turn grouped DataFrame back into a format similar to the original df
+        self.df_binned = grouped.reset_index()
+        return
+
     @staticmethod
     def save_results(data_dict, dates, datapath) -> None:
         """
