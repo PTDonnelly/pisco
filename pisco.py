@@ -67,7 +67,7 @@ def main():
 
     # After all processing jobs are submitted, submit a cleanup job with dependency
     if last_job_id and config.submit_job:
-        job.cleanup_job_files(last_job_id)
+        job.cleanup_job_files(config.datapath, last_job_id)
 
 if __name__ == "__main__":
     main()
