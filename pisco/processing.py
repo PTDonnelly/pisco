@@ -266,6 +266,8 @@ class Processor:
         # Reset index to turn grouped DataFrame back into a format similar to the original df
         df_binned = grouped.reset_index()
 
+        print(df_binned.columns)
+
         # Use new grid as the spatial coordinates
         df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
 
