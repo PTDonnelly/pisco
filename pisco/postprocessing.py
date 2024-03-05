@@ -220,7 +220,7 @@ class Postprocessor:
         for phase, name in self.cloud_phase_names.items():
             if self.is_df_prepared:
                 # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
-                filtered_df = self.df_binned[self.df_binned['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df_binned.columns if 'Spectrum' in col]]
+                filtered_df = self.df_binned[self.df_binned['CloudPhase1'] == phase]
                 print(filtered_df.columns)
                 olr = filtered_df['OLR']
                 olr_values[name] = olr
@@ -277,6 +277,7 @@ class Postprocessor:
                 values = Postprocessor.set_as_invalid()
 
             for key, value in values.items():
+                print(key, value)
                 data_dict[var][key].append(value)
 
         return None
