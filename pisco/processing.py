@@ -258,9 +258,7 @@ class Processor:
         just the date part of the original datetime objects.
         """
         # Extract just the date part from the 'Datetime' column at the start
-        self.df['Date'] = self.df['Datetime']
-
-        print(type(self.df['Datetime']), self.df['Date'])
+        self.df['Date'] = pd.to_datetime(df_binned['Datetime']).dt.date
 
         # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
@@ -268,7 +266,7 @@ class Processor:
 
         # Group by the new lat-lon bins and 'Date', then calculate mean of measurements for each bin
         # Exclude original Latitude, Longitude, and Datetime columns from the mean calculation
-        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date']).mean()
+        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
 
         # Reset index to turn grouped DataFrame back into a format that resembles the original df
         df_binned = grouped.reset_index()
@@ -285,7 +283,7 @@ class Processor:
         self.df = df_binned
 
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
-        self.df = self.df.sort_values(by=['Latitude', 'Longitude', 'Date']).reset_index(drop=True)
+        self.df = self.df.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
         
         return
 
