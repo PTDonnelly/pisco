@@ -108,6 +108,7 @@ class Processor:
         wavenumber_grid = spectral_grid[:, 1]
         return channel_ids, wavenumber_grid
     
+
     def get_dataframe_spectral_grid(self) -> List[float]:
         # Get the full IASI spectral grid
         _, wavenumber_grid = self._get_iasi_spectral_grid()
@@ -118,34 +119,39 @@ class Processor:
         extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
         return extracted_wavenumbers
     
-    def calculate_olr_from_spectrum(self) -> float:
-        """
-        Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
 
-        Returns:
-        - float: The average calculated OLR value.
+    def integrate_spectrum_to_olr(self) -> None:
         """
+        Calculates OLR and its error for each spectrum in the DataFrame, adds these as new columns,
+        and removes the original spectral radiance columns.
+        """
+
+        # Function to calculate OLR and its error for a single spectrum row
+        def calculate_olr_and_error(row, wavenumbers):
+            radiance = row[[col for col in self.df.columns if 'Spectrum' in col]].values
+            radiance_errors = np.std(radiance) # Adapt later to utilise IASI noise profile
+
+            integrated_spectrum = np.trapz(radiance, wavenumbers)
+            integrated_error = np.sqrt(np.trapz(radiance_errors ** 2, wavenumbers))
+
+            cloud_fraction = row['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
+            weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
+            weighted_integrated_error = integrated_error * cloud_fraction
+
+            return pd.Series([weighted_integrated_spectrum, weighted_integrated_error])
+
+        # Report to the logger
+        logger.info("Integrating spectra to OLR")
+
         # Retrieve IASI spectral grid and radiance from the DataFrame
         wavenumbers = self.get_dataframe_spectral_grid()
 
-        # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
-        radiance = self.df[[col for col in self.df.columns if 'Spectrum' in col]].values
+        # Apply the function to each row, assuming spectral and error data are correctly aligned
+        self.df[['OLR', 'OLR_Error']] = self.df.apply(calculate_olr_and_error, wavenumbers=wavenumbers, axis=1)
 
-        print(radiance.head())
-        
-        # Integrate the radiance over the wavelength for each measurement (calculate OLR)
-        logger.info("Integrating spectra to OLR")
-        integrated_spectrum = np.trapz(radiance, wavenumbers, axis=1)
-
-        # Extract the cloud fraction in the spectrum
-        cloud_fraction = self.df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
-
-        # Weight OLR integrals by cloud fraction (cloudier spectra more prominent in the average)
-        weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
-
-        print(np.shape(np.float32(weighted_integrated_spectrum)))
-        exit()
-        return np.float32(np.mean(weighted_integrated_spectrum))
+        # Remove the original spectral radiance and error columns
+        self.df.drop(columns=[col for col in self.df.columns if 'Spectrum' in col or 'Error' in col], inplace=True)
+        return
         
     @staticmethod
     def _get_reduced_fields() -> List[str]:
@@ -256,8 +262,8 @@ class Processor:
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
 
-        # Integrate spectra with wavelength to produce a single "OLR" value
-        self.calculate_olr_from_spectrum()
+        # Integrate spectra with wavelength to produce a single OLR value
+        self.integrate_spectrum_to_olr()
         return
     
 
