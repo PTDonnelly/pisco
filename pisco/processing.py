@@ -268,16 +268,16 @@ class Processor:
         # Reset index to turn grouped DataFrame back into a format that resembles the original df
         df_binned = grouped.reset_index()
 
-        # Extract just the date part from the 'Datetime' column at the start
-        df_binned['Date'] = self.df['Datetime'].dt.date
+        # # Extract just the date part from the 'Datetime' column at the start
+        # df_binned['Date'] = self.df['Datetime']
 
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
-        df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
+        df_binned.drop(columns=['Latitude', 'Longitude'], errors='ignore', inplace=True)
 
         # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
-        df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
+        df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude', 'Datetime': 'Date'}, inplace=True)
 
-        print(df_binned['Date'].head())
+        print(df_binned.head())
 
         # Replace the original DataFrame with the binned version
         self.df = df_binned
