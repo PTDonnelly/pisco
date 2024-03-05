@@ -74,8 +74,8 @@ def plot_statistical_timeseries(plotter: object, target_variables: List[str], pl
     for var in target_variables:
         if var == 'OLR':
             file_path = f"{plotter.datapath}daily_olr.csv"
-            ylabel = fr"{var} mW m$^{-2}$"
-            ylim = [3e-5, 6e-5]
+            ylabel = f"{var} (mW m$^{{-2}})$"
+            ylim = [0.16, 0.3]
         elif var == 'Phase Fraction':
             file_path = f"{plotter.datapath}daily_phase_fraction.csv"
             ylabel = "Phase / Total"
