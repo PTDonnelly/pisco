@@ -277,14 +277,14 @@ class Processor:
         # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
         df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude', 'Datetime': 'Date'}, inplace=True)
 
-        print(df_binned.head())
-
         # Replace the original DataFrame with the binned version
         self.df = df_binned
 
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
         self.df = self.df.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
         
+        print(self.df['Date'].head())
+
         return
 
     def combine_datasets(self) -> None:
