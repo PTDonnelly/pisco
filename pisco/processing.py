@@ -270,7 +270,9 @@ class Processor:
 
         # Extract just the date part from the 'Datetime' column at the start
         # df_binned['Date'] = pd.to_datetime(self.df['Datetime'])
-
+        self.df['Datetime'] = self.df['Datetime'].date
+        print(self.df['Datetime'].head())
+        self.df['Datetime'] = self.df['Datetime'].dt.date
         print(self.df['Datetime'].head())
 
         exit()
