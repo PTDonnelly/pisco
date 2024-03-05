@@ -259,25 +259,21 @@ class Processor:
         """
         # Convert 'Datetime' strings to datetime objects
         self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
-        # Extract just the date part from the 'Datetime' column
-        self.df['Date'] = self.df['Datetime'].dt.date
-        
+
         # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
 
         # Group by the new lat-lon bins and 'Date', then calculate mean of measurements for each bin
         # Exclude original Latitude, Longitude, and Datetime columns from the mean calculation
-        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
+        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Datetime']).mean()
 
         # Reset index to turn grouped DataFrame back into a format that resembles the original df
         df_binned = grouped.reset_index()
 
-        # Convert 'Datetime' strings to datetime objects
-        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
         # Extract just the date part from the 'Datetime' column
-        self.df['Date'] = self.df['Datetime'].dt.date
-
+        df_binned['Date'] = self.df['Datetime'].dt.date
+        
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
         df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
 
