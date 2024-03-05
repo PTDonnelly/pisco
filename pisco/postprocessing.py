@@ -177,58 +177,10 @@ class Postprocessor:
             self.df = pd.concat([self.df, dummy_df], ignore_index=True)
             return
 
-
-    # @staticmethod
-    # def _get_iasi_spectral_grid():
-    #     spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
-    #     channel_ids = spectral_grid[:, 0]
-    #     wavenumber_grid = spectral_grid[:, 1]
-    #     return channel_ids, wavenumber_grid
-
-
-    # def get_dataframe_spectral_grid(self) -> List[float]:
-    #     # Get the full IASI spectral grid
-    #     _, wavenumber_grid = Postprocessor._get_iasi_spectral_grid()
-    #     # Extract the numbers from the column names
-    #     spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
-    #     channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
-    #     # Extract the wavenumbers corresponding to the channel positions
-    #     extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
-    #     return extracted_wavenumbers
-
     @staticmethod
     def set_as_invalid():
         # Return a dictionary with a specific structure or flag to indicate invalid data
         return {"invalid": True}
-
-
-    # def calculate_olr_from_spectrum(self, sub_df: pd.DataFrame) -> Union[float, int]:
-    #     """
-    #     Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
-
-    #     Returns:
-    #     - float: The average calculated OLR value.
-    #     """
-    #     # Check that sub-DataFrame contains data
-    #     if sub_df.empty:
-    #         return -1
-    #     else:
-    #         # Retrieve IASI spectral grid and radiance from the DataFrame
-    #         wavenumbers = self.get_dataframe_spectral_grid()
-
-    #         # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
-    #         radiance = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]].values
-            
-    #         # Integrate the radiance over the wavelength for each measurement (calculate OLR)
-    #         integrated_spectrum = np.trapz(radiance, wavenumbers, axis=1)
-
-    #         # Extract the cloud fraction in the spectrum
-    #         cloud_fraction = sub_df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
-
-    #         # Weight OLR integrals by cloud fraction (cloudier spectra more prominent in the average)
-    #         weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
-
-    #         return np.float32(np.mean(weighted_integrated_spectrum))
 
 
     def get_outgoing_longwave_radiation(self) -> Dict[str, Union[float, int]]:
