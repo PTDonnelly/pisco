@@ -1,12 +1,13 @@
 import gzip
 import logging
+import numpy as np
 import os
 import pandas as pd
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pickle
 
-from pisco import Extractor
+from pisco import Extractor, Postprocessor
 
 # Obtain a logger for this module
 logger = logging.getLogger(__name__)
@@ -33,6 +34,9 @@ class Processor:
         check_l1c_l2_data_exist(): Checks the existence of L1C and L2 data files.
         unpickle(file): Uncompresses and loads a DataFrame from a pickled file.
         load_data(): Loads L1C spectra and L2 cloud products data into DataFrames.
+        _get_iasi_spectral_grid(): Retrieves the IASI spectral grid from a file.
+        get_dataframe_spectral_grid(): Extracts the spectral grid from the DataFrame's columns.
+        calculate_olr_from_spectrum(sub_df): Calculates the OLR from spectral data for a given day.
         _get_reduced_fields(): Returns a list of fields to retain in the reduced dataset.
         reduce_fields(merged_df): Reduces the merged DataFrame to specified fields and spectral channels.
         check_df(filepath, df): Validates the DataFrame for data presence and required columns.
@@ -63,7 +67,7 @@ class Processor:
         return
     
 
-    def check_l1c_l2_data_exist(self):
+    def check_l1c_l2_data_exist(self) -> bool:
         
         self._get_intermediate_analysis_data_paths()
         
@@ -81,7 +85,7 @@ class Processor:
             return True
     
     @staticmethod
-    def unpickle(file):
+    def unpickle(file) -> pd.DataFrame:
         with gzip.open(file, 'rb') as f:
             df = pickle.load(f)
         return df
@@ -97,6 +101,52 @@ class Processor:
         self.df_l2 = Processor.unpickle(self.datafile_l2)
         return
     
+    @staticmethod
+    def _get_iasi_spectral_grid():
+        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
+        channel_ids = spectral_grid[:, 0]
+        wavenumber_grid = spectral_grid[:, 1]
+        return channel_ids, wavenumber_grid
+    
+    def get_dataframe_spectral_grid(self) -> List[float]:
+        # Get the full IASI spectral grid
+        _, wavenumber_grid = Postprocessor._get_iasi_spectral_grid()
+        # Extract the numbers from the column names
+        spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
+        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
+        # Extract the wavenumbers corresponding to the channel positions
+        extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
+        return extracted_wavenumbers
+    
+    def calculate_olr_from_spectrum(self) -> float:
+        """
+        Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
+
+        Returns:
+        - float: The average calculated OLR value.
+        """
+        # Retrieve IASI spectral grid and radiance from the DataFrame
+        wavenumbers = self.get_dataframe_spectral_grid()
+
+        # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
+        radiance = self.df[[col for col in self.df.columns if 'Spectrum' in col]].values
+
+        print(np.shape(radiance))
+        
+        # Integrate the radiance over the wavelength for each measurement (calculate OLR)
+        logger.info("Integrating spectra to OLR")
+        integrated_spectrum = np.trapz(radiance, wavenumbers, axis=1)
+
+        # Extract the cloud fraction in the spectrum
+        cloud_fraction = self.df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
+
+        # Weight OLR integrals by cloud fraction (cloudier spectra more prominent in the average)
+        weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
+
+        print(np.shape(np.float32(np.mean(weighted_integrated_spectrum))))
+        exit()
+        return np.float32(np.mean(weighted_integrated_spectrum))
+        
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
@@ -205,6 +255,9 @@ class Processor:
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
+
+        # Integrate spectra with wavelength to produce a single "OLR" value
+        self.calculate_olr_from_spectrum()
         return
     
 

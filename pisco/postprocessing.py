@@ -32,10 +32,7 @@ class Postprocessor:
         extract_date_from_filepath(filepath): Extracts the date from a file path using a regular expression.
         _get_dataframe(filepath): Retrieves a DataFrame from a given filepath.
         prepare_dataframe(): Prepares the DataFrame for analysis by filtering and checking its contents.
-        _get_iasi_spectral_grid(): Retrieves the IASI spectral grid from a file.
-        get_dataframe_spectral_grid(): Extracts the spectral grid from the DataFrame's columns.
         set_as_invalid(): Returns a structure indicating invalid data.
-        calculate_olr_from_spectrum(sub_df): Calculates the OLR from spectral data for a given day.
         get_outgoing_longwave_radiation(): Calculates OLR values for all cloud phase conditions.
         get_phase_fraction(): Calculates the fraction of measurements for each cloud phase.
         process_target_variables(target_variables, data_dict): Processes each target variable and appends the results to a data dictionary.
@@ -181,23 +178,23 @@ class Postprocessor:
             return
 
 
-    @staticmethod
-    def _get_iasi_spectral_grid():
-        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
-        channel_ids = spectral_grid[:, 0]
-        wavenumber_grid = spectral_grid[:, 1]
-        return channel_ids, wavenumber_grid
+    # @staticmethod
+    # def _get_iasi_spectral_grid():
+    #     spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
+    #     channel_ids = spectral_grid[:, 0]
+    #     wavenumber_grid = spectral_grid[:, 1]
+    #     return channel_ids, wavenumber_grid
 
 
-    def get_dataframe_spectral_grid(self) -> List[float]:
-        # Get the full IASI spectral grid
-        _, wavenumber_grid = Postprocessor._get_iasi_spectral_grid()
-        # Extract the numbers from the column names
-        spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
-        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
-        # Extract the wavenumbers corresponding to the channel positions
-        extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
-        return extracted_wavenumbers
+    # def get_dataframe_spectral_grid(self) -> List[float]:
+    #     # Get the full IASI spectral grid
+    #     _, wavenumber_grid = Postprocessor._get_iasi_spectral_grid()
+    #     # Extract the numbers from the column names
+    #     spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
+    #     channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
+    #     # Extract the wavenumbers corresponding to the channel positions
+    #     extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
+    #     return extracted_wavenumbers
 
     @staticmethod
     def set_as_invalid():
@@ -205,33 +202,33 @@ class Postprocessor:
         return {"invalid": True}
 
 
-    def calculate_olr_from_spectrum(self, sub_df: pd.DataFrame) -> Union[float, int]:
-        """
-        Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
+    # def calculate_olr_from_spectrum(self, sub_df: pd.DataFrame) -> Union[float, int]:
+    #     """
+    #     Calculates the average Outgoing Longwave Radiation (OLR) from spectral data for a given day.
 
-        Returns:
-        - float: The average calculated OLR value.
-        """
-        # Check that sub-DataFrame contains data
-        if sub_df.empty:
-            return -1
-        else:
-            # Retrieve IASI spectral grid and radiance from the DataFrame
-            wavenumbers = self.get_dataframe_spectral_grid()
+    #     Returns:
+    #     - float: The average calculated OLR value.
+    #     """
+    #     # Check that sub-DataFrame contains data
+    #     if sub_df.empty:
+    #         return -1
+    #     else:
+    #         # Retrieve IASI spectral grid and radiance from the DataFrame
+    #         wavenumbers = self.get_dataframe_spectral_grid()
 
-            # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
-            radiance = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]].values
+    #         # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
+    #         radiance = sub_df[[col for col in sub_df.columns if 'Spectrum' in col]].values
             
-            # Integrate the radiance over the wavelength for each measurement (calculate OLR)
-            integrated_spectrum = np.trapz(radiance, wavenumbers, axis=1)
+    #         # Integrate the radiance over the wavelength for each measurement (calculate OLR)
+    #         integrated_spectrum = np.trapz(radiance, wavenumbers, axis=1)
 
-            # Extract the cloud fraction in the spectrum
-            cloud_fraction = sub_df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
+    #         # Extract the cloud fraction in the spectrum
+    #         cloud_fraction = sub_df['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
 
-            # Weight OLR integrals by cloud fraction (cloudier spectra more prominent in the average)
-            weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
+    #         # Weight OLR integrals by cloud fraction (cloudier spectra more prominent in the average)
+    #         weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
 
-            return np.float32(np.mean(weighted_integrated_spectrum))
+    #         return np.float32(np.mean(weighted_integrated_spectrum))
 
 
     def get_outgoing_longwave_radiation(self) -> Dict[str, Union[float, int]]:
@@ -249,7 +246,7 @@ class Postprocessor:
             if self.is_df_prepared:
                 # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
                 filtered_df = self.df[self.df['CloudPhase1'] == phase][['CloudPhase1', 'CloudAmountInSegment1'] + [col for col in self.df.columns if 'Spectrum' in col]]
-                olr = self.calculate_olr_from_spectrum(filtered_df)
+                olr = filtered_df['OLR'] #self.calculate_olr_from_spectrum(filtered_df)
                 olr_values[name] = olr
             else:
                 olr_values[name] = -1
