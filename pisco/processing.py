@@ -257,6 +257,11 @@ class Processor:
         the measurements within each bin. A new Datetime column is added back, containing
         just the date part of the original datetime objects.
         """
+        # Convert 'Datetime' strings to datetime objects
+        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+        # Extract just the date part from the 'Datetime' column
+        self.df['Date'] = self.df['Datetime'].dt.date
+
         # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
@@ -267,11 +272,6 @@ class Processor:
 
         # Reset index to turn grouped DataFrame back into a format that resembles the original df
         df_binned = grouped.reset_index()
-
-        # Convert 'Datetime' strings to datetime objects
-        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
-        # Extract just the date part from the 'Datetime' column
-        self.df['Date'] = self.df['Datetime'].dt.date
 
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
         df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
