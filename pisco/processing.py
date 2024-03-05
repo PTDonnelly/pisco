@@ -326,7 +326,7 @@ class Processor:
                 pickle.dump(self.df, f)
 
 
-            self.df.to_csv(f"{file_root}.csv", sep='\t')
+            self.df.to_csv(f"North Atlantic.csv", sep='\t')
             
             # Output information on the final DataFrame
             logger.info(self.df.info())
