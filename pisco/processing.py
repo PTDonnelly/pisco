@@ -102,73 +102,6 @@ class Processor:
         return
     
     @staticmethod
-    def _get_iasi_spectral_grid():
-        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
-        channel_ids = spectral_grid[:, 0]
-        wavenumber_grid = spectral_grid[:, 1]
-        return channel_ids, wavenumber_grid
-    
-
-    def get_dataframe_spectral_grid(self) -> List[float]:
-        # Get the full IASI spectral grid
-        _, wavenumber_grid = self._get_iasi_spectral_grid()
-        # Extract the numbers from the column names
-        spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
-        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
-        # Extract the wavenumbers corresponding to the channel positions
-        extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
-        return extracted_wavenumbers
-    
-
-    def integrate_spectrum_to_olr(self) -> None:
-        """
-        Calculates OLR and its error for each spectrum in the DataFrame, adds these as new columns,
-        and removes the original spectral radiance columns.
-        """
-
-        # Function to calculate OLR and its error for a single spectrum row
-        def calculate_olr_and_error(row, wavenumbers):
-            radiance = row[[col for col in self.df.columns if 'Spectrum' in col]].values
-            radiance_error = np.std(radiance) # Adapt later to utilise IASI noise profile
-            radiance_errors = np.full(radiance.shape, radiance_error)
-
-            integrated_spectrum = np.trapz(radiance, wavenumbers)
-            integrated_error = np.sqrt(np.trapz(radiance_errors ** 2, wavenumbers))
-
-            cloud_fraction = row['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
-            weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
-            weighted_integrated_error = integrated_error * cloud_fraction
-
-            return pd.Series((weighted_integrated_spectrum, weighted_integrated_error))
-
-        # Report to the logger
-        logger.info("Integrating spectra to OLR")
-
-        # Retrieve IASI spectral grid and radiance from the DataFrame
-        wavenumbers = self.get_dataframe_spectral_grid()
-
-        # Apply the function to each row, assuming spectral and error data are correctly aligned
-        self.df[['OLR', 'OLR_Error']] = self.df.apply(calculate_olr_and_error, wavenumbers=wavenumbers, axis=1)
-
-        # Remove the original spectral radiance and error columns
-        self.df.drop(columns=[col for col in self.df.columns if 'Spectrum' in col], inplace=True)
-        return
-        
-    @staticmethod
-    def _get_reduced_fields() -> List[str]:
-        reduced_fields = [
-            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
-            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
-        return reduced_fields
-
-
-    def reduce_fields(self, merged_df: pd.DataFrame):
-        # Keep only columns containing variables present in reduced_fields and spectral channels
-        reduced_fields = Processor._get_reduced_fields()
-        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
-        return merged_df.filter(reduced_fields + spectrum_columns)
-    
-    @staticmethod
     def check_df(filepath: str, df: pd.DataFrame = None) -> bool:
         # Ensure the dataframe is not empty
         if df.empty:
@@ -185,6 +118,40 @@ class Processor:
         
         logger.info(f"DataFrame checked: {filepath}")
         return True
+            
+    @staticmethod
+    def _get_iasi_spectral_grid():
+        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
+        channel_ids = spectral_grid[:, 0]
+        wavenumber_grid = spectral_grid[:, 1]
+        return channel_ids, wavenumber_grid
+    
+
+    def get_dataframe_spectral_grid(self) -> List[float]:
+        # Get the full IASI spectral grid
+        _, wavenumber_grid = self._get_iasi_spectral_grid()
+        # Extract the numbers from the column names
+        spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
+        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
+        # Extract the wavenumbers corresponding to the channel positions
+        extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
+        return extracted_wavenumbers
+                
+
+    def _create_merged_datapath(self):
+        # Create the output directory if it doesn't exist
+        os.makedirs(self.datapath_merged, exist_ok=True)
+        self.output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products")
+        return
+
+
+    def merge_datasets(self) -> None:
+        # Latitude and longitude values are rounded to 4 decimal places.
+        self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
+        self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
+
+        # Merge two DataFrames based on spatial and temporal parameters
+        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
 
     @staticmethod
     def build_filter_conditions(df: pd.DataFrame, maximum_zenith_angle: int=5):
@@ -234,23 +201,82 @@ class Processor:
             else:
                 return filtered_df
 
+    
+    @staticmethod
+    def _get_reduced_fields() -> List[str]:
+        reduced_fields = [
+            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
+            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
+        return reduced_fields
 
-    def merge_datasets(self) -> None:
-        # Latitude and longitude values are rounded to 4 decimal places.
-        self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
-        self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
-
-        # Merge two DataFrames based on spatial and temporal parameters
-        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
+    def reduce_fields(self, merged_df: pd.DataFrame):
+        # Keep only columns containing variables present in reduced_fields and spectral channels
+        reduced_fields = Processor._get_reduced_fields()
+        spectrum_columns = [col for col in merged_df if "Spectrum" in col]
+        return merged_df.filter(reduced_fields + spectrum_columns)
 
 
-    def _create_merged_datapath(self):
-        # Create the output directory if it doesn't exist
-        os.makedirs(self.datapath_merged, exist_ok=True)
-        self.output_path = os.path.join(self.datapath_merged, "spectra_and_cloud_products")
+    def integrate_spectrum_to_olr(self) -> None:
+        """
+        Calculates OLR and its error for each spectrum in the DataFrame, adds these as new columns,
+        and removes the original spectral radiance columns.
+        """
+
+        # Function to calculate OLR and its error for a single spectrum row
+        def calculate_olr_and_error(row, wavenumbers):
+            radiance = row[[col for col in self.df.columns if 'Spectrum' in col]].values
+            radiance_error = np.std(radiance) # Adapt later to utilise IASI noise profile
+            radiance_errors = np.full(radiance.shape, radiance_error)
+
+            integrated_spectrum = np.trapz(radiance, wavenumbers)
+            integrated_error = np.sqrt(np.trapz(radiance_errors ** 2, wavenumbers))
+
+            cloud_fraction = row['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
+            weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
+            weighted_integrated_error = integrated_error * cloud_fraction
+
+            return pd.Series((weighted_integrated_spectrum, weighted_integrated_error))
+
+        # Report to the logger
+        logger.info("Integrating spectra to OLR")
+
+        # Retrieve IASI spectral grid and radiance from the DataFrame
+        wavenumbers = self.get_dataframe_spectral_grid()
+
+        # Apply the function to each row, assuming spectral and error data are correctly aligned
+        self.df[['OLR', 'OLR_Error']] = self.df.apply(calculate_olr_and_error, wavenumbers=wavenumbers, axis=1)
+
+        # Remove the original spectral radiance and error columns
+        self.df.drop(columns=[col for col in self.df.columns if 'Spectrum' in col], inplace=True)
         return
+    
 
+    def downsample_spatial_grid(self):
+        """
+        Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
+        the measurements within each bin.
+        """
+        # Round latitude and longitude to nearest whole number to create grid bins
+        self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
+        self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
 
+        # Group by the new lat-lon bins and calculate mean of measurements for each bin
+        # You can adjust the aggregation as needed, here we use mean for example purposes
+        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
+
+        # Reset index to turn grouped DataFrame back into a format similar to the original df
+        df_binned = grouped.reset_index()
+
+        # Use new grid as the spatial coordinates
+        df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
+
+        # Replace the original DataFrame with the binned version
+        self.df = df_binned
+
+        # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
+        self.df = self.df.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
+        return
+    
     def combine_datasets(self) -> None:
         self._create_merged_datapath()
         
@@ -265,17 +291,19 @@ class Processor:
 
         # Integrate spectra with wavelength to produce a single OLR value
         self.integrate_spectrum_to_olr()
+
+        # Downsample measurements on to 1x1 degree spatial grid
+        self.downsample_spatial_grid()
         return
     
-
-    def _delete_intermediate_file(self, filepath):
+    @staticmethod
+    def _delete_intermediate_file(filepath):
         try:
             os.remove(filepath)
             logger.info(f"Deleted intermediate file: {filepath}")
         except OSError as e:
             logger.error(f"Error deleting file {filepath}: {e}")
         return
-
 
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         try:
@@ -298,7 +326,7 @@ class Processor:
         # Delete Preprocessor files
         if (delete_intermediate_files is None) and self.delete_intermediate_files:
             # If boolean flag is not manually passed, default to the boolean flag in config.delete_intermediate_files
-                self._delete_intermediate_file(self.datafile_l1c)
-                self._delete_intermediate_file(self.datafile_l2)
+                Processor._delete_intermediate_file(self.datafile_l1c)
+                Processor._delete_intermediate_file(self.datafile_l2)
 
         return

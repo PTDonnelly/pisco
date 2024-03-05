@@ -147,7 +147,6 @@ class Postprocessor:
         else:
             return pd.DataFrame()
 
-
     def prepare_dataframe(self) -> bool:
         """
         Prepares the DataFrame for analysis by filtering based on specified criteria.
@@ -179,25 +178,6 @@ class Postprocessor:
             self.df = pd.concat([self.df, dummy_df], ignore_index=True)
             return
 
-
-    def downsample_spatial_grid(self):
-        """
-        Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
-        the measurements within each bin.
-        """
-        # Round latitude and longitude to nearest whole number to create grid bins
-        self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
-        self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
-
-        # Group by the new lat-lon bins and calculate mean of measurements for each bin
-        # You can adjust the aggregation as needed, here we use mean for example purposes
-        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
-
-        # Reset index to turn grouped DataFrame back into a format similar to the original df
-        self.df_binned = grouped.reset_index()
-        return
-
-
     @staticmethod
     def set_as_invalid():
         # Return a dictionary with a specific structure or flag to indicate invalid data
@@ -214,14 +194,11 @@ class Postprocessor:
         # Initialize an empty dictionary to store values.
         olr_values = {}
 
-        print(self.df_binned.head())
-
         # Iterate over each category and store values
         for phase, name in self.cloud_phase_names.items():
             if self.is_df_prepared:
                 # For all rows with CloudPhase1 == phase, create sub_df with values of cloud phase, cloud fraction and spectral channels 
                 filtered_df = self.df_binned[self.df_binned['CloudPhase1'] == phase]
-                print(filtered_df.columns)
                 olr = filtered_df['OLR']
                 olr_values[name] = olr
             else:
