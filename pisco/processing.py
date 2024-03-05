@@ -258,7 +258,7 @@ class Processor:
         just the date part of the original datetime objects.
         """
         # Extract just the date part from the 'Datetime' column at the start
-        self.df['Date'] = self.df['Datetime'].dt.date
+        self.df['Date'] = self.df['Datetime']
 
         print(type(self.df['Datetime']), self.df['Date'])
 

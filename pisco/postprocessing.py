@@ -161,7 +161,7 @@ class Postprocessor:
         # Check if DataFrame contains data and required columns
         self.is_df_prepared = Processor.check_df(self.filepath, self.df)
         if self.is_df_prepared:
-            # Format datetime string as a dattime object
+            # Format datetime string as a datetime object
             self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
             
             # # Sort out bad measurements from "clear-sky" or "clear-ish sky" (correct for
