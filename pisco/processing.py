@@ -129,10 +129,9 @@ class Processor:
         # Function to calculate OLR and its error for a single spectrum row
         def calculate_olr_and_error(row, wavenumbers):
             radiance = row[[col for col in self.df.columns if 'Spectrum' in col]].values
-            radiance_errors = np.std(radiance) # Adapt later to utilise IASI noise profile
+            radiance_error = np.std(radiance) # Adapt later to utilise IASI noise profile
+            radiance_errors = np.full(radiance.shape, radiance_error)
 
-            print(np.shape(wavenumbers), np.shape(radiance))
-            exit()
             integrated_spectrum = np.trapz(radiance, wavenumbers)
             integrated_error = np.sqrt(np.trapz(radiance_errors ** 2, wavenumbers))
 
