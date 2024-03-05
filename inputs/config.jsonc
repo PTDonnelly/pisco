@@ -33,7 +33,7 @@
     "year_list": [2013],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
-    "month_list": [10],
+    "month_list": [3],
 
     // day_list: List[int] or str, List[int] of specific days, or "all" to scan all calendar days in month
     "day_list": [10],

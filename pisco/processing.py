@@ -317,6 +317,9 @@ class Processor:
             # Compress and save using gzip
             with gzip.open(output_file, 'wb') as f:
                 pickle.dump(self.df, f)
+
+
+            self.df.to_csv(f"{file_root}.csv", sep='\t')
             
             # Output information on the final DataFrame
             logger.info(self.df.info())
