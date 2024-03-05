@@ -131,6 +131,8 @@ class Processor:
             radiance = row[[col for col in self.df.columns if 'Spectrum' in col]].values
             radiance_errors = np.std(radiance) # Adapt later to utilise IASI noise profile
 
+            print(np.shape(wavenumbers), np.shape(radiance))
+            exit()
             integrated_spectrum = np.trapz(radiance, wavenumbers)
             integrated_error = np.sqrt(np.trapz(radiance_errors ** 2, wavenumbers))
 
