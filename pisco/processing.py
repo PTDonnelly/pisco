@@ -139,6 +139,7 @@ class Processor:
             weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
             weighted_integrated_error = integrated_error * cloud_fraction
 
+            print(weighted_integrated_spectrum, weighted_integrated_error)
             return pd.Series([weighted_integrated_spectrum, weighted_integrated_error])
 
         # Report to the logger
@@ -149,7 +150,14 @@ class Processor:
 
         # Apply the function to each row, assuming spectral and error data are correctly aligned
         self.df[['OLR', 'OLR_Error']] = self.df.apply(calculate_olr_and_error, wavenumbers=wavenumbers, axis=1)
+        # Apply and directly assign
+        results = self.df.apply(calculate_olr_and_error, wavenumbers=wavenumbers, axis=1)
+        print(results)
+        self.df['OLR'] = results['OLR']
+        self.df['OLR_Error'] = results['OLR_Error']
 
+
+        exit()
         # Remove the original spectral radiance and error columns
         self.df.drop(columns=[col for col in self.df.columns if 'Spectrum' in col or 'Error' in col], inplace=True)
         return
