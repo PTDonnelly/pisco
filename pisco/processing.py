@@ -254,31 +254,36 @@ class Processor:
     def downsample_spatial_grid(self):
         """
         Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
-        the measurements within each bin.
+        the measurements within each bin. A new Datetime column is added back, containing
+        just the date part of the original datetime objects.
         """
+        # Extract just the date part from the 'Datetime' column at the start
+        self.df['Date'] = self.df['Datetime'].dt.date
+
         # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
 
-        # Group by the new lat-lon bins and calculate mean of measurements for each bin
-        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned']).mean()
+        # Group by the new lat-lon bins and 'Date', then calculate mean of measurements for each bin
+        # Exclude original Latitude, Longitude, and Datetime columns from the mean calculation
+        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date']).mean()
 
-        # Reset index to turn grouped DataFrame back into a format similar to the original df
+        # Reset index to turn grouped DataFrame back into a format that resembles the original df
         df_binned = grouped.reset_index()
-        df_binned.drop(columns=['Latitude', 'Longitude'], inplace=True)
 
-        # Use new grid as the spatial coordinates
+        # Drop the original Latitude, Longitude, and Datetime columns from the binned df
+        df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
+
+        # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
         df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
 
         # Replace the original DataFrame with the binned version
         self.df = df_binned
 
-        print(self.df.columns)
-
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
-        self.df = self.df.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
+        self.df = self.df.sort_values(by=['Latitude', 'Longitude', 'Date']).reset_index(drop=True)
+        
         return
-    
 
     def combine_datasets(self) -> None:
         self._create_merged_datapath()
