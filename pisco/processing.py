@@ -131,7 +131,7 @@ class Processor:
         # Extract the radiance values from spectral columns (in native IASI units of mW.m-2.st-1.(cm-1)-1)
         radiance = self.df[[col for col in self.df.columns if 'Spectrum' in col]].values
 
-        print(np.shape(radiance))
+        print(radiance.head())
         
         # Integrate the radiance over the wavelength for each measurement (calculate OLR)
         logger.info("Integrating spectra to OLR")
@@ -143,7 +143,7 @@ class Processor:
         # Weight OLR integrals by cloud fraction (cloudier spectra more prominent in the average)
         weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
 
-        print(np.shape(np.float32(np.mean(weighted_integrated_spectrum))))
+        print(np.shape(np.float32(weighted_integrated_spectrum)))
         exit()
         return np.float32(np.mean(weighted_integrated_spectrum))
         
@@ -176,7 +176,7 @@ class Processor:
                 logger.info(f"Missing column(s) in DataFrame: {filepath}\n{', '.join(missing_columns)}")
                 return False
         
-        logger.info(f"DataFrame processed: {filepath}")
+        logger.info(f"DataFrame checked: {filepath}")
         return True
 
     @staticmethod
