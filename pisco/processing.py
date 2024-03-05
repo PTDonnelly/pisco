@@ -260,6 +260,8 @@ class Processor:
         # Extract just the date part from the 'Datetime' column at the start
         self.df['Date'] = self.df['Datetime'].dt.date
 
+        print(type(self.df['Datetime']), self.df['Date'])
+
         # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
@@ -276,6 +278,8 @@ class Processor:
 
         # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
         df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
+
+        print(df_binned['Date'])
 
         # Replace the original DataFrame with the binned version
         self.df = df_binned
