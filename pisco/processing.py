@@ -277,7 +277,7 @@ class Processor:
         # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
         df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude', 'Datetime': 'Date'}, inplace=True)
 
-        print(df_binned['Date'].head())
+        print(df_binned.head())
 
         # Replace the original DataFrame with the binned version
         self.df = df_binned
