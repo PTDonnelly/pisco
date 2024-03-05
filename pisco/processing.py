@@ -258,7 +258,7 @@ class Processor:
         just the date part of the original datetime objects.
         """
         # Extract just the date part from the 'Datetime' column at the start
-        self.df['Date'] = pd.to_datetime(df_binned['Datetime']).dt.date
+        self.df['Date'] = pd.to_datetime(self.df['Datetime']).dt.date
 
         # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
