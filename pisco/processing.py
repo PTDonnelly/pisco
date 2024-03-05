@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 
 import pickle
 
-from pisco import Extractor, Postprocessor
+from pisco import Extractor
 
 # Obtain a logger for this module
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class Processor:
     
     def get_dataframe_spectral_grid(self) -> List[float]:
         # Get the full IASI spectral grid
-        _, wavenumber_grid = Postprocessor._get_iasi_spectral_grid()
+        _, wavenumber_grid = self._get_iasi_spectral_grid()
         # Extract the numbers from the column names
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
         channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
