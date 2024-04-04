@@ -111,7 +111,6 @@ class Extractor:
         """
         # Get the input data path
         self.datapath_in = self._get_datapath_in()
-        print(self.datapath_in)
         # Get the output data path
         self.datapath_out = self._get_datapath_out()
         return
@@ -139,8 +138,8 @@ class Extractor:
 
     def get_l2_product_files(self) -> List[Path]:
         # Define the full path to the location of the binary L2 files
-        print(self.datafile_in, self.year, self.month, self.day)
-        directory_path = Path(self.datafile_in) / self.year / self.month / self.day
+        print(self.datapath_in, self.year, self.month, self.day)
+        directory_path = Path(self.datapath_in) / self.year / self.month / self.day
 
         # Scan for all files in the directory
         files = list(directory_path.glob('*.bin'))
