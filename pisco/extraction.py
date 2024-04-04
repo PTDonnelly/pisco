@@ -174,8 +174,8 @@ class Extractor:
         return ' '.join(list_of_parameters)
 
 
-    def _get_version_from_file_path(satellite: str, entry_datetime: datetime) -> int:
-        # Define the cutoff datetimes for each satellite and version
+    def _get_version_from_file_path(self, satellite: str, entry_datetime: datetime) -> int:
+        # Define the cutoff datetimes and clp reader version for MetOp satellites A and B (C is most recent and uses version 6 by default)
         cutoffs = {
             'a': [
                 ("20140930072357", 1),
