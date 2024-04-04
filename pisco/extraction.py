@@ -111,8 +111,10 @@ class Extractor:
         """
         # Get the input data path
         self.datapath_in = self._get_datapath_in()
+        print(self.datapath_in)
         # Get the output data path
         self.datapath_out = self._get_datapath_out()
+        return
 
 
     def build_intermediate_filepath(self) -> str:
@@ -291,6 +293,8 @@ class Extractor:
         """
         Preprocesses the IASI data.
         """
+        # Get input file paths
+        self.get_datapaths()
         # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
         
