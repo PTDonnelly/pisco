@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from .configuration import Configurer
 
@@ -199,7 +199,7 @@ class Extractor:
         # Use the extracted information to determine the version
         return self._get_version_from_file_path(satellite, entry_datetime)
 
-    def get_command(self, l2_product_file: str=None) -> str:
+    def get_command(self, l2_product_file: Optional[str]=None) -> str:
         """
         Builds the command to extract IASI data based on the data level.
 
@@ -287,28 +287,18 @@ class Extractor:
             return True
 
 
-    def extract_files(self) -> Tuple[bool, str]:
+    def extract_files(self, file_path: Optional[str]=None) -> Tuple[bool, str]:
         """
         Preprocesses the IASI data.
         """
         # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
         
-        if self.data_level == 'l1c':
-            # Build the command string to execute the binary script
-            command = self.get_command()
-            # Run the command to extract the data
-            result = self.run_command(command)
-            # Check if files are produced. If not, skip processing.
-            self.intermediate_file_check = self.check_extracted_files(result)
+        # Build the command string to execute the binary script
+        command = self.get_command(file_path)
         
-        elif self.data_level == 'l2':
-            # Scan raw datafiles in the directory self.datafile_in as Path objects
-            file_paths = self.get_l2_product_files()
-            for file_path in file_paths:
-                # Build the command string to execute the binary script
-                command = self.get_command(l2_product_file=file_path)
-                # Run the command to extract the data
-                result = self.run_command(command)
-                # Check if files are produced. If not, skip processing.
-                self.intermediate_file_check = self.check_extracted_files(result)
+        # Run the command to extract the data
+        result = self.run_command(command)
+        
+        # Check if files are produced. If not, skip processing.
+        self.intermediate_file_check = self.check_extracted_files(result)

@@ -27,13 +27,19 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     Returns:
     None: The function performs extraction and preprocessing operations but does not return a value.
     """
-    # Use OBR to extract IASI data from raw binary files
+    # Use IASI readers to extract IASI data from raw binary files
     ex.data_level = data_level
     ex.get_datapaths()
-    ex.extract_files()
+    
+    if ex.data_level == 'l1c':
+        ex.extract_files()
+    
+    elif ex.data_level == 'l2':
+        # Scan raw datafiles in the directory ex.datafile_in as Path objects
+        file_paths = ex.get_l2_product_files()
+        for file_path in file_paths:
+            ex.extract_files(file_path)
 
-    print(ex.datapath_in)
-    print(ex.datapath_out)
 
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
