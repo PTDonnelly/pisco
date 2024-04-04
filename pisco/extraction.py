@@ -174,7 +174,10 @@ class Extractor:
         return ' '.join(list_of_parameters)
 
 
-    def _get_version_from_file_path(self, satellite: str, entry_datetime: datetime) -> int:
+    def _get_version_from_file_path(self, satellite: str, date_time: datetime) -> int:
+        # Convert the datetime string to a datetime object
+        measurement_date_time = datetime.strptime(date_time, "%Y%m%d%H%M%S")
+
         # Define the cutoff datetimes and clp reader version for MetOp satellites A and B (C is most recent and uses version 6 by default)
         cutoffs = {
             'a': [
@@ -201,9 +204,9 @@ class Extractor:
         # Iterate through the cutoffs to find the correct version
         for cutoff_str, version in cutoffs[satellite]:
             cutoff_datetime = datetime.strptime(cutoff_str, "%Y%m%d%H%M%S")
-            print(cutoff_str, cutoff_datetime, version)
-            input()
-            if entry_datetime < cutoff_datetime:
+            if measurement_date_time < cutoff_datetime:
+                print(measurement_date_time, cutoff_datetime, version)
+                input()
                 return version
             
         # If none of the conditions were met, it means the date is after the last cutoff
@@ -219,13 +222,10 @@ class Extractor:
             if not match:
                 raise ValueError("File name format does not match expected pattern.")
 
-        satellite, datetime_str = match.groups()
-
-        # Convert the datetime string to a datetime object
-        entry_datetime = datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
+        satellite, date_time = match.groups()
 
         # Use the extracted information to determine the version
-        return self._get_version_from_file_path(satellite, entry_datetime)
+        return self._get_version_from_file_path(satellite, date_time)
 
     def get_command(self, l2_product_file: Optional[str]=None) -> str:
         """
