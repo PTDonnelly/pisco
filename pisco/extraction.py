@@ -293,8 +293,6 @@ class Extractor:
         """
         Preprocesses the IASI data.
         """
-        # Get input file paths
-        self.get_datapaths()
         # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
         
