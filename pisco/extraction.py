@@ -138,10 +138,9 @@ class Extractor:
     def get_l2_product_files(self) -> List[Path]:
         # Define the full path to the location of the binary L2 files
         l2_product_directory = Path(self.datapath_in) / self.year / self.month / self.day / self.config.products
-        print(l2_product_directory)
+
         # Scan for all files in the directory
         l2_product_files = list(l2_product_directory.glob('*.bin'))
-        print(l2_product_files)
         return l2_product_files
     
 
@@ -176,10 +175,39 @@ class Extractor:
 
 
     def _get_version_from_file_path(satellite: str, entry_datetime: datetime) -> int:
-        # Placeholder for the actual logic that determines the version
-        # based on satellite and datetime
-        # Return a dummy version number for demonstration
-        return 1
+        # Define the cutoff datetimes for each satellite and version
+        cutoffs = {
+            'a': [
+                ("20140930072357", 1),
+                ("20150702071153", 2),
+                ("20150924084159", 3),
+                ("20170620083857", 4),
+                ("20190514071758", 5),
+            ],
+            'b': [
+                ("20140930081455", 1),
+                ("20150702140854", 2),
+                ("20150924095658", 3),
+                ("20170620093255", 4),
+                ("20190514080259", 5),
+            ]
+        }
+        
+        # Ensure satellite letter is lowercase for matching keys in the dictionary
+        satellite = satellite.lower()
+        if satellite not in cutoffs:
+            raise ValueError("Satellite must be 'a', 'b', or 'c'.")
+
+        # Iterate through the cutoffs to find the correct version
+        for cutoff_str, version in cutoffs[satellite]:
+            cutoff_datetime = datetime.strptime(cutoff_str, "%Y%m%d%H%M%S")
+            print(cutoff_str, cutoff_datetime, version)
+            input()
+            if entry_datetime < cutoff_datetime:
+                return version
+            
+        # If none of the conditions were met, it means the date is after the last cutoff
+        return 6
 
     def _get_clp_version(self, file: Path) -> int:
         """Extract the satellite identifier, date, and time from the file name"""
@@ -196,8 +224,6 @@ class Extractor:
         # Convert the datetime string to a datetime object
         entry_datetime = datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
 
-        print(satellite, entry_datetime)
-        exit()
         # Use the extracted information to determine the version
         return self._get_version_from_file_path(satellite, entry_datetime)
 
@@ -220,7 +246,6 @@ class Extractor:
             return f"{executable_runpath} {parameters} -out {self.intermediate_file}"
         
         elif self.data_level == 'l2':
-            logger.info("HERE2")
             # Get version of IASI L2 CLP reader based on the date and time of observation
             version = self._get_clp_version(l2_product_file)
             # Define the path to the run executable
@@ -296,9 +321,11 @@ class Extractor:
         """
         # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
-        logger.info("HERE1")
+
         # Build the command string to execute the binary script
         command = self.get_command(file_path)
+
+        exit()
         
         # Run the command to extract the data
         result = self.run_command(command)
