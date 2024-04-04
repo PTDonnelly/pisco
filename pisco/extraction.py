@@ -137,7 +137,7 @@ class Extractor:
 
     def get_l2_product_files(self) -> List[Path]:
         # Define the full path to the location of the binary L2 files
-        l2_product_directory = Path(self.datapath_in) / self.year / self.month / self.day
+        l2_product_directory = Path(self.datapath_in) / self.year / self.month / self.day / self.config.products
         print(l2_product_directory)
         # Scan for all files in the directory
         l2_product_files = list(l2_product_directory.glob('*.bin'))
