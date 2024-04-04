@@ -30,7 +30,7 @@
     "delete_intermediate_files": true,
 
     // year_list: List[int], List of years for extraction
-    "year_list": [2012, 2014, 2015, 2016, 2017, 2018, 2019],
+    "year_list": [2018],
 
     // month_list:  List[int] or str, List[int] of specific months or "all" to scan all calendar months in year
     "month_list": [3],
