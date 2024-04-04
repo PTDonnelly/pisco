@@ -205,8 +205,6 @@ class Extractor:
         for cutoff_str, version in cutoffs[satellite]:
             cutoff_datetime = datetime.strptime(cutoff_str, "%Y%m%d%H%M%S")
             if measurement_date_time < cutoff_datetime:
-                print(measurement_date_time, cutoff_datetime, version)
-                input()
                 return version
             
         # If none of the conditions were met, it means the date is after the last cutoff
@@ -324,7 +322,7 @@ class Extractor:
 
         # Build the command string to execute the binary script
         command = self.get_command(file_path)
-
+        print(command)
         exit()
         
         # Run the command to extract the data
