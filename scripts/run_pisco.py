@@ -39,6 +39,7 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         file_paths = ex.get_l2_product_files()
         for file_path in file_paths:
             ex.extract_files(file_path)
+            exit()
 
 
     # If IASI data was successfully extracted

@@ -322,8 +322,6 @@ class Extractor:
 
         # Build the command string to execute the binary script
         command = self.get_command(file_path)
-        print(command)
-        exit()
         
         # Run the command to extract the data
         result = self.run_command(command)
