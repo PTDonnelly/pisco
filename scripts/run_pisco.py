@@ -32,10 +32,10 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     ex.get_datapaths()
     
     if ex.data_level == 'l1c':
+        # Run OBR from date parameters
         ex.extract_files()
-    
     elif ex.data_level == 'l2':
-        # Scan raw datafiles in the directory ex.datafile_in as Path objects
+        # Scan raw datafiles in the date directory
         file_paths = ex.get_l2_product_files()
         for file_path in file_paths:
             ex.extract_files(file_path)

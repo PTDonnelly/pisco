@@ -98,7 +98,6 @@ class Extractor:
             if int(self.year) < 2013:
                 return os.path.join("/bdd", "IASI", self.data_level.upper(), {self.year}, {self.month}, {self.day}, self.config.products)
             else:
-                print("DOING IT HERE")
                 return os.path.join("/bdd",self.config.satellite_identifier, self.data_level, "iasi")
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
@@ -144,6 +143,7 @@ class Extractor:
         files = list(directory_path.glob('*.bin'))
         return files
     
+
     def _build_parameters(self) -> str:
         """
         Builds the parameter string for the IASI data extraction command.
@@ -152,7 +152,7 @@ class Extractor:
             str: Parameters for the command.
         """
         # Define the parameters for the command
-        if (self.data_level == 'l1c'):
+        if self.data_level == 'l1c':
             # Set range of spectral channels to use (pass custom spectral range as arguments, defaults to channels 220-2220 in the main absorption band of water ice)
             self.channels = self.config.set_channels(self.config.channels_mode)
             # Create a string of all channel IDs separated by commas
@@ -172,6 +172,7 @@ class Extractor:
 
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
+
 
     def _get_version_from_file_path(satellite: str, entry_datetime: datetime) -> int:
         # Placeholder for the actual logic that determines the version
@@ -218,6 +219,7 @@ class Extractor:
             return f"{executable_runpath} {parameters} -out {self.intermediate_file}"
         
         elif self.data_level == 'l2':
+            logger.info("HERE2")
             # Get version of IASI L2 CLP reader based on the date and time of observation
             version = self._get_clp_version(l2_product_file)
             # Define the path to the run executable
@@ -293,7 +295,7 @@ class Extractor:
         """
         # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
-        
+        logger.info("HERE1")
         # Build the command string to execute the binary script
         command = self.get_command(file_path)
         
