@@ -95,10 +95,10 @@ class Extractor:
         # Check the data level
         if (self.data_level == 'l1c') or (self.data_level == 'l2'):
             # Format the input path string and return it
-            if int(self.year) >= 2013:
-                return os.path.join("/bdd",self.config.satellite_identifier, self.data_level, "iasi")
-            else:
+            if int(self.year) < 2013:
                 return os.path.join("/bdd", "IASI", self.data_level.upper(), {self.year}, {self.month}, {self.day}, self.config.products)
+            else:
+                return os.path.join("/bdd",self.config.satellite_identifier, self.data_level, "iasi")
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -136,6 +136,7 @@ class Extractor:
 
     def get_l2_product_files(self) -> List[Path]:
         # Define the full path to the location of the binary L2 files
+        print(self.datafile_in, self.year, self.month, self.day)
         directory_path = Path(self.datafile_in) / self.year / self.month / self.day
 
         # Scan for all files in the directory
@@ -167,17 +168,7 @@ class Extractor:
                 f"-qlt {self.config.quality_flags}",
                 f"-of txt"  # output file format
             ]
-        # elif (self.data_level == 'l2'):
-        #     list_of_parameters = [
-        #         f"-d2 {self.datapath_in}", # l2 data directory
-        #         f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}", # first and last day
-        #         f"-mila {self.config.latitude_range[0]} ", # min_latitude
-        #         f"-mala {self.config.latitude_range[1]} ", # max_latitude
-        #         f"-milo {self.config.longitude_range[0]} ", # min_longitude
-        #         f"-malo {self.config.longitude_range[1]} ", # max_longitude
-        #         f"-t2 {self.config.products}", # l2 products
-        #         f"-of txt"  # output file format
-        #     ]
+
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
 
@@ -188,11 +179,14 @@ class Extractor:
         return 1
 
     def _get_clp_version(self, file: Path) -> int:
-        # Extract the satellite identifier, date, and time from the file name
-        pattern = re.compile(r'METOP([ABC])\+IASI_C_EUMP_(\d{14})')
-        match = pattern.search(file.name)
-        if not match:
-            raise ValueError("File name format does not match expected pattern.")
+        """Extract the satellite identifier, date, and time from the file name"""
+        if int(self.year) < 2013:
+            pass
+        else:
+            pattern = re.compile(r'METOP([ABC])\+IASI_C_EUMP_(\d{14})')
+            match = pattern.search(file.name)
+            if not match:
+                raise ValueError("File name format does not match expected pattern.")
 
         satellite, datetime_str = match.groups()
 
