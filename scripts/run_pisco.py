@@ -35,7 +35,6 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         # Run OBR from date parameters
         ex.extract_files()
     elif ex.data_level == 'l2':
-        logging.info("HERE0")
         # Scan raw datafiles in the date directory
         file_paths = ex.get_l2_product_files()
         for file_path in file_paths:
