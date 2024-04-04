@@ -1,5 +1,8 @@
+from datetime import datetime
 import logging
 import os
+from pathlib import Path
+import re
 import subprocess
 from typing import List, Tuple
 
@@ -115,8 +118,6 @@ class Extractor:
         Returns:
             intermediate_file (str): the full path to the intermediate file produced by IASI extraction script.
         """
-        self.get_datapaths()
-
         if self.data_level == 'l1c':
             self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
@@ -130,6 +131,14 @@ class Extractor:
         return os.path.join(self.datapath_out, self.datafile_out)
 
 
+    def get_l2_product_files(self) -> List[Path]:
+        # Define the full path to the location of the binary L2 files
+        directory_path = Path(self.datafile_in) / self.year / self.month / self.day
+
+        # Scan for all files in the directory
+        files = list(directory_path.glob('*.bin'))
+        return files
+    
     def _build_parameters(self) -> str:
         """
         Builds the parameter string for the IASI data extraction command.
@@ -155,22 +164,44 @@ class Extractor:
                 f"-qlt {self.config.quality_flags}",
                 f"-of txt"  # output file format
             ]
-        elif (self.data_level == 'l2'):
-            list_of_parameters = [
-                f"-d2 {self.datapath_in}", # l2 data directory
-                f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}", # first and last day
-                f"-mila {self.config.latitude_range[0]} ", # min_latitude
-                f"-mala {self.config.latitude_range[1]} ", # max_latitude
-                f"-milo {self.config.longitude_range[0]} ", # min_longitude
-                f"-malo {self.config.longitude_range[1]} ", # max_longitude
-                f"-t2 {self.config.products}", # l2 products
-                f"-of txt"  # output file format
-            ]
+        # elif (self.data_level == 'l2'):
+        #     list_of_parameters = [
+        #         f"-d2 {self.datapath_in}", # l2 data directory
+        #         f"-fd {self.year}-{self.month}-{self.day} -ld {self.year}-{self.month}-{self.day}", # first and last day
+        #         f"-mila {self.config.latitude_range[0]} ", # min_latitude
+        #         f"-mala {self.config.latitude_range[1]} ", # max_latitude
+        #         f"-milo {self.config.longitude_range[0]} ", # min_longitude
+        #         f"-malo {self.config.longitude_range[1]} ", # max_longitude
+        #         f"-t2 {self.config.products}", # l2 products
+        #         f"-of txt"  # output file format
+        #     ]
         # Join the parameters into a single string and return
         return ' '.join(list_of_parameters)
 
+    def _get_version_from_file_path(satellite: str, entry_datetime: datetime) -> int:
+        # Placeholder for the actual logic that determines the version
+        # based on satellite and datetime
+        # Return a dummy version number for demonstration
+        return 1
 
-    def _get_command(self) -> str:
+    def _get_clp_version(self, file: Path) -> int:
+        # Extract the satellite identifier, date, and time from the file name
+        pattern = re.compile(r'METOP([ABC])\+IASI_C_EUMP_(\d{14})')
+        match = pattern.search(file.name)
+        if not match:
+            raise ValueError("File name format does not match expected pattern.")
+
+        satellite, datetime_str = match.groups()
+
+        # Convert the datetime string to a datetime object
+        entry_datetime = datetime.strptime(datetime_str, "%Y%m%d%H%M%S")
+
+        print(satellite, entry_datetime)
+        exit()
+        # Use the extracted information to determine the version
+        return self._get_version_from_file_path(satellite, entry_datetime)
+
+    def get_command(self, l2_product_file: str=None) -> str:
         """
         Builds the command to extract IASI data based on the data level.
 
@@ -180,25 +211,30 @@ class Extractor:
         Returns:
             str: Command to run for data extraction.
         """
-        if (self.data_level == 'l1c') or (self.data_level == 'l2'):
+        if self.data_level == 'l1c':
             # Define the path to the run executable
-            full_runpath = os.path.join(self.runpath, "bin", "obr_v4")
+            executable_runpath = os.path.join(self.runpath, "bin", "obr_v4")
             # Get the command parameters
             parameters = self._build_parameters()
             # Return the complete command
-            return f"{full_runpath} {parameters} -out {self.intermediate_file}"
+            return f"{executable_runpath} {parameters} -out {self.intermediate_file}"
+        
+        elif self.data_level == 'l2':
+            # Get version of IASI L2 CLP reader based on the date and time of observation
+            version = self._get_clp_version(l2_product_file)
+            # Define the path to the run executable
+            executable_runpath = os.path.join(self.runpath, "bin",  "clpall_ascii")
+            # Return the complete command
+            return f"{executable_runpath} {l2_product_file} {self.intermediate_file} v{version}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
 
 
-    def run_command(self) -> object:
+    def run_command(self, command: str) -> object:
         """
         Executes and monitors the command to extract IASI data.
         """
-        # Build the command string to execute the binary script
-        command = self._get_command()
-
         try:
             # Initiate the subprocess with Popen.
             # shell=True specifies that the command will be run through the shell.
@@ -259,7 +295,22 @@ class Extractor:
         """
         # Create the output directory and point to intermediate file
         self.intermediate_file = self.build_intermediate_filepath()
-        # Run the command to extract the data
-        result = self.run_command()
-        # Check if files are produced. If not, skip processing.
-        self.intermediate_file_check = self.check_extracted_files(result)
+        
+        if self.data_level == 'l1c':
+            # Build the command string to execute the binary script
+            command = self.get_command()
+            # Run the command to extract the data
+            result = self.run_command(command)
+            # Check if files are produced. If not, skip processing.
+            self.intermediate_file_check = self.check_extracted_files(result)
+        
+        elif self.data_level == 'l2':
+            # Scan raw datafiles in the directory self.datafile_in as Path objects
+            file_paths = self.get_l2_product_files()
+            for file_path in file_paths:
+                # Build the command string to execute the binary script
+                command = self.get_command(l2_product_file=file_path)
+                # Run the command to extract the data
+                result = self.run_command(command)
+                # Check if files are produced. If not, skip processing.
+                self.intermediate_file_check = self.check_extracted_files(result)
