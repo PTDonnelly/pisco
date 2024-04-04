@@ -32,6 +32,9 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     ex.get_datapaths()
     ex.extract_files()
 
+    print(ex.datapath_in)
+    print(ex.datapath_out)
+
     # If IASI data was successfully extracted
     if ex.intermediate_file_check:
         # Preprocess the data into pandas DataFrames

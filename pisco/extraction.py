@@ -98,6 +98,7 @@ class Extractor:
             if int(self.year) < 2013:
                 return os.path.join("/bdd", "IASI", self.data_level.upper(), {self.year}, {self.month}, {self.day}, self.config.products)
             else:
+                print("DOING IT HERE")
                 return os.path.join("/bdd",self.config.satellite_identifier, self.data_level, "iasi")
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
