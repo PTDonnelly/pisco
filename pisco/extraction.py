@@ -451,27 +451,21 @@ class Extractor:
         
         # Initialize an empty list to store DataFrames
         df_list = []
-        for i, file in enumerate(files):
-            logger.info(i)
+        for file in files:
             
             # Read each intermediate text file into a DataFrame
             df = pd.read_csv(file, header=None, names=['Data'])
 
-            print(df.head())
-            print(len(df.columns))
             # Split single-column string into separate columns of strings
             df_expanded = df['Data'].str.split(expand=True)
             df_expanded.columns = converters.keys()
-
-            print(df_expanded.head())
-            print(len(df_expanded.columns))
 
             # Set data types of columns using converter functions
             df_expanded = self.apply_converters_to_df(df_expanded)
 
             # Append DataFrame to list and delete text file
             df_list.append(df_expanded)
-            # self._delete_intermediate_file(file)
+            self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
@@ -493,10 +487,10 @@ class Extractor:
         
         # Check if the file exists and is non-empty
         if file_path.exists() and file_path.stat().st_size > 0:
-            logger.info("Intermediate file exists and is non-empty.")
+            logger.error("Intermediate file exists and is non-empty.")
             return True
         else:
-            logger.info("Intermediate file does not exist or is empty.")
+            logger.error("Intermediate file does not exist or is empty.")
             return False
 
 
