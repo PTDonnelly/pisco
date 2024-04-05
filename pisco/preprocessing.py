@@ -124,7 +124,9 @@ class Preprocessor:
     def _get_l2_product_fields() -> List[Tuple]:
         # Format of OBR fields (field_name, data_type)
         fields = [
-            ('Vertical Significance', 'uint32'),
+            ('Datetime', 'float32'),
+            ('Latitude', 'float32'),
+            ('Longitude', 'float32'),
             ('Pressure 1', 'float32'),
             ('Temperature or Dry Bulb Temperature 1', 'float32'),
             ('Cloud Amount in Segment 1', 'float32'),
@@ -201,8 +203,8 @@ class Preprocessor:
                 )
         if self.data_level == 'l2':
             combined_fields = (
-                Preprocessor._get_common_fields() +
-                Preprocessor._get_l2_record_fields() +
+                # Preprocessor._get_common_fields() +
+                # Preprocessor._get_l2_record_fields() +
                 Preprocessor._get_l2_product_fields()
                 )
 
@@ -211,7 +213,7 @@ class Preprocessor:
 
 
     def open_text_file(self) -> None:
-        logger.info("Loading intermediate OBR text file:")
+        logger.info("Loading intermediate text file:")
         
         # Create dtype dict from combined fields
         dtype_dict = self._get_fields_and_datatypes()
