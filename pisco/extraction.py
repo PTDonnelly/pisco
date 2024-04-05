@@ -451,8 +451,6 @@ class Extractor:
         
         # Concatenate the split datetime columns with the rest of the expanded DataFrame
         df_final = pd.concat([datetime_split, df_expanded], axis=1)
-        print(df_final.head())
-        print(len(df.columns), len(converters.keys()))
         df_final.columns = converters.keys()
 
         # Set data types of columns using converter functions
