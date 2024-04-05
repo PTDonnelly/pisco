@@ -150,6 +150,15 @@ class Processor:
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
 
+        print(self.df_l1c.head(verbose=True))
+        print(self.df_l2.head(verbose=True))
+
+        self.df_l1c['Datetime'] = pd.to_datetime(self.df_l1c['Datetime'])
+        self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
+
+        print(self.df_l1c.head(verbose=True))
+        print(self.df_l2.head(verbose=True))
+        
         # Merge two DataFrames based on spatial and temporal parameters
         return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude'], how='inner')
 
