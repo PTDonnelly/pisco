@@ -434,7 +434,7 @@ class Extractor:
     
 
     def combine_files(self):
-        logger.info(f"Combining L2 cloud products into daily file")
+        logger.info(f"Combining L2 cloud products")
 
         # Build data type converter functions to account for NaNs
         converters = self.build_converters()
@@ -448,7 +448,7 @@ class Extractor:
             # Read each intermediate binary file into a DataFrame, append to list, then delete it
             df = pd.read_csv(file, header=None, names=converters.keys(), converters=converters)
             df_list.append(df)
-            self._delete_intermediate_file(file)
+            # self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
