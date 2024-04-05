@@ -480,7 +480,7 @@ class Extractor:
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
         # Sort the DataFrame based on the "Datetime" column
-        combined_df.sort_values(by="Datetime", inplace=True)
+        combined_df.sort_values(by=['Date', 'Time'], inplace=True)
         # Reset index if you want a clean, continuous index
         combined_df.reset_index(drop=True, inplace=True)
 
