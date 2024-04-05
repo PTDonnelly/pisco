@@ -142,7 +142,7 @@ class Preprocessor:
 
     def expand_datetime_column(self) -> None:
 
-        print(self.df['Date', 'Time'].head())
+        print(self.df[['Date', 'Time']].head())
 
         # Ensure that the "Datetime" column is in datetime format
         self._create_datetime_objects(self)
