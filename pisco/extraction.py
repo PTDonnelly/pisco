@@ -465,10 +465,10 @@ class Extractor:
             df_expanded.columns = converters.keys()
 
             # Set data types of columns using converter functions
-            df_expanded = self.apply_converters_to_df(self, df_expanded)
+            df_expanded = self.apply_converters_to_df(df_expanded)
 
             # Append DataFrame to list and delete text file
-            df_list.append(df)
+            df_list.append(df_expanded)
             # self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
