@@ -133,7 +133,7 @@ class Processor:
         
         # Extract the numbers from the column names
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
-        channel_positions = spectral_channels.str.split().str[-1].astype(int)
+        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
         
         # Extract the wavenumbers corresponding to the channel positions
         extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
@@ -238,6 +238,7 @@ class Processor:
 
         return pd.Series((weighted_integrated_spectrum, weighted_integrated_error))
     
+
     def integrate_spectrum_to_olr(self) -> None:
         """
         Calculates OLR and its error for each spectrum in the DataFrame, adds these as new columns,
