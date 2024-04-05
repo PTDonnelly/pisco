@@ -67,11 +67,11 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
             # Expand Datetime column into date and time elements
             preprocessor.expand_datetime_column()
         
-        # Construct Local Time column
-        preprocessor.build_local_time()
-        
         # Construct Datetime column and remove individual time elements
         preprocessor.build_datetime()
+
+        # Construct Local Time column
+        preprocessor.build_local_time()
         
         # Save filtered DataFrame to compressed pickle
         preprocessor.save_observations()

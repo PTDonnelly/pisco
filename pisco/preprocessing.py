@@ -124,54 +124,43 @@ class Preprocessor:
         return
 
 
-    def _create_datetime_objects(self) -> None:
+    def build_datetime(self) -> List:
+        """
+        Stores the datetime components to a single column and drops the elements.
+        """
+        if self.data_level == "l1c":
+            self.df['Datetime'] = (self.df['Year'].apply(lambda x: f'{int(x):04d}') + 
+                                   self.df['Month'].apply(lambda x: f'{int(x):02d}') +
+                                   self.df['Day'].apply(lambda x: f'{int(x):02d}') +
+                                   self.df['Hour'].apply(lambda x: f'{int(x):02d}') +
+                                   self.df['Minute'].apply(lambda x: f'{int(x):02d}')
+                                   )
+            
+        elif self.data_level == "l2":
+            # Ensure both columns are strings for concatenation
+            self.df['Date'] = self.df['Date'].astype(str)
+            self.df['Time'] = self.df['Time'].astype(str)
+            # If 'Time' values are not zero-padded, you might need to pad them
+            self.df['Time'] = self.df['Time'].str.pad(width=6, side='left', fillchar='0')
+            
+            # Concatenate 'Date' and 'Time' columns into a single 'Datetime' string
+            self.df['Datetime'] = self.df['Date'] + self.df['Time']
+            # Convert 'Datetime' string to a datetime object
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M%S')
 
-        print(self.df[['Date', 'Time']].head())
-        
-        # Ensure both columns are strings for concatenation
-        self.df['Date'] = self.df['Date'].astype(str)
-        self.df['Time'] = self.df['Time'].astype(str)
-
-        # If 'Time' values are not zero-padded, you might need to pad them
-        self.df['Time'] = self.df['Time'].str.pad(width=6, side='left', fillchar='0')
-
-        print(self.df[['Date', 'Time']].head())
-        
-        # Concatenate 'Date' and 'Time' columns into a single 'Datetime' string
-        self.df['Datetime'] = self.df['Date'] + self.df['Time']
-
-        # Convert 'Datetime' string to a datetime object
-        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M%S')
-
-        print(self.df['Datetime'].head())
-
-        # Drop individual Date and Time columns
-        self.df.drop(columns=['Date', 'Time'], inplace=True)
-        return
-
-
-    def expand_datetime_column(self) -> None:
-
-        # Ensure that the "Datetime" column is in datetime format
-        self._create_datetime_objects()
-
-        print(self.df['Datetime'].head())
-        
-        # Extract year, month, day, hour, minute, and milliseconds components
-        self.df['Year'] = self.df['Datetime'].dt.year
-        self.df['Month'] = self.df['Datetime'].dt.month
-        self.df['Day'] = self.df['Datetime'].dt.day
-        self.df['Hour'] = self.df['Datetime'].dt.hour
-        self.df['Minute'] = self.df['Datetime'].dt.minute
-        self.df['Milliseconds'] = self.df['Datetime'].dt.microsecond // 1000  # datetime represents of fractional seconds as microseconds)
-
-        print(self.df.head())
-        # Drop the original 'Datetime' column
-        self.df.drop(columns=['Datetime'], inplace=True)
-        exit()
+            # Drop individual Date and Time columns
+            self.df.drop(columns=['Date', 'Time'], inplace=True)
+            
+            # Extract year, month, day, hour, minute, and milliseconds components (for calculation of Local Time)
+            self.df['Year'] = self.df['Datetime'].dt.year
+            self.df['Month'] = self.df['Datetime'].dt.month
+            self.df['Day'] = self.df['Datetime'].dt.day
+            self.df['Hour'] = self.df['Datetime'].dt.hour
+            self.df['Minute'] = self.df['Datetime'].dt.minute
+            self.df['Milliseconds'] = self.df['Datetime'].dt.microsecond // 1000  # datetime represents of fractional seconds as microseconds)
+    
         return 
     
-
     def _calculate_local_time(self) -> None:
         """
         Calculate the local time (in hours, UTC) that determines whether it is day or night at a specific longitude.
@@ -219,27 +208,13 @@ class Preprocessor:
 
         # Store the Boolean indicating day (True) or night (False) in the DataFrame
         self.df['Local Time'] = (6 < local_time) & (local_time < 18)
+
+        # Drop original time element columns (in place to save on memory)
+        self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
         return
 
 
-    def build_datetime(self) -> List:
-        """
-        Stores the datetime components to a single column and drops the elements.
-        """
-        self.df['Datetime'] = (self.df['Year'].apply(lambda x: f'{int(x):04d}') +
-                                    self.df['Month'].apply(lambda x: f'{int(x):02d}') +
-                                    self.df['Day'].apply(lambda x: f'{int(x):02d}') +
-                                    self.df['Hour'].apply(lambda x: f'{int(x):02d}') +
-                                    self.df['Minute'].apply(lambda x: f'{int(x):02d}')
-                                    )
-        
-        print(self.df['Datetime'].head())
-        
-        exit()
-        
-        # Drop original time element columns (in place to save on memory)
-        self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
-        return  
+  
     
 
     def _delete_intermediate_file(self, filepath) -> None:
