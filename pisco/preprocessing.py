@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class Preprocessor:
     """Handles preprocessing of IASI data for analysis.
 
-    This class is designed to read text file outputs from OBR,
+    This class is designed to read text file outputs from OBR or generic L2 reader,
     structure the data into a pandas DataFrame,
     and perform data manipulations to prepare it for further analysis.
     It supports handling large datasets by chunking and efficiently manages memory usage during the process.
@@ -43,7 +43,7 @@ class Preprocessor:
         save_observations(delete_intermediate_files=None): Saves processed data to a file and optionally deletes the intermediate file.
     """
     def __init__(self, ex: Extractor, allocated_memory: int, memory_safety_margin=0.5):
-        self.intermediate_file: str = ex.intermediate_file
+        self.intermediate_file: str = ex.full_output_path
         self.delete_intermediate_files = ex.config.delete_intermediate_files
         self.data_level: str = ex.data_level
         self.channels: List[int] = ex.channels
