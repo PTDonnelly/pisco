@@ -9,7 +9,7 @@
     "L2": true,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
-    "process": false,
+    "process": true,
 
     // channels: str, Specifies which mode of selection for IASI spectral channels
     "channels_mode": "all_reduced",
