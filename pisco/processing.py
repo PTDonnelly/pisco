@@ -333,8 +333,7 @@ class Processor:
             with gzip.open(output_file, 'wb') as f:
                 pickle.dump(self.df, f)
 
-
-            self.df.to_csv(f"{file_root}.csv", sep='\t')
+            self.df.to_csv(f"{file_root}.csv", sep='\t', index=False)
             
             # Output information on the final DataFrame
             logger.info(self.df.info())
