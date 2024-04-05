@@ -466,8 +466,8 @@ class Extractor:
             df_expanded = df['Data'].str.split(expand=True)
             df_expanded.columns = converters.keys()
 
-            print(df.head())
-            print(len(df.columns))
+            print(df_expanded.head())
+            print(len(df_expanded.columns))
 
             # Set data types of columns using converter functions
             df_expanded = self.apply_converters_to_df(df_expanded)
