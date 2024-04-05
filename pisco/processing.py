@@ -99,9 +99,6 @@ class Processor:
         logger.info("Loading L1C spectra and L2 cloud products:")
         self.df_l1c = Processor.unpickle(self.datafile_l1c)
         self.df_l2 = Processor.unpickle(self.datafile_l2)
-
-        print(self.df_l1c.head())
-        print(self.df_l2.head())
         return
     
     @staticmethod
@@ -163,7 +160,7 @@ class Processor:
         self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
 
         # Merge two DataFrames based on spatial and temporal parameters
-        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude'], how='inner')
+        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', 'Local Time'], how='inner')
 
     @staticmethod
     def build_filter_conditions(df: pd.DataFrame, maximum_zenith_angle: int=5):
