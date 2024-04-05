@@ -120,7 +120,7 @@ class Extractor:
     def _get_l2_product_fields() -> List[Tuple]:
         # Format of OBR fields (field_name, data_type)
         fields = [
-            ('Datetime', 'float32'),
+            ('Datetime', 'str'),
             ('Latitude', 'float32'),
             ('Longitude', 'float32'),
             ('Cloud Top Pressure 1', 'float32'),
@@ -434,15 +434,21 @@ class Extractor:
             # Ensure column refers to existing DataFrame column; adjust if using numerical indices or actual names
             if column in df.columns:
                 df[column] = df[column].apply(func)
-
         return df
 
-    def process_file(self, file, converters):
+    def get_df_from_file(self, file, converters):
         # Read each intermediate text file into a DataFrame
         df = pd.read_csv(file, header=None, names=['Data'])
 
         # Split single-column string into separate columns of strings
         df_expanded = df['Data'].str.split(expand=True)
+        print(df_expanded[0].head())
+
+        df_expanded = df_expanded[0].str.split('.', expand=True)
+        print(df_expanded[0].head())
+
+        exit()
+
         df_expanded.columns = converters.keys()
 
         # Set data types of columns using converter functions
@@ -462,18 +468,10 @@ class Extractor:
         df_list = []
         for file in files:
             logger.info(f"Combining: {file}")
-            # Read each intermediate text file into a DataFrame
-            df = pd.read_csv(file, header=None, names=['Data'])
-
-            # Split single-column string into separate columns of strings
-            df_expanded = df['Data'].str.split(expand=True)
-            df_expanded.columns = converters.keys()
-
-            # Set data types of columns using converter functions
-            df_expanded = self.apply_converters_to_df(converters, df_expanded)
-
-            # Append DataFrame to list and delete text file
-            df_list.append(df_expanded)
+            
+            # Read each intermediate text file into a DataFrame, append to list, then delete
+            df = self.get_df_from_file(file, converters)
+            df_list.append(df)
             self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
