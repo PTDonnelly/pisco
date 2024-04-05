@@ -171,6 +171,7 @@ class Processor:
         combined_conditions = include_nadir
         return combined_conditions
     
+
     def filter_observations(self, df):
         """Prepares the dataframe by converting 'Datetime' to pandas datetime objects,
         removing missing data, and filtering based on conditions.
@@ -205,9 +206,10 @@ class Processor:
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
-            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
+            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "Local Time",
             "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
         return reduced_fields
+
 
     def reduce_fields(self, merged_df: pd.DataFrame):
         # Keep only columns containing variables present in reduced_fields and spectral channels
@@ -287,6 +289,7 @@ class Processor:
         
         return
 
+
     def combine_datasets(self) -> None:
         self._create_merged_datapath()
         
@@ -315,6 +318,7 @@ class Processor:
             logger.error(f"Error deleting file {filepath}: {e}")
         return
 
+
     def save_merged_products(self, delete_intermediate_files: Optional[bool]=None) -> None:
         try:
             # Split the intermediate file path into the root and extension, and give new extension
@@ -326,7 +330,7 @@ class Processor:
                 pickle.dump(self.df, f)
 
 
-            self.df.to_csv(f"North Atlantic.csv", sep='\t')
+            # self.df.to_csv(f"North Atlantic.csv", sep='\t')
             
             # Output information on the final DataFrame
             logger.info(self.df.info())

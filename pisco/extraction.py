@@ -461,7 +461,7 @@ class Extractor:
         # Initialize an empty list to store DataFrames
         df_list = []
         for file in files:
-            logger.info(file)
+            logger.info(f"Combining: {file}")
             # Read each intermediate text file into a DataFrame
             df = pd.read_csv(file, header=None, names=['Data'])
 

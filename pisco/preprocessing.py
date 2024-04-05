@@ -183,11 +183,9 @@ class Preprocessor:
         """
         Stores the local time Boolean indicating whether the current time is day or night.
         """
-        # Calculate the local time
+        # Calculate the local time and store to DataFrame
         local_time = self._calculate_local_time()
-
-        # Store the Boolean indicating day (True) or night (False) in the DataFrame
-        self.df['Local Time'] = (6 < local_time) & (local_time < 18)
+        self.df['Local Time'] = local_time
         return
 
 
@@ -204,6 +202,8 @@ class Preprocessor:
         
         # Drop original time element columns (in place to save on memory)
         self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
+        print(self.df.head())
+        exit()
         return  
     
 
