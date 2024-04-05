@@ -334,6 +334,7 @@ class Extractor:
         for file in files:
             # Read each file into a DataFrame
             df = pd.read_csv(file, sep='\t', header=None)
+            print(df.head())
             df_list.append(df)
         
         # Concatenate all DataFrames along the rows (axis=0)
@@ -343,7 +344,9 @@ class Extractor:
         # Reset index if you want a clean, continuous index
         combined_df.reset_index(drop=True, inplace=True)     
 
-        print(combined_df.head())
+        print(combined_df.shape)
+        print(combined_df.columns)
+
         exit() 
         
         # Specify the column names from the OBR documentation
