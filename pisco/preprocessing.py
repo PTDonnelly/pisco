@@ -129,12 +129,14 @@ class Preprocessor:
         Stores the datetime components to a single column and drops the elements.
         """
         if self.data_level == "l1c":
-            self.df['Datetime'] = (self.df['Year'].apply(lambda x: f'{int(x):04d}') + 
-                                   self.df['Month'].apply(lambda x: f'{int(x):02d}') +
-                                   self.df['Day'].apply(lambda x: f'{int(x):02d}') +
-                                   self.df['Hour'].apply(lambda x: f'{int(x):02d}') +
-                                   self.df['Minute'].apply(lambda x: f'{int(x):02d}')
-                                   )
+            self.df['Datetime'] = pd.to_datetime(
+                self.df['Year'].astype(int).astype(str).str.zfill(4) +
+                self.df['Month'].astype(int).astype(str).str.zfill(2) +
+                self.df['Day'].astype(int).astype(str).str.zfill(2) +
+                self.df['Hour'].astype(int).astype(str).str.zfill(2) +
+                self.df['Minute'].astype(int).astype(str).str.zfill(2),
+                format='%Y%m%d%H%M'
+                )
             
         elif self.data_level == "l2":
             # Ensure both columns are strings for concatenation
@@ -161,6 +163,7 @@ class Preprocessor:
     
         return 
     
+
     def _calculate_local_time(self) -> None:
         """
         Calculate the local time (in hours, UTC) that determines whether it is day or night at a specific longitude.
@@ -213,9 +216,6 @@ class Preprocessor:
         self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
         return
 
-
-  
-    
 
     def _delete_intermediate_file(self, filepath) -> None:
         """Deletes the specified intermediate file."""
