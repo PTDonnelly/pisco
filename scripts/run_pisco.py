@@ -63,10 +63,6 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
             # Rename the spectral columns to contain "Spectrum"
             preprocessor.fix_spectrum_columns()
         
-        elif preprocessor.data_level == "l2":
-            # Expand Datetime column into date and time elements
-            preprocessor.expand_datetime_column()
-        
         # Construct Datetime column and remove individual time elements
         preprocessor.build_datetime()
 
