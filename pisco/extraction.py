@@ -275,7 +275,7 @@ class Extractor:
         return ' '.join(list_of_parameters)
 
 
-    def _get_version_from_file_path(self, satellite: str, date_time: datetime) -> int:
+    def _get_version_from_file_path(self, satellite: str, date_time: datetime, default_version: int=6) -> int:
         # Convert the datetime string to a datetime object
         measurement_date_time = datetime.strptime(date_time, "%Y%m%d%H%M%S")
 
@@ -309,7 +309,7 @@ class Extractor:
                 return version
             
         # If none of the conditions were met, it means the date is after the last cutoff
-        return 6
+        return default_version
 
 
     def _get_clp_version(self, file: Path) -> int:
