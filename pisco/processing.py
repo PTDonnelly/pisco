@@ -138,7 +138,7 @@ class Processor:
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
         
         print(spectral_channels.head())
-
+        exit()
         column_names_as_strings = spectral_channels.columns.astype(str)
         channel_positions = column_names_as_strings.str.split().str[-1].astype(int)
         
@@ -253,8 +253,6 @@ class Processor:
         # Report to the logger
         logger.info("Integrating spectra to OLR")
 
-        print(self.df.head())
-        
         # Retrieve IASI spectral grid and radiance from the DataFrame
         wavenumbers = self.get_dataframe_spectral_grid()
 
@@ -309,8 +307,12 @@ class Processor:
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
 
+        print(merged_df.head())
+
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
+
+        print(filtered_df.head())
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
