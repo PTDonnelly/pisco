@@ -483,8 +483,8 @@ class Extractor:
         combined_df.reset_index(drop=True, inplace=True)
 
         # Write the combined DataFrame to a new CSV file
-        logger.info(f"Saving daily combined L2 cloud products: {self.intermediate_file_path}")
         self.intermediate_file_path = self.build_intermediate_file_path()
+        logger.info(f"Saving daily combined L2 cloud products: {self.intermediate_file_path}")
         combined_df.to_csv(self.intermediate_file_path, sep='\t', index=False)
         return
 
