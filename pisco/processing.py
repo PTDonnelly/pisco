@@ -133,12 +133,6 @@ class Processor:
         
         # Extract the numbers from the column names
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
-        print(self.df.head())
-
-        print(spectral_channels)
-
-        print(type(spectral_channels[0]))
-
         channel_positions = spectral_channels.str.split().str[-1].astype(int)
         
         # Extract the wavenumbers corresponding to the channel positions
@@ -307,21 +301,11 @@ class Processor:
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
 
-        print(merged_df.head())
-        print(merged_df.columns)
-        input()
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
-        print(filtered_df.head())
-        print(filtered_df.columns)
-        input()
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
-
-        print(self.df.head())
-        print(self.df.columns)
-        input()
 
         # Integrate spectra with wavelength to produce a single OLR value
         self.integrate_spectrum_to_olr()
