@@ -202,6 +202,31 @@ class Preprocessor:
         # Take the modulus again to ensure the time is within the 0 to 23 hours range
         return np.mod(time_shifted, 24)
 
+    def _format_fractional_time_to_hhmmss(self, fractional_hours):
+        """
+        Convert fractional hours into a formatted time string HHMMSS.
+
+        Args:
+        fractional_hours (np.ndarray): Array of fractional hours.
+
+        Returns:
+        np.ndarray: Formatted time strings.
+        """
+        # Extract the integer part (hours) and fractional part
+        hours = np.floor(fractional_hours)
+        fractional_minutes = (fractional_hours - hours) * 60
+        
+        # Repeat for minutes -> seconds
+        minutes = np.floor(fractional_minutes)
+        seconds = np.round((fractional_minutes - minutes) * 60)
+
+        # Format as strings with zero padding
+        formatted_time = np.char.zfill(hours.astype(int).astype(str), 2) + \
+                        np.char.zfill(minutes.astype(int).astype(str), 2) + \
+                        np.char.zfill(seconds.astype(int).astype(str), 2)
+
+        return formatted_time
+
 
     def build_local_time(self) -> List:
         """
@@ -210,8 +235,12 @@ class Preprocessor:
         # Calculate the local time
         local_time = self._calculate_local_time()
 
+        # Convert to formatted time strings
+        formatted_local_time = self._format_fractional_time_to_hhmmss(local_time)
+
         # Store the Boolean indicating day (True) or night (False) in the DataFrame
-        self.df['Local Time'] = (6 < local_time) & (local_time < 18)
+        self.df['DayNightQualifier'] = (6 < local_time) & (local_time < 18)
+        self.df['Local Time'] = formatted_local_time
 
         # Drop original time element columns (in place to save on memory)
         self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
