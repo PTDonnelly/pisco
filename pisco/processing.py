@@ -158,6 +158,7 @@ class Processor:
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
 
+        # Ensure both Datetime columns are datetime objects
         self.df_l1c['Datetime'] = pd.to_datetime(self.df_l1c['Datetime'])
         self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
 
@@ -306,11 +307,21 @@ class Processor:
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
 
+        print(merged_df.head())
+        print(merged_df.columns)
+        input()
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
+        print(filtered_df.head())
+        print(filtered_df.columns)
+        input()
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
+
+        print(self.df.head())
+        print(self.df.columns)
+        input()
 
         # Integrate spectra with wavelength to produce a single OLR value
         self.integrate_spectrum_to_olr()
