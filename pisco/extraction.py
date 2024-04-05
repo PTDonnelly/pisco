@@ -472,8 +472,6 @@ class Extractor:
             # Append DataFrame to list and delete text file
             df_list.append(df_expanded)
             # self._delete_intermediate_file(file)
-
-            input()
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
