@@ -23,7 +23,6 @@ class Preprocessor:
     Attributes:
         intermediate_file (str): Path to the intermediate file containing raw OBR data.
         delete_intermediate_files (bool): Indicates whether intermediate files should be deleted after processing.
-        data_level (str): Specifies the data processing level, e.g., 'l1c' or 'l2'.
         channels (List[int]): Channels to be included in the processing.
         allocated_memory (int): Memory allocated for processing data, in bytes.
         memory_safety_margin (float): Fraction of allocated memory used as a safety margin during chunking.
@@ -45,7 +44,6 @@ class Preprocessor:
     def __init__(self, ex: Extractor, allocated_memory: int, memory_safety_margin=0.5):
         self.intermediate_file: str = ex.intermediate_file_path
         self.delete_intermediate_files = ex.config.delete_intermediate_files
-        self.data_level: str = ex.data_level
         self.channels: List[int] = ex.channels
         self.allocated_memory = allocated_memory * (1024 ** 3) # Convert from Gigabytes to Bytes
         self.memory_safety_margin = memory_safety_margin
@@ -124,11 +122,14 @@ class Preprocessor:
         return
 
 
-    def build_datetime(self) -> List:
+    def select_geographic_region(self) -> None:
+        return
+    
+    def build_datetime(self, ex: Extractor) -> List:
         """
         Stores the datetime components to a single column and drops the elements.
         """
-        if self.data_level == "l1c":
+        if ex.data_level == "l1c":
             self.df['Datetime'] = pd.to_datetime(
                 self.df['Year'].astype(int).astype(str).str.zfill(4) +
                 self.df['Month'].astype(int).astype(str).str.zfill(2) +
@@ -138,7 +139,7 @@ class Preprocessor:
                 format='%Y%m%d%H%M'
                 )
             
-        elif self.data_level == "l2":
+        elif ex.data_level == "l2":
             # Ensure both columns are strings for concatenation
             self.df['Date'] = self.df['Date'].astype(str)
             self.df['Time'] = self.df['Time'].astype(str)

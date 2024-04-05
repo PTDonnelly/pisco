@@ -59,12 +59,16 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         # Read OBR textfiles and store to pandas DataFrame
         preprocessor.open_text_file(ex)
         
-        if preprocessor.data_level == "l1c":
+        if ex.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
             preprocessor.fix_spectrum_columns()
-        
+
+        elif ex.data_level == "l2":
+            # Isolate geographic region
+            preprocessor.select_geographic_region()
+
         # Construct Datetime column and remove individual time elements
-        preprocessor.build_datetime()
+        preprocessor.build_datetime(ex)
 
         # Construct Local Time column
         preprocessor.build_local_time()
