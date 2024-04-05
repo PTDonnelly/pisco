@@ -129,6 +129,9 @@ class Preprocessor:
         self.df['Date'] = self.df['Date'].astype(str)
         self.df['Time'] = self.df['Time'].astype(str)
 
+        # If 'Time' values are not zero-padded, you might need to pad them
+        self.df['Time'] = self.df['Time'].str.pad(width=6, side='left', fillchar='0')
+
         # Concatenate 'Date' and 'Time' columns into a single 'Datetime' string
         self.df['Datetime'] = self.df['Date'] + self.df['Time']
 
