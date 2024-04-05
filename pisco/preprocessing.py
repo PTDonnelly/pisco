@@ -125,6 +125,10 @@ class Preprocessor:
 
 
     def expand_datetime_column(self) -> None:
+
+        print(self.df['Datetime'].head())
+
+        
         # Ensure that the "Datetime" column is in datetime format
         self.df['Datetime'] = pd.to_datetime(self.df['Datetime'])
 
