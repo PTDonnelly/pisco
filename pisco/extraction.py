@@ -341,7 +341,10 @@ class Extractor:
         # Sort the DataFrame based on the date-time column if needed
         combined_df.sort_values(by=combined_df.columns[0], inplace=True)
         # Reset index if you want a clean, continuous index
-        combined_df.reset_index(drop=True, inplace=True)      
+        combined_df.reset_index(drop=True, inplace=True)     
+
+        print(combined_df.head())
+        exit() 
         
         # Specify the column names from the OBR documentation
         column_names = [
