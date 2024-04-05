@@ -38,8 +38,8 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         # Scan raw datafiles in the date directory
         file_paths = ex.get_l2_product_files()
         for file_path in file_paths:
-            ex.extract_files(file_path)
-            exit()
+            ex.l2_product_file_path = file_path
+            ex.extract_files()
 
 
     # If IASI data was successfully extracted

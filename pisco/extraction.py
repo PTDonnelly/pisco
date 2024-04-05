@@ -61,6 +61,7 @@ class Extractor:
         self.datapath_out: str = None
         self.datafile_in: str = None
         self.datafile_out: str = None
+        self.l2_product_file_path: str = None
         self.intermediate_file: str = None
         self.intermediate_file_check: bool = None
 
@@ -115,7 +116,7 @@ class Extractor:
         return
 
 
-    def build_intermediate_filepath(self) -> str:
+    def build_intermediate_filepath(self, date_time: Optional[str]=None) -> str:
         """
         Creates the directory to save the output files.
         
@@ -125,7 +126,7 @@ class Extractor:
         if self.data_level == 'l1c':
             self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
-            self.datafile_out = f"cloud_products.txt"
+            self.datafile_out = f"{date_time}_cloud_products.txt"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -210,6 +211,7 @@ class Extractor:
         # If none of the conditions were met, it means the date is after the last cutoff
         return 6
 
+
     def _get_clp_version(self, file: Path) -> int:
         """Extract the satellite identifier, date, and time from the file name"""
         if int(self.year) < 2013:
@@ -223,9 +225,10 @@ class Extractor:
         satellite, date_time = match.groups()
 
         # Use the extracted information to determine the version
-        return self._get_version_from_file_path(satellite, date_time)
+        return self._get_version_from_file_path(satellite, date_time), date_time
 
-    def get_command(self, l2_product_file: Optional[str]=None) -> str:
+
+    def get_command(self) -> str:
         """
         Builds the command to extract IASI data based on the data level.
 
@@ -240,16 +243,20 @@ class Extractor:
             executable_runpath = os.path.join(self.runpath, "bin", "obr_v4")
             # Get the command parameters
             parameters = self._build_parameters()
+            # Create the output directory and point to intermediate file
+            self.intermediate_file = self.build_intermediate_filepath()
             # Return the complete command
             return f"{executable_runpath} {parameters} -out {self.intermediate_file}"
         
         elif self.data_level == 'l2':
             # Get version of IASI L2 CLP reader based on the date and time of observation
-            version = self._get_clp_version(l2_product_file)
+            version, date_time = self._get_clp_version(self.l2_product_file_path)
+            # Create the output directory and point to intermediate file
+            self.intermediate_file = self.build_intermediate_filepath(date_time)
             # Define the path to the run executable
             executable_runpath = os.path.join(self.runpath, "bin",  "clpall_ascii")
             # Return the complete command
-            return f"{executable_runpath} {l2_product_file} {self.intermediate_file} v{version}"
+            return f"{executable_runpath} {self.l2_product_file_path} {self.intermediate_file} v{version}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -313,15 +320,12 @@ class Extractor:
             return True
 
 
-    def extract_files(self, file_path: Optional[str]=None) -> Tuple[bool, str]:
+    def extract_files(self) -> Tuple[bool, str]:
         """
         Preprocesses the IASI data.
         """
-        # Create the output directory and point to intermediate file
-        self.intermediate_file = self.build_intermediate_filepath()
-
         # Build the command string to execute the binary script
-        command = self.get_command(file_path)
+        command = self.get_command()
         
         # Run the command to extract the data
         result = self.run_command(command)
