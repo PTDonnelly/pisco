@@ -434,6 +434,8 @@ class Extractor:
     
 
     def combine_files(self):
+        logger.info(f"Combining L2 cloud products into daily file")
+
         # Build data type converter functions to account for NaNs
         converters = self.build_converters()
         
