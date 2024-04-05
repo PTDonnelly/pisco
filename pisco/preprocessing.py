@@ -103,24 +103,6 @@ class Preprocessor:
         return fields
       
     @staticmethod
-    def _get_l2_record_fields() -> List[Tuple]:
-        # Format of OBR fields (field_name, data_type)
-        fields = [
-            ('Superadiabatic Indicator', 'uint8'),
-            ('Land Sea Qualifier', 'uint8'),
-            ('Day Night Qualifier', 'uint8'),
-            ('Processing Technique', 'uint32'),
-            ('Sun Glint Indicator', 'uint8'),
-            ('Cloud Formation and Height Assignment', 'uint32'),
-            ('Instrument Detecting Clouds', 'uint32'),
-            ('Validation Flag for IASI L1 Product', 'uint32'),
-            ('Quality Completeness of Retrieval', 'uint32'),
-            ('Retrieval Choice Indicator', 'uint32'),
-            ('Satellite Manoeuvre Indicator', 'uint32')
-            ]
-        return fields
-
-    @staticmethod
     def _get_l2_product_fields() -> List[Tuple]:
         # Format of OBR fields (field_name, data_type)
         fields = [
@@ -203,8 +185,6 @@ class Preprocessor:
                 )
         if self.data_level == 'l2':
             combined_fields = (
-                # Preprocessor._get_common_fields() +
-                # Preprocessor._get_l2_record_fields() +
                 Preprocessor._get_l2_product_fields()
                 )
 
@@ -234,6 +214,23 @@ class Preprocessor:
         self.df.rename(columns=rename_mapping, inplace=True)
         return
 
+
+    def expand_datetime_column(self) -> None:
+        # Ensure that the "Datetime" column is in datetime format
+        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'])
+        
+        # Extract year, month, day, hour, minute, and milliseconds components
+        self.df['Year'] = self.df['Datetime'].dt.year
+        self.df['Month'] = self.df['Datetime'].dt.month
+        self.df['Day'] = self.df['Datetime'].dt.day
+        self.df['Hour'] = self.df['Datetime'].dt.hour
+        self.df['Minute'] = self.df['Datetime'].dt.minute
+        self.df['Milliseconds'] = self.df['Datetime'].dt.microsecond // 1000  # datetime represents of fractional seconds as microseconds)
+
+        # Drop the original 'Datetime' column
+        self.df.drop(columns=['Datetime'], inplace=True)
+        return 
+    
 
     def _calculate_local_time(self) -> None:
         """

@@ -60,6 +60,9 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         if preprocessor.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
             preprocessor.fix_spectrum_columns()
+        elif preprocessor.data_level == "l2":
+            # Expand Datetime column into date and time elements
+            preprocessor.expand_datetime_column()
         
         # Construct Local Time column
         preprocessor.build_local_time()
