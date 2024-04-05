@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 import logging
 import numpy as np
@@ -424,13 +425,10 @@ class Extractor:
             else:
                 # For other types, just strip whitespace (customize as needed)
                 converters[column] = lambda x: x.strip()
-
         return converters
     
 
-    def apply_converters_to_df(self, df):
-        converters = self.build_converters()
-
+    def apply_converters_to_df(self, converters, df):
         # Apply each converter function to its respective column in the DataFrame
         for column, func in converters.items():
             # Ensure column refers to existing DataFrame column; adjust if using numerical indices or actual names
@@ -439,33 +437,57 @@ class Extractor:
 
         return df
 
+    def process_file(self, file, converters):
+        # Read each intermediate text file into a DataFrame
+        df = pd.read_csv(file, header=None, names=['Data'])
+
+        # Split single-column string into separate columns of strings
+        df_expanded = df['Data'].str.split(expand=True)
+        df_expanded.columns = converters.keys()
+
+        # Set data types of columns using converter functions
+        df_expanded = self.apply_converters_to_df(converters, df_expanded)
+        return df_expanded
 
     def combine_files(self):
         logger.info(f"Combining L2 cloud products")
 
         # Build data type converter functions to account for NaNs
         converters = self.build_converters()
-        
+
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
-        
-        # Initialize an empty list to store DataFrames
+
+        # Use ProcessPoolExecutor to parallelize file processing
         df_list = []
-        for file in files:
+        with ProcessPoolExecutor() as executor:
+            # Submit all file processing tasks and execute them in parallel
+            future_to_file = {executor.submit(self.process_file, file, converters): file for file in files}
             
-            # Read each intermediate text file into a DataFrame
-            df = pd.read_csv(file, header=None, names=['Data'])
+            for future in as_completed(future_to_file):
+                df_expanded = future.result()
+                # Append DataFrame to list and delete text file
+                df_list.append(df_expanded)
+                self._delete_intermediate_file(file)
 
-            # Split single-column string into separate columns of strings
-            df_expanded = df['Data'].str.split(expand=True)
-            df_expanded.columns = converters.keys()
 
-            # Set data types of columns using converter functions
-            df_expanded = self.apply_converters_to_df(df_expanded)
+        # # Initialize an empty list to store DataFrames
+        # df_list = []
+        # for file in files:
+            
+        #     # Read each intermediate text file into a DataFrame
+        #     df = pd.read_csv(file, header=None, names=['Data'])
 
-            # Append DataFrame to list and delete text file
-            df_list.append(df_expanded)
-            self._delete_intermediate_file(file)
+        #     # Split single-column string into separate columns of strings
+        #     df_expanded = df['Data'].str.split(expand=True)
+        #     df_expanded.columns = converters.keys()
+
+        #     # Set data types of columns using converter functions
+        #     df_expanded = self.apply_converters_to_df(converters, df_expanded)
+
+        #     # Append DataFrame to list and delete text file
+        #     df_list.append(df_expanded)
+        #     self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
