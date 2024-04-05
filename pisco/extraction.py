@@ -458,7 +458,7 @@ class Extractor:
         return df_final
 
 
-    def combine_files(self):
+    def combine_individual_l2_files(self):
         logger.info(f"Combining L2 cloud products")
 
         # Build data type converter functions to account for NaNs
@@ -510,5 +510,4 @@ class Extractor:
         
         # Run the command to extract the data
         self.run_command(command)
-        
         return
