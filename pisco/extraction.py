@@ -433,6 +433,18 @@ class Extractor:
         return converters
     
 
+    def apply_converters_to_df(self, df):
+        converters = self.build_converters()
+
+        # Apply each converter function to its respective column in the DataFrame
+        for column, func in converters.items():
+            # Ensure column refers to existing DataFrame column; adjust if using numerical indices or actual names
+            if column in df.columns:
+                df[column] = df[column].apply(func)
+
+        return df
+
+
     def combine_files(self):
         logger.info(f"Combining L2 cloud products")
 
@@ -445,8 +457,17 @@ class Extractor:
         # Initialize an empty list to store DataFrames
         df_list = []
         for file in files:
-            # Read each intermediate binary file into a DataFrame, append to list, then delete it
-            df = pd.read_csv(file, header=None, names=converters.keys(), converters=converters)
+            # Read each intermediate text file into a DataFrame
+            df = pd.read_csv(self.intermediate_file, sep="\n", header=None, names=['Data'])
+            
+            # Split single-column string into separate columns of strings
+            df_expanded = df['Data'].str.split(expand=True)
+            df_expanded.columns = converters.keys()
+
+            # Set data types of columns using converter functions
+            df_expanded = self.apply_converters_to_df(self, df_expanded)
+            
+            # Append DataFrame to list and delete text file
             df_list.append(df)
             # self._delete_intermediate_file(file)
         
