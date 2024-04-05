@@ -444,7 +444,7 @@ class Extractor:
         df_list = []
         for file in files:
             # Read each intermediate binary file into a DataFrame, append to list, then delete it
-            df = pd.read_csv(file, sep="\t", header=None, names=converters.keys(), converters=converters)
+            df = pd.read_csv(file, header=None, names=converters.keys(), converters=converters)
             df_list.append(df)
             self._delete_intermediate_file(file)
         
@@ -455,11 +455,10 @@ class Extractor:
         # Reset index if you want a clean, continuous index
         combined_df.reset_index(drop=True, inplace=True)
 
-        # Write the combined DataFrame to a new CSV file, without the index
+        # Write the combined DataFrame to a new CSV file
+        logger.info(f"Saving daily combined L2 cloud products: {self.intermediate_file_path}")
         self.intermediate_file_path = self.build_intermediate_file_path()
         combined_df.to_csv(self.intermediate_file_path, sep='\t', index=False)
-
-        logger.info(f"Saving daily combined L2 cloud products: {self.intermediate_file_path}")
         return
 
 
