@@ -47,19 +47,20 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         
         # Combine all files into a single daily file
         ex.combine_files()
-
-
-    # If IASI data was successfully extracted
-    if ex.intermediate_file_check:
+    
+    # Check if IASI data was successfully extracted
+    intermediate_file_exists = ex.check_extracted_file()
+    if intermediate_file_exists:
         # Preprocess the data into pandas DataFrames
         preprocessor = Preprocessor(ex, memory)
         
         # Read OBR textfiles and store to pandas DataFrame
-        preprocessor.open_text_file()
+        preprocessor.open_text_file(ex)
         
         if preprocessor.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
             preprocessor.fix_spectrum_columns()
+        
         elif preprocessor.data_level == "l2":
             # Expand Datetime column into date and time elements
             preprocessor.expand_datetime_column()

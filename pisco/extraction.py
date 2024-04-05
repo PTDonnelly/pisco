@@ -398,9 +398,7 @@ class Extractor:
         except Exception as unexpected_error:
             # Catch any other exceptions that weren't handled above.
             raise RuntimeError(f"An unexpected error occurred while running the command '{command}': {str(unexpected_error)}")
-        
-        # Create a CompletedProcess object that contains the result of execution
-        return subprocess.CompletedProcess(args=command, returncode=return_code, stdout='\n'.join(command_output), stderr=None)
+        return
 
     @staticmethod
     def _get_l2_products_for_file_check(products):
@@ -460,19 +458,22 @@ class Extractor:
         # Write the combined DataFrame to a new CSV file, without the index
         self.intermediate_file_path = self.build_intermediate_file_path()
         combined_df.to_csv(self.intermediate_file_path, sep='\t', index=False)
+
+        logger.info(f"Saving daily combined L2 cloud products: {self.intermediate_file_path}")
         return
 
 
-    def check_extracted_files(self, result: object) -> bool:
-        products = self._get_l2_products_for_file_check(self.config.products)
-
-        # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
-        if ("No L1C data files found" in result.stdout) or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
-            logger.info(result.stdout)
-            os.remove(self.intermediate_file_path)
-            return False
-        else:
+    def check_extracted_file(self):
+        # Create a Path object
+        file_path = Path(self.intermediate_file_path)
+        
+        # Check if the file exists and is non-empty
+        if file_path.exists() and file_path.stat().st_size > 0:
+            logger.info("Intermediate file exists and is non-empty.")
             return True
+        else:
+            logger.info("Intermediate file does not exist or is empty.")
+            return False
 
 
     def extract_files(self) -> Tuple[bool, str]:
@@ -483,7 +484,6 @@ class Extractor:
         command = self.get_command()
         
         # Run the command to extract the data
-        result = self.run_command(command)
+        self.run_command(command)
         
-        # Check if files are produced. If not, skip processing.
-        self.intermediate_file_check = self.check_extracted_files(result)
+        return
