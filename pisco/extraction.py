@@ -415,7 +415,10 @@ class Extractor:
             logger.error(f"Error deleting file: {e}")
 
 
-    def build_converters(self, dtype_dict) -> dict:        
+    def build_converters(self) -> dict:        
+        # Create dtype dict from combined fields
+        dtype_dict = self._get_fields_and_datatypes()
+        
         # Create converters based on dtype_dict
         converters = {}
         for column, dtype in dtype_dict.items():
@@ -431,12 +434,10 @@ class Extractor:
 
         return converters
     
-    def combine_files(self):
-        # Create dtype dict from combined fields
-        dtype_dict = self._get_fields_and_datatypes()
 
-        # Replace NaN values with a numpy NaN and strip whitespace
-        converters = self.build_converters(dtype_dict)
+    def combine_files(self):
+        # Build data type converter functions to account for NaNs
+        converters = self.build_converters()
         
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
@@ -445,7 +446,7 @@ class Extractor:
         df_list = []
         for file in files:
             # Read each intermediate binary file into a DataFrame, append to list, then delete it
-            df = pd.read_csv(file, sep="\t", dtype=dtype_dict, header=None, names=dtype_dict.keys(), converters=converters)
+            df = pd.read_csv(file, sep="\t", header=None, names=converters.keys(), converters=converters)
             df_list.append(df)
             self._delete_intermediate_file(file)
         

@@ -101,11 +101,11 @@ class Preprocessor:
         return file_size > (self.allocated_memory / self.memory_safety_margin)
 
 
-    def open_text_file(self) -> None:
+    def open_text_file(self, ex: Extractor) -> None:
         logger.info("Loading intermediate text file:")
         
         # Create dtype dict from combined fields
-        dtype_dict = Extractor._get_fields_and_datatypes()
+        dtype_dict = ex._get_fields_and_datatypes()
 
         if self.should_load_in_chunks():
             self.df = self.read_file_in_chunks(dtype_dict)
