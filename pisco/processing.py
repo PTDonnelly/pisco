@@ -305,14 +305,19 @@ class Processor:
         merged_df = self.merge_datasets()
 
         print(merged_df.head())
+        input()
 
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
 
         print(filtered_df.head())
+        input()
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
+
+        print(self.df.head())
+        input()
 
         # Integrate spectra with wavelength to produce a single OLR value
         self.integrate_spectrum_to_olr()
