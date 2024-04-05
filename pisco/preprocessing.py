@@ -51,80 +51,6 @@ class Preprocessor:
         self.memory_safety_margin = memory_safety_margin
         self.df = None
 
-
-    @staticmethod
-    def _get_common_fields() -> List[Tuple]:
-        # Format of OBR fields (field_name, data_type)
-        fields = [
-            ('SatelliteIdentifier', 'uint32'),
-            ('Tb', 'uint8'),
-            ('Year', 'uint16'),
-            ('Month', 'uint8'),
-            ('Day', 'uint8'),
-            ('Hour', 'uint8'),
-            ('Minute', 'uint8'),
-            ('Milliseconds', 'uint32'),
-            ('Latitude', 'float32'),
-            ('Longitude', 'float32'),
-            ('Satellite Zenith Angle', 'float32'),
-            ('Bearing', 'float32'),
-            ('Solar Zenith Angle', 'float32'),
-            ('Solar Azimuth', 'float32'),
-            ('Field of View Number', 'uint32'),
-            ('Orbit Number', 'uint32'),
-            ('Scan Line Number', 'uint32'),
-            ('Height of Station', 'float32')
-            ]
-        return fields
-  
-    @staticmethod
-    def _get_l1c_record_fields() -> List[Tuple]:
-        # Format of OBR fields (field_name, data_type)
-        fields = [
-            ('Day version', 'uint16'),
-            ('Start Channel 1', 'uint32'),
-            ('End Channel 1', 'uint32'),
-            ('Quality Flag 1', 'uint32'),
-            ('Start Channel 2', 'uint32'),
-            ('End Channel 2', 'uint32'),
-            ('Quality Flag 2', 'uint32'),
-            ('Start Channel 3', 'uint32'),
-            ('End Channel 3', 'uint32'),
-            ('Quality Flag 3', 'uint32'),
-            ('Cloud Fraction', 'uint32'),
-            ('Surface Type', 'uint8')
-            ]
-        return fields
-    
-    @staticmethod
-    def _get_l1c_product_fields(channels: List[int]) -> List[Tuple]:
-        # Format of spectral fields (field_name, data_type) where field_name is the channel ID (values are radiance in native IASI units of mW.m-2.st-1.(cm-1)-1)
-        fields = [(str(channel_id), 'float32') for channel_id in channels]
-        return fields
-      
-    @staticmethod
-    def _get_l2_product_fields() -> List[Tuple]:
-        # Format of OBR fields (field_name, data_type)
-        fields = [
-            ('Datetime', 'float32'),
-            ('Latitude', 'float32'),
-            ('Longitude', 'float32'),
-            ('Pressure 1', 'float32'),
-            ('Temperature or Dry Bulb Temperature 1', 'float32'),
-            ('Cloud Amount in Segment 1', 'float32'),
-            ('Cloud Phase 1', 'uint32'),
-            ('Pressure 2', 'float32'),
-            ('Temperature or Dry Bulb Temperature 2', 'float32'),
-            ('Cloud Amount in Segment 2', 'float32'),
-            ('Cloud Phase 2', 'uint32'),
-            ('Pressure 3', 'float32'),
-            ('Temperature or Dry Bulb Temperature 3', 'float32'),
-            ('Cloud Amount in Segment 3', 'float32'),
-            ('Cloud Phase 3', 'uint32')
-            ]
-        return fields
-
-
     def calculate_chunk_size(self, dtype_dict: Dict):       
         # Open the first 100 rows of the csv to check memory usage of DataFrame
         sample_df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict, nrows=100)
@@ -175,28 +101,11 @@ class Preprocessor:
         return file_size > (self.allocated_memory / self.memory_safety_margin)
 
 
-    def _get_fields_and_datatypes(self) -> Dict[str, str]:
-        # Read and combine byte tables to optimise reading of OBR txtfile
-        if self.data_level == 'l1c':
-            combined_fields = (
-                Preprocessor._get_common_fields() +
-                Preprocessor._get_l1c_record_fields() +
-                Preprocessor._get_l1c_product_fields(self.channels)
-                )
-        if self.data_level == 'l2':
-            combined_fields = (
-                Preprocessor._get_l2_product_fields()
-                )
-
-        # Create dtype dict from combined fields
-        return {field[0]: field[1] for field in combined_fields}
-
-
     def open_text_file(self) -> None:
         logger.info("Loading intermediate text file:")
         
         # Create dtype dict from combined fields
-        dtype_dict = self._get_fields_and_datatypes()
+        dtype_dict = Extractor._get_fields_and_datatypes()
 
         if self.should_load_in_chunks():
             self.df = self.read_file_in_chunks(dtype_dict)

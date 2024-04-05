@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 import re
 import subprocess
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 from .configuration import Configurer
 
@@ -65,7 +65,96 @@ class Extractor:
         self.intermediate_file_path: str = None
         self.intermediate_file_check: bool = None
 
-        
+    @staticmethod
+    def _get_common_fields() -> List[Tuple]:
+        # Format of OBR fields (field_name, data_type)
+        fields = [
+            ('SatelliteIdentifier', 'uint32'),
+            ('Tb', 'uint8'),
+            ('Year', 'uint16'),
+            ('Month', 'uint8'),
+            ('Day', 'uint8'),
+            ('Hour', 'uint8'),
+            ('Minute', 'uint8'),
+            ('Milliseconds', 'uint32'),
+            ('Latitude', 'float32'),
+            ('Longitude', 'float32'),
+            ('Satellite Zenith Angle', 'float32'),
+            ('Bearing', 'float32'),
+            ('Solar Zenith Angle', 'float32'),
+            ('Solar Azimuth', 'float32'),
+            ('Field of View Number', 'uint32'),
+            ('Orbit Number', 'uint32'),
+            ('Scan Line Number', 'uint32'),
+            ('Height of Station', 'float32')
+            ]
+        return fields
+  
+    @staticmethod
+    def _get_l1c_record_fields() -> List[Tuple]:
+        # Format of OBR fields (field_name, data_type)
+        fields = [
+            ('Day version', 'uint16'),
+            ('Start Channel 1', 'uint32'),
+            ('End Channel 1', 'uint32'),
+            ('Quality Flag 1', 'uint32'),
+            ('Start Channel 2', 'uint32'),
+            ('End Channel 2', 'uint32'),
+            ('Quality Flag 2', 'uint32'),
+            ('Start Channel 3', 'uint32'),
+            ('End Channel 3', 'uint32'),
+            ('Quality Flag 3', 'uint32'),
+            ('Cloud Fraction', 'uint32'),
+            ('Surface Type', 'uint8')
+            ]
+        return fields
+    
+    @staticmethod
+    def _get_l1c_product_fields(channels: List[int]) -> List[Tuple]:
+        # Format of spectral fields (field_name, data_type) where field_name is the channel ID (values are radiance in native IASI units of mW.m-2.st-1.(cm-1)-1)
+        fields = [(str(channel_id), 'float32') for channel_id in channels]
+        return fields
+      
+    @staticmethod
+    def _get_l2_product_fields() -> List[Tuple]:
+        # Format of OBR fields (field_name, data_type)
+        fields = [
+            ('Datetime', 'float32'),
+            ('Latitude', 'float32'),
+            ('Longitude', 'float32'),
+            ('Cloud Top Pressure 1', 'float32'),
+            ('Temperature or Dry Bulb Temperature 1', 'float32'),
+            ('Cloud Amount in Segment 1', 'float32'),
+            ('Cloud Phase 1', 'uint32'),
+            ('Cloud Top Pressure 2', 'float32'),
+            ('Temperature or Dry Bulb Temperature 2', 'float32'),
+            ('Cloud Amount in Segment 2', 'float32'),
+            ('Cloud Phase 2', 'uint32'),
+            ('Cloud Top Pressure 3', 'float32'),
+            ('Temperature or Dry Bulb Temperature 3', 'float32'),
+            ('Cloud Amount in Segment 3', 'float32'),
+            ('Cloud Phase 3', 'uint32')
+            ]
+        return fields
+    
+
+    def _get_fields_and_datatypes(self) -> Dict[str, str]:
+        # Read and combine byte tables to optimise reading of OBR txtfile
+        if self.data_level == 'l1c':
+            combined_fields = (
+                Extractor._get_common_fields() +
+                Extractor._get_l1c_record_fields() +
+                Extractor._get_l1c_product_fields(self.channels)
+                )
+        if self.data_level == 'l2':
+            combined_fields = (
+                Extractor._get_l2_product_fields()
+                )
+
+        # Create dtype dict from combined fields
+        return {field[0]: field[1] for field in combined_fields}
+
+
     def _get_datapath_out(self) -> str:
         """
         Gets the data path for the output based on the data level, year, month, and day.
@@ -324,13 +413,10 @@ class Extractor:
         except OSError as e:
             logger.error(f"Error deleting file: {e}")
 
+    
     def combine_files(self):
-        # Specify the column names from the OBR documentation
-        column_names = [
-            "Datetime", "Latitude", 'Longitude',
-            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1",
-            "Pressure2", "Temperature/dry-bulbTemperature2", "CloudAmountInSegment2", "CloudPhase2",
-            "Pressure3", "Temperature/dry-bulbTemperature3", "CloudAmountInSegment3", "CloudPhase3"]
+        # Create dtype dict from combined fields
+        dtype_dict = self._get_fields_and_datatypes()
         
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
@@ -339,7 +425,7 @@ class Extractor:
         df_list = []
         for file in files:
             # Read each intermediate binary file into a DataFrame, append to list, then delete it
-            df = pd.read_csv(file, header=None, names=column_names)
+            df = pd.read_csv(file, sep="\t", dtype=dtype_dict, header=None, names=dtype_dict.keys())
             df_list.append(df)
             self._delete_intermediate_file(file)
         
