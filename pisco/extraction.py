@@ -43,7 +43,6 @@ class Extractor:
         _build_parameters(): Constructs the parameter string for the extraction command.
         _get_command(): Builds the full command to be executed for data extraction.
         run_command(): Executes the extraction command and handles its output.
-        _get_l2_products_for_file_check(products): Parses the products string for file checking.
         check_extracted_files(result): Checks the extraction process's result and verifies the intermediate file's presence.
         extract_files(): Orchestrates the data extraction process, including running the extraction command and checking the output.
     """
@@ -400,10 +399,6 @@ class Extractor:
             raise RuntimeError(f"An unexpected error occurred while running the command '{command}': {str(unexpected_error)}")
         return
 
-    @staticmethod
-    def _get_l2_products_for_file_check(products):
-        return products.split(',')
-
 
     def _delete_intermediate_file(self, filepath) -> None:
         """Deletes the specified intermediate file."""
@@ -456,7 +451,9 @@ class Extractor:
         
         # Initialize an empty list to store DataFrames
         df_list = []
-        for file in files:
+        for i, file in enumerate(files):
+            logger.info(i)
+            
             # Read each intermediate text file into a DataFrame
             df = pd.read_csv(file, header=None, names=['Data'])
 
@@ -475,6 +472,8 @@ class Extractor:
             # Append DataFrame to list and delete text file
             df_list.append(df_expanded)
             # self._delete_intermediate_file(file)
+
+            input()
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
