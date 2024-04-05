@@ -444,13 +444,18 @@ class Extractor:
 
         # Split single-column string into separate columns of strings
         df_expanded = df['Data'].str.split(expand=True)
-        # Split the zeroth column (Datetime, as YYYYmmdd.HHMMSS) into the Date and Time columns
-        df_expanded_datetime_split = df_expanded[0].str.split('.', expand=True)
-        df_expanded_datetime_split.columns = converters.keys()
+        # Split the zeroth column (assumed to contain datetime info like YYYYmmdd.HHMMSS) into Date and Time
+        datetime_split = df_expanded[0].str.split('.', expand=True)
+        # Drop the original zeroth column from df_expanded as it's now redundant
+        df_expanded = df_expanded.drop(columns=[0])
+        
+        # Concatenate the split datetime columns with the rest of the expanded DataFrame
+        df_final = pd.concat([datetime_split, df_expanded], axis=1)
+        df_final.columns = converters.keys()
 
         # Set data types of columns using converter functions
-        df_expanded_datetime_split = self.apply_converters_to_df(converters, df_expanded_datetime_split)
-        return df_expanded_datetime_split
+        df_final = self.apply_converters_to_df(converters, df_final)
+        return df_final
 
 
     def combine_files(self):
