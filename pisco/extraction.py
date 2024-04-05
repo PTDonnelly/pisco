@@ -31,14 +31,14 @@ class Extractor:
         datapath_out (str): Output data path where extracted files will be stored.
         datafile_in (str): Name of the input data file.
         datafile_out (str): Name of the output data file.
-        intermediate_file (str): Path to the intermediate file produced by the extraction process.
+        full_output_path (str): Path to the intermediate file produced by the extraction process.
         intermediate_file_check (bool): Flag indicating whether the intermediate file has been successfully produced.
 
     Methods:
         _get_datapath_out(): Determines the output data path based on data level and date.
         _get_datapath_in(): Determines the input data path based on data level.
         get_datapaths(): Retrieves both input and output data paths.
-        build_intermediate_filepath(): Creates the path for the intermediate file and ensures the output directory exists.
+        build_full_output_path(): Creates the path for the intermediate file and ensures the output directory exists.
         _build_parameters(): Constructs the parameter string for the extraction command.
         _get_command(): Builds the full command to be executed for data extraction.
         run_command(): Executes the extraction command and handles its output.
@@ -62,7 +62,7 @@ class Extractor:
         self.datapath_out: str = None
         self.datafile_in: str = None
         self.datafile_out: str = None
-        self.intermediate_file: str = None
+        self.full_output_path: str = None
         self.intermediate_file_check: bool = None
 
         
@@ -116,7 +116,7 @@ class Extractor:
         return
 
 
-    def build_intermediate_filepath(self, date_time: Optional[str]=None) -> str:
+    def build_full_output_path(self, date_time: Optional[str]=None) -> str:
         """
         Creates the directory to save the output files.
         
@@ -126,7 +126,7 @@ class Extractor:
         if self.data_level == 'l1c':
             self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
-            self.datafile_out = f"{date_time}cloud_products.txt"
+            self.datafile_out = f"{date_time}_cloud_products.txt" if date_time else "cloud_products.txt"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -253,19 +253,19 @@ class Extractor:
             # Get the command parameters
             parameters = self._build_parameters()
             # Create the output directory and point to intermediate file
-            self.intermediate_file = self.build_intermediate_filepath()
+            self.full_output_path = self.build_full_output_path()
             # Return the complete command
-            return f"{executable_runpath} {parameters} -out {self.intermediate_file}"
+            return f"{executable_runpath} {parameters} -out {self.full_output_path}"
         
         elif self.data_level == 'l2':
             # Get version of IASI L2 CLP reader based on the date and time of observation
             version, date_time = self._get_clp_version(self.datafile_in)
             # Create the output directory and point to intermediate file
-            self.intermediate_file = self.build_intermediate_filepath(date_time)
+            self.full_output_path = self.build_full_output_path(date_time)
             # Define the path to the run executable
             executable_runpath = os.path.join(self.runpath, "bin",  "clpall_ascii")
             # Return the complete command
-            return f"{executable_runpath} {self.datafile_in} {self.intermediate_file} v{version}"
+            return f"{executable_runpath} {self.datafile_in} {self.full_output_path} v{version}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -333,14 +333,15 @@ class Extractor:
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
-        # # Optionally, sort the DataFrame based on the date-time column if needed
-        # combined_df.sort_values(by=['date-time'], inplace=True)
+        
+        # Sort the DataFrame based on the date-time column if needed
+        combined_df.sort_values(by=combined_df.columns[0], inplace=True)
         
         # Reset index if you want a clean, continuous index
         combined_df.reset_index(drop=True, inplace=True)
         
         # Specify the path for the combined file
-        combined_file_path = self.build_intermediate_filepath()
+        combined_file_path = self.build_full_output_path()
         
         # Write the combined DataFrame to a new CSV file, without the index
         combined_df.to_csv(combined_file_path, sep='\t', index=False)
@@ -353,7 +354,7 @@ class Extractor:
         # If binary script runs but detects no data, report back, delete the empty intermediate file, and return False
         if ("No L1C data files found" in result.stdout) or any(f"0 {product} data selected out of 0" in result.stdout for product in products):
             logger.info(result.stdout)
-            os.remove(self.intermediate_file)
+            os.remove(self.full_output_path)
             return False
         else:
             return True

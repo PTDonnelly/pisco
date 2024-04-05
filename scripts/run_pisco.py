@@ -38,9 +38,12 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         # Scan raw datafiles in the date directory
         file_paths = ex.get_raw_l2_product_files()
         for file_path in file_paths:
+            logging.info(f"Extracting: {file_path}")
+            
             # Run generic IASI L2 reader on each input raw binary files
             ex.datafile_in = file_path
             ex.extract_files()
+        
         # Combine all files into a single daily file
         ex.combine_files()
 
