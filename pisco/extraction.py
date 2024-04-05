@@ -316,15 +316,20 @@ class Extractor:
     def _get_l2_products_for_file_check(products):
         return products.split(',')
 
+
+    def _delete_intermediate_file(self, filepath) -> None:
+        """Deletes the specified intermediate file."""
+        try:
+            os.remove(filepath)
+        except OSError as e:
+            logger.error(f"Error deleting file: {e}")
+
     def combine_files(self):
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
         
         # Initialize an empty list to store DataFrames
         df_list = []
-        
-        # # Specify the column names if known, assuming the first column is date-time
-        # column_names = ['date-time', 'column2', 'column3']  # Adjust based on actual structure
         
         for file in files:
             # Read each file into a DataFrame
@@ -333,18 +338,21 @@ class Extractor:
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
-        
         # Sort the DataFrame based on the date-time column if needed
         combined_df.sort_values(by=combined_df.columns[0], inplace=True)
-        
         # Reset index if you want a clean, continuous index
-        combined_df.reset_index(drop=True, inplace=True)
+        combined_df.reset_index(drop=True, inplace=True)      
         
-        # Specify the path for the combined file
-        combined_file_path = self.build_full_output_path()
-        
+        # # Specify the column names if known, assuming the first column is date-time
+        # column_names = ['date-time', 'column2', 'column3']  # Adjust based on actual structure
+
         # Write the combined DataFrame to a new CSV file, without the index
+        combined_file_path = self.build_full_output_path()
         combined_df.to_csv(combined_file_path, sep='\t', index=False)
+
+        for file in files:
+            # Delete intermediate binary output files
+            self._delete_intermediate_file(file)
         return
 
 
