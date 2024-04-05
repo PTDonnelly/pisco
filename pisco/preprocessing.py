@@ -125,6 +125,9 @@ class Preprocessor:
 
 
     def _create_datetime_objects(self) -> None:
+
+        print(self.df[['Date', 'Time']].head())
+        
         # Ensure both columns are strings for concatenation
         self.df['Date'] = self.df['Date'].astype(str)
         self.df['Time'] = self.df['Time'].astype(str)
@@ -132,11 +135,15 @@ class Preprocessor:
         # If 'Time' values are not zero-padded, you might need to pad them
         self.df['Time'] = self.df['Time'].str.pad(width=6, side='left', fillchar='0')
 
+        print(self.df[['Date', 'Time']].head())
+        
         # Concatenate 'Date' and 'Time' columns into a single 'Datetime' string
         self.df['Datetime'] = self.df['Date'] + self.df['Time']
 
         # Convert 'Datetime' string to a datetime object
         self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M%S')
+
+        print(self.df['Datetime'].head())
 
         # Drop individual Date and Time columns
         self.df.drop(columns=['Date', 'Time'], inplace=True)
@@ -145,10 +152,8 @@ class Preprocessor:
 
     def expand_datetime_column(self) -> None:
 
-        print(self.df[['Date', 'Time']].head())
-
         # Ensure that the "Datetime" column is in datetime format
-        self._create_datetime_objects(self)
+        self._create_datetime_objects()
 
         print(self.df['Datetime'].head())
         
