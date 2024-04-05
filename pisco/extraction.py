@@ -469,9 +469,7 @@ class Extractor:
 
         # Initialize an empty list to store DataFrames
         df_list = []
-        for file in files:
-            logger.info(f"Combining: {file}")
-            
+        for file in files:            
             # Read each intermediate text file into a DataFrame, append to list, then delete
             df = self.get_df_from_file(file, converters)
             df_list.append(df)
