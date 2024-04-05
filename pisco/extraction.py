@@ -458,7 +458,7 @@ class Extractor:
         df_list = []
         for file in files:
             # Read each intermediate text file into a DataFrame
-            df = pd.read_csv(file, sep="\n", header=None, names=['Data'])
+            df = pd.read_csv(file, header=None, names=['Data'])
             
             # Split single-column string into separate columns of strings
             df_expanded = df['Data'].str.split(expand=True)
