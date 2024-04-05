@@ -458,36 +458,36 @@ class Extractor:
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
 
-        # Use ProcessPoolExecutor to parallelize file processing
-        df_list = []
-        with ProcessPoolExecutor() as executor:
-            # Submit all file processing tasks and execute them in parallel
-            future_to_file = {executor.submit(self.process_file, file, converters): file for file in files}
-            
-            for future in as_completed(future_to_file):
-                df_expanded = future.result()
-                # Append DataFrame to list and delete text file
-                df_list.append(df_expanded)
-                self._delete_intermediate_file(file)
-
-
-        # # Initialize an empty list to store DataFrames
+        # # Use ProcessPoolExecutor to parallelize file processing
         # df_list = []
-        # for file in files:
+        # with ProcessPoolExecutor() as executor:
+        #     # Submit all file processing tasks and execute them in parallel
+        #     future_to_file = {executor.submit(self.process_file, file, converters): file for file in files}
             
-        #     # Read each intermediate text file into a DataFrame
-        #     df = pd.read_csv(file, header=None, names=['Data'])
+        #     for future in as_completed(future_to_file):
+        #         df_expanded = future.result()
+        #         # Append DataFrame to list and delete text file
+        #         df_list.append(df_expanded)
+        #         self._delete_intermediate_file(file)
 
-        #     # Split single-column string into separate columns of strings
-        #     df_expanded = df['Data'].str.split(expand=True)
-        #     df_expanded.columns = converters.keys()
 
-        #     # Set data types of columns using converter functions
-        #     df_expanded = self.apply_converters_to_df(converters, df_expanded)
+        # Initialize an empty list to store DataFrames
+        df_list = []
+        for file in files:
+            
+            # Read each intermediate text file into a DataFrame
+            df = pd.read_csv(file, header=None, names=['Data'])
 
-        #     # Append DataFrame to list and delete text file
-        #     df_list.append(df_expanded)
-        #     self._delete_intermediate_file(file)
+            # Split single-column string into separate columns of strings
+            df_expanded = df['Data'].str.split(expand=True)
+            df_expanded.columns = converters.keys()
+
+            # Set data types of columns using converter functions
+            df_expanded = self.apply_converters_to_df(converters, df_expanded)
+
+            # Append DataFrame to list and delete text file
+            df_list.append(df_expanded)
+            self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
