@@ -48,7 +48,6 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
             ex.extract_files()
         
         # Combine all files into a single daily file
-        print(dir(ex))
         ex.combine_individual_l2_files()
     
     # Check if IASI data was successfully extracted

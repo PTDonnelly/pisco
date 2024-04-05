@@ -135,7 +135,7 @@ class Processor:
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
         
         print(spectral_channels.head())
-        
+
         column_names_as_strings = spectral_channels.columns.astype(str)
         channel_positions = column_names_as_strings.str.split().str[-1].astype(int)
         
@@ -215,7 +215,7 @@ class Processor:
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
             "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
-            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
+            'CloudTopPressure1', "Temperature/DryBulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
         return reduced_fields
 
 

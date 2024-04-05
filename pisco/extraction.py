@@ -124,18 +124,18 @@ class Extractor:
             ('Time', 'uint32'),
             ('Latitude', 'float32'),
             ('Longitude', 'float32'),
-            ('Cloud Top Pressure 1', 'float32'),
-            ('Temperature or Dry Bulb Temperature 1', 'float32'),
-            ('Cloud Amount in Segment 1', 'float32'),
-            ('Cloud Phase 1', 'uint32'),
-            ('Cloud Top Pressure 2', 'float32'),
-            ('Temperature or Dry Bulb Temperature 2', 'float32'),
-            ('Cloud Amount in Segment 2', 'float32'),
-            ('Cloud Phase 2', 'uint32'),
-            ('Cloud Top Pressure 3', 'float32'),
-            ('Temperature or Dry Bulb Temperature 3', 'float32'),
-            ('Cloud Amount in Segment 3', 'float32'),
-            ('Cloud Phase 3', 'uint32')
+            ('CloudTopPressure1', 'float32'),
+            ('Temperature/DryBulbTemperature1', 'float32'),
+            ('CloudAmountInSegment 1', 'float32'),
+            ('CloudPhase1', 'uint32'),
+            ('CloudTopPressure2', 'float32'),
+            ('Temperature/DryBulbTemperature2', 'float32'),
+            ('CloudAmountInSegment 2', 'float32'),
+            ('CloudPhase2', 'uint32'),
+            ('CloudTopPressure3', 'float32'),
+            ('Temperature/DryBulbTemperature3', 'float32'),
+            ('CloudAmountInSegment 3', 'float32'),
+            ('CloudPhase3', 'uint32')
             ]
         return fields
     
