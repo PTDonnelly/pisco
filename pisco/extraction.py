@@ -472,7 +472,6 @@ class Extractor:
             # Set data types of columns using converter functions
             df_expanded = self.apply_converters_to_df(df_expanded)
 
-            exit()
             # Append DataFrame to list and delete text file
             df_list.append(df_expanded)
             # self._delete_intermediate_file(file)
