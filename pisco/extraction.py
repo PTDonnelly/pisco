@@ -345,19 +345,14 @@ class Extractor:
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
-        # Sort the DataFrame based on the date-time column if needed
-        combined_df.sort_values(by=combined_df.columns[0], inplace=True)
+        # Sort the DataFrame based on the "Datetime" column
+        combined_df.sort_values(by="Datetime", inplace=True)
         # Reset index if you want a clean, continuous index
-        combined_df.reset_index(drop=True, inplace=True)     
-
-        print(combined_df.shape)
-        print(combined_df.columns)
-
-        exit()
+        combined_df.reset_index(drop=True, inplace=True)
 
         # Write the combined DataFrame to a new CSV file, without the index
         combined_file_path = self.build_full_output_path()
-        combined_df.to_csv(combined_file_path, header=column_names, sep='\t', index=False)
+        combined_df.to_csv(combined_file_path, sep='\t', index=False)
         return
 
 
