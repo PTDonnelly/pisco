@@ -130,9 +130,15 @@ class Processor:
     def get_dataframe_spectral_grid(self) -> List[float]:
         # Get the full IASI spectral grid
         _, wavenumber_grid = self._get_iasi_spectral_grid()
+        
         # Extract the numbers from the column names
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
-        channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
+        
+        print(spectral_channels.head())
+        
+        column_names_as_strings = spectral_channels.columns.astype(str)
+        channel_positions = column_names_as_strings.str.split().str[-1].astype(int)
+        
         # Extract the wavenumbers corresponding to the channel positions
         extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
         return extracted_wavenumbers
@@ -150,14 +156,8 @@ class Processor:
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
 
-        print(self.df_l1c.info())
-        print(self.df_l2.info())
-
         self.df_l1c['Datetime'] = pd.to_datetime(self.df_l1c['Datetime'])
         self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
-
-        print(self.df_l1c.info())
-        print(self.df_l2.info())
 
         # Merge two DataFrames based on spatial and temporal parameters
         return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude'], how='inner')
@@ -211,7 +211,6 @@ class Processor:
             else:
                 return filtered_df
 
-    
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
