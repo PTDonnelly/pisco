@@ -215,7 +215,7 @@ class Processor:
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
             "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
-            'CloudTopPressure1', "Temperature/DryBulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
+            'CloudTopPressure1', "CloudTopTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
         return reduced_fields
 
 
