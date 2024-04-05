@@ -325,6 +325,13 @@ class Extractor:
             logger.error(f"Error deleting file: {e}")
 
     def combine_files(self):
+        # Specify the column names from the OBR documentation
+        column_names = [
+            "Datetime", "Latitude", 'Longitude',
+            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1",
+            "Pressure2", "Temperature/dry-bulbTemperature2", "CloudAmountInSegment2", "CloudPhase2",
+            "Pressure3", "Temperature/dry-bulbTemperature3", "CloudAmountInSegment3", "CloudPhase3"]
+        
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
         
@@ -332,7 +339,7 @@ class Extractor:
         df_list = []
         for file in files:
             # Read each intermediate binary file into a DataFrame, append to list, then delete it
-            df = pd.read_csv(file, sep='\t', header=None)
+            df = pd.read_csv(file, header=None, names=column_names)
             df_list.append(df)
             self._delete_intermediate_file(file)
         
@@ -346,14 +353,7 @@ class Extractor:
         print(combined_df.shape)
         print(combined_df.columns)
 
-        exit() 
-        
-        # Specify the column names from the OBR documentation
-        column_names = [
-            "Datetime", "Latitude", 'Longitude',
-            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1",
-            "Pressure2", "Temperature/dry-bulbTemperature2", "CloudAmountInSegment2", "CloudPhase2",
-            "Pressure3", "Temperature/dry-bulbTemperature3", "CloudAmountInSegment3", "CloudPhase3"]
+        exit()
 
         # Write the combined DataFrame to a new CSV file, without the index
         combined_file_path = self.build_full_output_path()
