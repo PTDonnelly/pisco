@@ -445,7 +445,7 @@ class Extractor:
         print(df_expanded[0].head())
 
         df_expanded = df_expanded[0].str.split('.', expand=True)
-        print(df_expanded[0].head())
+        print(df_expanded[0].head(), df_expanded[1].head())
 
         exit()
 
