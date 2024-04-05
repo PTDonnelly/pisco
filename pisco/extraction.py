@@ -458,23 +458,10 @@ class Extractor:
         # Get paths of individual files as Path() objects
         files = self.get_reduced_l2_product_files()
 
-        # # Use ProcessPoolExecutor to parallelize file processing
-        # df_list = []
-        # with ProcessPoolExecutor() as executor:
-        #     # Submit all file processing tasks and execute them in parallel
-        #     future_to_file = {executor.submit(self.process_file, file, converters): file for file in files}
-            
-        #     for future in as_completed(future_to_file):
-        #         df_expanded = future.result()
-        #         # Append DataFrame to list and delete text file
-        #         df_list.append(df_expanded)
-        #         self._delete_intermediate_file(file)
-
-
         # Initialize an empty list to store DataFrames
         df_list = []
         for file in files:
-            
+            logger.info(file)
             # Read each intermediate text file into a DataFrame
             df = pd.read_csv(file, header=None, names=['Data'])
 
