@@ -351,8 +351,8 @@ class Extractor:
         combined_df.reset_index(drop=True, inplace=True)
 
         # Write the combined DataFrame to a new CSV file, without the index
-        combined_file_path = self.build_intermediate_file_path()
-        combined_df.to_csv(combined_file_path, sep='\t', index=False)
+        self.intermediate_file_path = self.build_intermediate_file_path()
+        combined_df.to_csv(self.intermediate_file_path, sep='\t', index=False)
         return
 
 

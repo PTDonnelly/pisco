@@ -37,8 +37,9 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     elif ex.data_level == 'l2':
         # Scan raw datafiles in the date directory
         file_paths = ex.get_raw_l2_product_files()
+        logging.info(f"Extracting: IASI L2 Cloud Products")
         for file_path in file_paths:
-            logging.info(f"Extracting: {file_path}")
+            logging.info(f"{file_path}")
             
             # Run generic IASI L2 reader on each input raw binary files
             ex.datafile_in = file_path
