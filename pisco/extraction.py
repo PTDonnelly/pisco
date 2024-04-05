@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+import pandas as pd
 from pathlib import Path
 import re
 import subprocess
@@ -61,7 +62,6 @@ class Extractor:
         self.datapath_out: str = None
         self.datafile_in: str = None
         self.datafile_out: str = None
-        self.l2_product_file_path: str = None
         self.intermediate_file: str = None
         self.intermediate_file_check: bool = None
 
@@ -126,7 +126,7 @@ class Extractor:
         if self.data_level == 'l1c':
             self.datafile_out = f"extracted_spectra.txt"
         elif self.data_level == 'l2':
-            self.datafile_out = f"{date_time}_cloud_products.txt"
+            self.datafile_out = f"{date_time}cloud_products.txt"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -136,7 +136,7 @@ class Extractor:
         return os.path.join(self.datapath_out, self.datafile_out)
 
 
-    def get_l2_product_files(self) -> List[Path]:
+    def get_raw_l2_product_files(self) -> List[Path]:
         # Define the full path to the location of the binary L2 files
         l2_product_directory = Path(self.datapath_in) / self.year / self.month / self.day / self.config.products
 
@@ -145,6 +145,15 @@ class Extractor:
         return l2_product_files
     
 
+    def get_reduced_l2_product_files(self) -> List[Path]:
+        # Define the full path to the location of the text files extracted from the binary L2 files
+        l2_product_directory = Path(self.datapath_out)
+
+        # Scan for all files in the directory
+        l2_product_files = list(l2_product_directory.glob('*.txt'))
+        return l2_product_files
+
+    
     def _build_parameters(self) -> str:
         """
         Builds the parameter string for the IASI data extraction command.
@@ -250,13 +259,13 @@ class Extractor:
         
         elif self.data_level == 'l2':
             # Get version of IASI L2 CLP reader based on the date and time of observation
-            version, date_time = self._get_clp_version(self.l2_product_file_path)
+            version, date_time = self._get_clp_version(self.datafile_in)
             # Create the output directory and point to intermediate file
             self.intermediate_file = self.build_intermediate_filepath(date_time)
             # Define the path to the run executable
             executable_runpath = os.path.join(self.runpath, "bin",  "clpall_ascii")
             # Return the complete command
-            return f"{executable_runpath} {self.l2_product_file_path} {self.intermediate_file} v{version}"
+            return f"{executable_runpath} {self.datafile_in} {self.intermediate_file} v{version}"
         else:
             # If the data level is not 'l1c' or 'l2', raise an error
             raise ValueError("Invalid data path type. Accepts 'l1c' or 'l2'.")
@@ -306,6 +315,36 @@ class Extractor:
     @staticmethod
     def _get_l2_products_for_file_check(products):
         return products.split(',')
+
+    def combine_files(self):
+        # Get paths of individual files as Path() objects
+        files = self.get_reduced_l2_product_files()
+        
+        # Initialize an empty list to store DataFrames
+        df_list = []
+        
+        # # Specify the column names if known, assuming the first column is date-time
+        # column_names = ['date-time', 'column2', 'column3']  # Adjust based on actual structure
+        
+        for file in files:
+            # Read each file into a DataFrame
+            df = pd.read_csv(file, sep='\t', header=None)
+            df_list.append(df)
+        
+        # Concatenate all DataFrames along the rows (axis=0)
+        combined_df = pd.concat(df_list, axis=0)
+        # # Optionally, sort the DataFrame based on the date-time column if needed
+        # combined_df.sort_values(by=['date-time'], inplace=True)
+        
+        # Reset index if you want a clean, continuous index
+        combined_df.reset_index(drop=True, inplace=True)
+        
+        # Specify the path for the combined file
+        combined_file_path = self.build_intermediate_filepath()
+        
+        # Write the combined DataFrame to a new CSV file, without the index
+        combined_df.to_csv(combined_file_path, sep='\t', index=False)
+        return
 
 
     def check_extracted_files(self, result: object) -> bool:
