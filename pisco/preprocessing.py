@@ -124,13 +124,28 @@ class Preprocessor:
         return
 
 
+    def _create_datetime_objects(self) -> None:
+        # Ensure both columns are strings for concatenation
+        self.df['Date'] = self.df['Date'].astype(str)
+        self.df['Time'] = self.df['Time'].astype(str)
+
+        # Concatenate 'Date' and 'Time' columns into a single 'Datetime' string
+        self.df['Datetime'] = self.df['Date'] + self.df['Time']
+
+        # Convert 'Datetime' string to a datetime object
+        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M%S')
+
+        # Drop individual Date and Time columns
+        self.df.drop(columns=['Date', 'Time'], inplace=True)
+        return
+
+
     def expand_datetime_column(self) -> None:
 
-        print(self.df['Datetime'].head())
+        print(self.df['Date', 'Time'].head())
 
-        
         # Ensure that the "Datetime" column is in datetime format
-        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'])
+        self._create_datetime_objects(self)
 
         print(self.df['Datetime'].head())
         
@@ -145,6 +160,7 @@ class Preprocessor:
         print(self.df.head())
         # Drop the original 'Datetime' column
         self.df.drop(columns=['Datetime'], inplace=True)
+        exit()
         return 
     
 
