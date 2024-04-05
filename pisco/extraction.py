@@ -343,12 +343,17 @@ class Extractor:
         # Reset index if you want a clean, continuous index
         combined_df.reset_index(drop=True, inplace=True)      
         
-        # # Specify the column names if known, assuming the first column is date-time
-        # column_names = ['date-time', 'column2', 'column3']  # Adjust based on actual structure
+        # Specify the column names if known, assuming the first column is date-time
+        column_names = ['date-time', 'column2', 'column3']  # Adjust based on actual structure
+        column_names = [
+            "Datetime", "Latitude", 'Longitude',
+            "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1",
+            "Pressure2", "Temperature/dry-bulbTemperature2", "CloudAmountInSegment2", "CloudPhase2",
+            "Pressure3", "Temperature/dry-bulbTemperature3", "CloudAmountInSegment3", "CloudPhase3"]
 
         # Write the combined DataFrame to a new CSV file, without the index
         combined_file_path = self.build_full_output_path()
-        combined_df.to_csv(combined_file_path, sep='\t', index=False)
+        combined_df.to_csv(combined_file_path, columns=column_names, sep='\t', index=False)
 
         for file in files:
             # Delete intermediate binary output files
