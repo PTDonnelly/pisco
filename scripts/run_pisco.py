@@ -65,7 +65,7 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
 
         elif ex.data_level == "l2":
             # Isolate geographic region
-            preprocessor.select_geographic_region()
+            preprocessor.select_geographic_region(ex)
 
         # Construct Datetime column and remove individual time elements
         preprocessor.build_datetime(ex)

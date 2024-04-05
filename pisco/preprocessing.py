@@ -124,8 +124,8 @@ class Preprocessor:
 
     def select_geographic_region(self, ex: Extractor) -> None:
         # Use ex.config.latitude_range and ex.config.longitude_range to select only the data in that window
-        lat_min, lat_max = self.config.latitude_range
-        lon_min, lon_max = self.config.longitude_range
+        lat_min, lat_max = ex.config.latitude_range
+        lon_min, lon_max = ex.config.longitude_range
         
         # Filter the DataFrame for the specified geographic region
         self.df = self.df[(self.df['Latitude'] >= lat_min) & (self.df['Latitude'] <= lat_max) &
