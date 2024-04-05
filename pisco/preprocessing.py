@@ -236,11 +236,11 @@ class Preprocessor:
         # Calculate the local time
         local_time = self._calculate_local_time()
 
-        # Convert to formatted time strings
-        formatted_local_time = self._format_fractional_time_to_hhmmss(local_time)
-
         # Store the Boolean indicating day (True) or night (False) in the DataFrame
         self.df['DayNightQualifier'] = (6 < local_time) & (local_time < 18)
+        
+        # # Convert to formatted time strings
+        # formatted_local_time = self._format_fractional_time_to_hhmmss(local_time)
         # self.df['Local Time'] = formatted_local_time
 
         # Drop original time element columns (in place to save on memory)
