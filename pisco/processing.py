@@ -151,7 +151,7 @@ class Processor:
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
 
         # Merge two DataFrames based on spatial and temporal parameters
-        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle"], how='inner')
+        return pd.merge(self.df_l1c, self.df_l2, on=["Datetime", "Latitude", 'Longitude'], how='inner')
 
     @staticmethod
     def build_filter_conditions(df: pd.DataFrame, maximum_zenith_angle: int=5):
@@ -206,7 +206,7 @@ class Processor:
     @staticmethod
     def _get_reduced_fields() -> List[str]:
         reduced_fields = [
-            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier", "Local Time",
+            "Datetime", "Latitude", 'Longitude', "SatelliteZenithAngle", "DayNightQualifier",
             "Pressure1", "Temperature/dry-bulbTemperature1", "CloudAmountInSegment1", "CloudPhase1"]
         return reduced_fields
 

@@ -127,6 +127,8 @@ class Preprocessor:
     def expand_datetime_column(self) -> None:
         # Ensure that the "Datetime" column is in datetime format
         self.df['Datetime'] = pd.to_datetime(self.df['Datetime'])
+
+        print(self.df['Datetime'].head())
         
         # Extract year, month, day, hour, minute, and milliseconds components
         self.df['Year'] = self.df['Datetime'].dt.year
@@ -136,6 +138,7 @@ class Preprocessor:
         self.df['Minute'] = self.df['Datetime'].dt.minute
         self.df['Milliseconds'] = self.df['Datetime'].dt.microsecond // 1000  # datetime represents of fractional seconds as microseconds)
 
+        print(self.df.head())
         # Drop the original 'Datetime' column
         self.df.drop(columns=['Datetime'], inplace=True)
         return 
@@ -183,9 +186,11 @@ class Preprocessor:
         """
         Stores the local time Boolean indicating whether the current time is day or night.
         """
-        # Calculate the local time and store to DataFrame
+        # Calculate the local time
         local_time = self._calculate_local_time()
-        self.df['Local Time'] = local_time
+
+        # Store the Boolean indicating day (True) or night (False) in the DataFrame
+        self.df['Local Time'] = (6 < local_time) & (local_time < 18)
         return
 
 
@@ -200,10 +205,12 @@ class Preprocessor:
                                     self.df['Minute'].apply(lambda x: f'{int(x):02d}')
                                     )
         
+        print(self.df['Datetime'].head())
+        
+        exit()
+        
         # Drop original time element columns (in place to save on memory)
         self.df.drop(columns=['Year', 'Month', 'Day', 'Hour', 'Minute', 'Milliseconds'], inplace=True)
-        print(self.df.head())
-        exit()
         return  
     
 

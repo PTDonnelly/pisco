@@ -496,7 +496,6 @@ class Extractor:
         
         # Check if the file exists and is non-empty
         if file_path.exists() and file_path.stat().st_size > 0:
-            logger.error("Intermediate file exists and is non-empty.")
             return True
         else:
             logger.error("Intermediate file does not exist or is empty.")
