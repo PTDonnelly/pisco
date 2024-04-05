@@ -43,7 +43,7 @@ class Preprocessor:
         save_observations(delete_intermediate_files=None): Saves processed data to a file and optionally deletes the intermediate file.
     """
     def __init__(self, ex: Extractor, allocated_memory: int, memory_safety_margin=0.5):
-        self.intermediate_file: str = ex.full_output_path
+        self.intermediate_file: str = ex.intermediate_file_path
         self.delete_intermediate_files = ex.config.delete_intermediate_files
         self.data_level: str = ex.data_level
         self.channels: List[int] = ex.channels
