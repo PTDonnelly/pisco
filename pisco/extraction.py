@@ -330,12 +330,11 @@ class Extractor:
         
         # Initialize an empty list to store DataFrames
         df_list = []
-        
         for file in files:
-            # Read each file into a DataFrame
+            # Read each intermediate binary file into a DataFrame, append to list, then delete it
             df = pd.read_csv(file, sep='\t', header=None)
-            print(df.head())
             df_list.append(df)
+            self._delete_intermediate_file(file)
         
         # Concatenate all DataFrames along the rows (axis=0)
         combined_df = pd.concat(df_list, axis=0)
@@ -359,10 +358,6 @@ class Extractor:
         # Write the combined DataFrame to a new CSV file, without the index
         combined_file_path = self.build_full_output_path()
         combined_df.to_csv(combined_file_path, header=column_names, sep='\t', index=False)
-
-        for file in files:
-            # Delete intermediate binary output files
-            self._delete_intermediate_file(file)
         return
 
 
