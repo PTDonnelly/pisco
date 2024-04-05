@@ -459,14 +459,20 @@ class Extractor:
         for file in files:
             # Read each intermediate text file into a DataFrame
             df = pd.read_csv(file, header=None, names=['Data'])
-            
+
+            print(df.head())
+            print(len(df.columns))
             # Split single-column string into separate columns of strings
             df_expanded = df['Data'].str.split(expand=True)
             df_expanded.columns = converters.keys()
 
+            print(df.head())
+            print(len(df.columns))
+
             # Set data types of columns using converter functions
             df_expanded = self.apply_converters_to_df(df_expanded)
 
+            exit()
             # Append DataFrame to list and delete text file
             df_list.append(df_expanded)
             # self._delete_intermediate_file(file)
