@@ -269,8 +269,6 @@ class Processor:
     def aggregate_spatial_grid(self):
         # Group by binned lat-lon and date
         grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date'])
-        # Reset index to turn grouped DataFrame back into a format that resembles the original df
-        self.df_binned = grouped.reset_index()
         
         print(self.df.head())
         print(grouped.head())
