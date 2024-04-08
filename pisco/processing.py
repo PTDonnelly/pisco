@@ -139,7 +139,7 @@ class Processor:
 
         print(spectral_channels.head())
         input()
-        
+
         channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
 
         print(channel_positions)
@@ -311,9 +311,15 @@ class Processor:
         
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
+        print("merged_df")
+        print(merged_df.head())
+        input()
 
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
+        print("filtered_df")
+        print(filtered_df.head())
+        input()
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
