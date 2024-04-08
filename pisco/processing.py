@@ -290,7 +290,7 @@ class Processor:
         self.df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
 
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
-        self.df_binned.sort_values(by=['Latitude', 'Longitude'], inplace=True).reset_index(drop=True)
+        self.df_binned.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
 
         print(self.df_binned.head())
         print([col for col in self.df_binned.columns])
