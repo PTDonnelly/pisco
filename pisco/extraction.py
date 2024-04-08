@@ -442,23 +442,24 @@ class Extractor:
         # Read each intermediate text file into a DataFrame
         df = pd.read_csv(file, header=None, names=['Data'])
 
-        # Split single-column string into separate columns of strings
-        df_expanded = df['Data'].str.split(expand=True)
+        if not df.empty:
+            # Split single-column string into separate columns of strings
+            df_expanded = df['Data'].str.split(expand=True)
+            
+            # Split the zeroth column (assumed to contain datetime info like YYYYmmdd.HHMMSS) into Date and Time
+            datetime_split = df_expanded[0].str.split('.', expand=True)
+            # Drop the original zeroth column from df_expanded as it's now redundant
+            df_expanded = df_expanded.drop(columns=[0])
+            
+            # Concatenate the split datetime columns with the rest of the expanded DataFrame
+            df_final = pd.concat([datetime_split, df_expanded], axis=1)
+            df_final.columns = converters.keys()
 
-        print(df_expanded.head())
-        input()
-        # Split the zeroth column (assumed to contain datetime info like YYYYmmdd.HHMMSS) into Date and Time
-        datetime_split = df_expanded[0].str.split('.', expand=True)
-        # Drop the original zeroth column from df_expanded as it's now redundant
-        df_expanded = df_expanded.drop(columns=[0])
-        
-        # Concatenate the split datetime columns with the rest of the expanded DataFrame
-        df_final = pd.concat([datetime_split, df_expanded], axis=1)
-        df_final.columns = converters.keys()
-
-        # Set data types of columns using converter functions
-        df_final = self.apply_converters_to_df(converters, df_final)
-        return df_final
+            # Set data types of columns using converter functions
+            df_final = self.apply_converters_to_df(converters, df_final)
+            return df_final
+        else:
+            return pd.DataFrame()
 
 
     def combine_individual_l2_files(self):
