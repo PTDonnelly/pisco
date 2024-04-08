@@ -269,6 +269,8 @@ class Processor:
     def aggregate_spatial_grid(self):
         # Group by binned lat-lon and date
         grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date'])
+        # Reset index to turn grouped DataFrame back into a format that resembles the original df
+        self.df_binned = grouped.reset_index()
         
         print(self.df.head())
         print(grouped.head())
@@ -282,6 +284,15 @@ class Processor:
         # Calculate weighted averages for icy and clear OLR
         self.df_binned['OLR_icy'] = sums['OLR_icy_weighted'] / sums['Weight_icy']
         self.df_binned['OLR_clear'] = sums['OLR_clear_weighted'] / sums['Weight_clear']
+
+        # Drop the original Latitude, Longitude, and Datetime columns from the binned df
+        self.df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
+
+        # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
+        self.df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
+
+        # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
+        self.df_binned.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
         return
 
     def downsample_measurements(self):
@@ -300,24 +311,7 @@ class Processor:
         self.calculate_weighted_olr()
 
         # Group measurements by location and time
-        self.aggregate_spatial_grid()
-
-        # Group by the new lat-lon bins and 'Date', then calculate mean of measurements for each bin
-        # Exclude original Latitude, Longitude, and Datetime columns from the mean calculation
-        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date']).mean()
-
-        # Reset index to turn grouped DataFrame back into a format that resembles the original df
-        self.df_binned = grouped.reset_index()
-
-        # Drop the original Latitude, Longitude, and Datetime columns from the binned df
-        self.df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
-
-        # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
-        self.df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
-
-        # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
-        self.df_binned.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
-        
+        self.aggregate_spatial_grid()        
         return
 
 
