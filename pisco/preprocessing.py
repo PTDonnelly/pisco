@@ -110,7 +110,8 @@ class Preprocessor:
         else:
             # Read in as normal
             logger.info(self.intermediate_file)
-            self.df = pd.read_csv(self.intermediate_file, sep="\t", dtype=dtype_dict)
+            input()
+            self.df = pd.read_csv(self.intermediate_file, sep="\t", header=0, dtype=dtype_dict)
         return
 
 
