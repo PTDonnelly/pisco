@@ -51,7 +51,7 @@ python /data/pdonnelly/github/pisco/scripts/run_pisco.py {allocated_memory} {yea
     return script_name
 
 
-def submit_job_file(script_name: str) -> str:
+def submit_job_file(output_path: str, script_name: str) -> str:
     try:
         # Submit the batch script to SLURM using sbatch and capture the output
         result = subprocess.run(["sbatch", script_name], capture_output=True, text=True)
@@ -59,7 +59,7 @@ def submit_job_file(script_name: str) -> str:
         # Check if the command was successful
         if result.returncode == 0:
             # Log the standard output if the command succeeded
-            logging.info(f"Batch script submitted successfully: {result.stdout.strip()}")
+            logging.info(f"Batch script submitted successfully: {output_path} == {result.stdout.strip()}")
             # Extract and return the job ID
             job_id = result.stdout.strip().split()[-1]  # Assumes the job ID is the last element
             return job_id
