@@ -11,7 +11,6 @@ def create_output_directory(datapath: str, satellite_identifier: str, year: str,
     output_path = os.path.join(datapath, satellite_identifier, year, month, day)
     try:
         os.makedirs(output_path, exist_ok=True)
-        logging.info(f"Created directory: {output_path}")
     except OSError as e:
         logging.error(f"Error creating directory: {output_path}: {e}")
     return output_path
@@ -59,7 +58,7 @@ def submit_job_file(output_path: str, script_name: str) -> str:
         # Check if the command was successful
         if result.returncode == 0:
             # Log the standard output if the command succeeded
-            logging.info(f"Batch script submitted successfully: {output_path} == {result.stdout.strip()}")
+            logging.info(f"{result.stdout.strip()} at {output_path}")
             # Extract and return the job ID
             job_id = result.stdout.strip().split()[-1]  # Assumes the job ID is the last element
             return job_id
