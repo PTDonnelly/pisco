@@ -1,12 +1,12 @@
 {   
     // submit_job: bool, Specifies if run should be submitted to SLURM (True) or run a login node (False)
-    "submit_job": true, 
+    "submit_job": false, 
     
     // L1C: bool, Specifies whether Level 1C data should be processed
-    "L1C": true,
+    "L1C": false,
 
     // L2: bool, Specifies whether Level 2 data should be processed
-    "L2": true,
+    "L2": false,
 
     // process: bool, Specifies whether Level 1C and Level 2 data should be correlated for filtering spectra
     "process": true,
