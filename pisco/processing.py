@@ -134,8 +134,8 @@ class Processor:
         # Extract the numbers from the column names
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
 
-        print(spectral_channels)
-        
+        print(spectral_channels.head())
+
         channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
 
         print(channel_positions)
