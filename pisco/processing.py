@@ -265,6 +265,7 @@ class Processor:
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
         return 
     
+
     def calculate_weighted_olr(self, clear_icy_threshold: float=0.3):
         self.df['CloudFraction'] = self.df['CloudAmountInSegment1'] / 100
         self.df['Weight_icy'] = self.df['CloudFraction']
@@ -273,6 +274,7 @@ class Processor:
         self.df['OLR_icy_weighted'] = self.df['OLR'] * self.df['Weight_icy']
         self.df['OLR_clear_weighted'] = self.df['OLR'] * self.df['Weight_clear']
         return
+
 
     def aggregate_spatial_grid(self):
         # Group by binned lat-lon and date
@@ -293,10 +295,9 @@ class Processor:
 
         # Select the columns to keep in the final DataFrame
         self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean', 'OLR_icy', 'OLR_clear']]
-
-        print(self.df_binned.head())
         return
     
+
     def clean_up_binned_dataframe(self):
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
         self.df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
@@ -307,6 +308,7 @@ class Processor:
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
         self.df_binned.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
         return
+
 
     def downsample_measurements(self):
         """
