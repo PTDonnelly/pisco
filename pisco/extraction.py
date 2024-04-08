@@ -444,6 +444,9 @@ class Extractor:
 
         # Split single-column string into separate columns of strings
         df_expanded = df['Data'].str.split(expand=True)
+
+        print(df_expanded.head())
+        input()
         # Split the zeroth column (assumed to contain datetime info like YYYYmmdd.HHMMSS) into Date and Time
         datetime_split = df_expanded[0].str.split('.', expand=True)
         # Drop the original zeroth column from df_expanded as it's now redundant
