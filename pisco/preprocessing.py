@@ -100,7 +100,7 @@ class Preprocessor:
 
 
     def open_text_file(self, ex: Extractor) -> None:
-        logger.info("Loading intermediate text file:")
+        logger.info(f"Loading intermediate text file: {self.intermediate_file}")
         
         # Create dtype dict from combined fields
         dtype_dict = ex._get_fields_and_datatypes()
@@ -109,8 +109,6 @@ class Preprocessor:
             self.df = self.read_file_in_chunks(dtype_dict)
         else:
             # Read in as normal
-            logger.info(self.intermediate_file)
-            input()
             self.df = pd.read_csv(self.intermediate_file, sep="\t", header=0, dtype=dtype_dict)
         return
 
