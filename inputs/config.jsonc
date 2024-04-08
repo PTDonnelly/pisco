@@ -1,9 +1,9 @@
 {   
     // submit_job: bool, Specifies if run should be submitted to SLURM (True) or run a login node (False)
-    "submit_job": false, 
+    "submit_job": true, 
     
     // L1C: bool, Specifies whether Level 1C data should be processed
-    "L1C": false,
+    "L1C": true,
 
     // L2: bool, Specifies whether Level 2 data should be processed
     "L2": true,
