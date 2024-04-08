@@ -258,7 +258,7 @@ class Processor:
     
     
     def calculate_weighted_olr(self, clear_icy_threshold: float=0.3):
-        self.df['CloudFraction'] = self.df['CloudAmountInSegment'] / 100
+        self.df['CloudFraction'] = self.df['CloudAmountInSegment1'] / 100
         self.df['Weight_icy'] = self.df['CloudFraction']
         self.df['Weight_clear'] = self.df['CloudFraction'].apply(lambda x: 1-x if x < clear_icy_threshold else np.nan)
         self.df['Weight_clear'] = self.df['Weight_clear'].fillna(1)
