@@ -257,6 +257,14 @@ class Processor:
         return
     
     
+    def prepare_coarse_grid(self):
+        # Convert datetimes, extract dates, and round lat-lon for binning
+        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+        self.df['Date'] = self.df['Datetime'].dt.date
+        self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
+        self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
+        return 
+    
     def calculate_weighted_olr(self, clear_icy_threshold: float=0.3):
         self.df['CloudFraction'] = self.df['CloudAmountInSegment1'] / 100
         self.df['Weight_icy'] = self.df['CloudFraction']
@@ -269,20 +277,27 @@ class Processor:
     def aggregate_spatial_grid(self):
         # Group by binned lat-lon and date
         grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date'])
-        
-        print(self.df.head())
-        print(grouped.head())
 
-        # Calculate mean OLR of all spectra
-        self.df_binned['OLR_mean'] = grouped['OLR'].mean()
-        
-        # Sum weights and weighted OLR values for icy and clear
-        sums = grouped[['OLR_icy_weighted', 'Weight_icy', 'OLR_clear_weighted', 'Weight_clear']].sum()
-        
+        # Directly calculate mean OLR for each group
+        mean_OLR = grouped['OLR'].mean().reset_index(name='OLR_mean')
+
+        # Calculate sums for weighted values within each group
+        sums = grouped[['OLR_icy_weighted', 'Weight_icy', 'OLR_clear_weighted', 'Weight_clear']].sum().reset_index()
+
         # Calculate weighted averages for icy and clear OLR
-        self.df_binned['OLR_icy'] = sums['OLR_icy_weighted'] / sums['Weight_icy']
-        self.df_binned['OLR_clear'] = sums['OLR_clear_weighted'] / sums['Weight_clear']
+        sums['OLR_icy'] = sums['OLR_icy_weighted'] / sums['Weight_icy']
+        sums['OLR_clear'] = sums['OLR_clear_weighted'] / sums['Weight_clear']
 
+        # Merge the mean OLR DataFrame with the sums DataFrame on their common columns
+        self.df_binned = pd.merge(mean_OLR, sums, on=['Latitude_binned', 'Longitude_binned', 'Date'])
+
+        # Select the columns to keep in the final DataFrame
+        self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean', 'OLR_icy', 'OLR_clear']]
+
+        print(self.df_binned.head())
+        return
+    
+    def clean_up_binned_dataframe(self):
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
         self.df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
 
@@ -299,17 +314,16 @@ class Processor:
         the measurements within each bin. A new Datetime column is added back, containing
         just the date part of the original datetime objects.
         """
-        # Convert datetimes, extract dates, and round lat-lon for binning
-        self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
-        self.df['Date'] = self.df['Datetime'].dt.date
-        self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
-        self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
+        self.prepare_coarse_grid()
 
         # Weight the OLR calculation by the cloud fraction and type
         self.calculate_weighted_olr()
 
         # Group measurements by location and time
-        self.aggregate_spatial_grid()        
+        self.aggregate_spatial_grid()
+
+        # Tidy up columns before saving
+        self.clean_up_binned_dataframe()
         return
 
 
