@@ -262,14 +262,17 @@ class Processor:
         self.df['Weight_icy'] = self.df['CloudFraction']
         self.df['Weight_clear'] = self.df['CloudFraction'].apply(lambda x: 1-x if x < clear_icy_threshold else np.nan)
         self.df['Weight_clear'] = self.df['Weight_clear'].fillna(1)
-        self.df['OLR_icy'] = self.df['OLR'] * self.df['Weight_icy']
-        self.df['OLR_clear'] = self.df['OLR'] * self.df['Weight_clear']
+        self.df['OLR_icy_weighted'] = self.df['OLR'] * self.df['Weight_icy']
+        self.df['OLR_clear_weighted'] = self.df['OLR'] * self.df['Weight_clear']
         return
 
     def aggregate_spatial_grid(self):
         # Group by binned lat-lon and date
         grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date'])
         
+        print(self.df.head())
+        print(grouped.head())
+
         # Calculate mean OLR of all spectra
         self.df_binned['OLR_mean'] = grouped['OLR'].mean()
         
