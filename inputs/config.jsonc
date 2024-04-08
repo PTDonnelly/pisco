@@ -27,7 +27,7 @@
     "datapath": "/data/pdonnelly/iasi/",
 
     // delete_intermediate_files: bool, Specifies whether intermediate OBR files and files from Preprocessor should be deleted (leaving only the final merged dataset)
-    "delete_intermediate_files": true,
+    "delete_intermediate_files": false,
 
     // year_list: List[int], List of years for extraction
     "year_list": [2018, 2019, 2020, 2021, 2022, 2023],
