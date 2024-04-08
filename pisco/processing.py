@@ -162,6 +162,9 @@ class Processor:
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
 
+        print(self.df_l1c.head())
+        print(self.df_l2.head())
+        exit()
         # Ensure both Datetime columns are datetime objects
         self.df_l1c['Datetime'] = pd.to_datetime(self.df_l1c['Datetime'])
         self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
