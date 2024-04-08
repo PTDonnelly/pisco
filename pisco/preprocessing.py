@@ -114,8 +114,6 @@ class Preprocessor:
 
 
     def fix_spectrum_columns(self) -> None:
-        logger.info("Renaming spectral columns")
-        input()
         # Create a renaming mapping by prepending "Spectrum " to each spectral channel column name
         rename_mapping = {str(channel_id): f"Spectrum {channel_id}" for channel_id in self.channels}
 
