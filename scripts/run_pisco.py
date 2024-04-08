@@ -57,7 +57,6 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         preprocessor = Preprocessor(ex, memory)
         
         # Read OBR textfiles and store to pandas DataFrame
-        print(f"##### {ex.data_level}")
         preprocessor.open_text_file(ex)
         
         if ex.data_level == "l1c":
