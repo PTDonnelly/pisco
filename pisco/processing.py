@@ -292,8 +292,7 @@ class Processor:
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
         self.df_binned.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
 
-        print(self.df_binned.head())
-        print([col for col in self.df_binned.columns])
+        print(self.df_binned.info())
         
         return
 
@@ -338,6 +337,7 @@ class Processor:
                 pickle.dump(self.df, f)
 
             self.df.to_csv(f"{file_root}.csv", sep='\t', index=False)
+            self.df_binned.to_csv(f"{file_root}_binned.csv", sep='\t', index=False)
             
             # Output information on the final DataFrame
             logger.info(self.df.info())
