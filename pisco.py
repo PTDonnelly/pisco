@@ -61,7 +61,7 @@ def main():
 
                 if config.submit_job:
                     # Submit the batch script to SLURM using sbatch and capture the last job ID
-                    job_id = job.submit_job_file(config.datapath, script_name)
+                    job_id = job.submit_job_file(output_path, script_name)
                     if job_id:
                         last_job_id = job_id  # Update last_job_id with the latest submitted job ID
 

@@ -56,6 +56,7 @@ class Processor:
         self.df_l1c: object = None
         self.df_l2: object = None
         self.df: object = None
+        self.df_binned: object = None
 
 
     def _get_intermediate_analysis_data_paths(self) -> None:
@@ -280,19 +281,19 @@ class Processor:
         grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date']).mean()
 
         # Reset index to turn grouped DataFrame back into a format that resembles the original df
-        df_binned = grouped.reset_index()
+        self.df_binned = grouped.reset_index()
 
         # Drop the original Latitude, Longitude, and Datetime columns from the binned df
-        df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
+        self.df_binned.drop(columns=['Latitude', 'Longitude', 'Datetime'], errors='ignore', inplace=True)
 
         # Rename the binned latitude and longitude columns to 'Latitude' and 'Longitude'
-        df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
-
-        # Replace the original DataFrame with the binned version
-        self.df = df_binned
+        self.df_binned.rename(columns={'Latitude_binned': 'Latitude', 'Longitude_binned': 'Longitude'}, inplace=True)
 
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
-        self.df = self.df.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
+        self.df_binned.sort_values(by=['Latitude', 'Longitude'], inplace=True).reset_index(drop=True)
+
+        print(self.df_binned.head())
+        print([col for col in self.df_binned.columns])
         
         return
 
