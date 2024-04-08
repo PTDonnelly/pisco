@@ -130,20 +130,11 @@ class Processor:
     def get_dataframe_spectral_grid(self) -> List[float]:
         # Get the full IASI spectral grid
         _, wavenumber_grid = self._get_iasi_spectral_grid()
-        
-        print(self.df.head())
-        input()
 
         # Extract the numbers from the column names
         spectral_channels = self.df[[col for col in self.df.columns if 'Spectrum' in col]]
 
-        print(spectral_channels.head())
-        input()
-
         channel_positions = spectral_channels.columns.str.split().str[-1].astype(int)
-
-        print(channel_positions)
-        input()
 
         # Extract the wavenumbers corresponding to the channel positions
         extracted_wavenumbers = [wavenumber_grid[position-1] for position in channel_positions]
@@ -161,7 +152,7 @@ class Processor:
         # Latitude and longitude values are rounded to 4 decimal places.
         self.df_l1c[['Latitude', 'Longitude']] = self.df_l1c[['Latitude', 'Longitude']].round(4)
         self.df_l2[['Latitude', 'Longitude']] = self.df_l2[['Latitude', 'Longitude']].round(4)
-        
+
         # Ensure both Datetime columns are datetime objects
         self.df_l1c['Datetime'] = pd.to_datetime(self.df_l1c['Datetime'])
         self.df_l2['Datetime'] = pd.to_datetime(self.df_l2['Datetime'])
@@ -311,15 +302,9 @@ class Processor:
         
         # Merge two DataFrames based on space-time co-ordinates
         merged_df = self.merge_datasets()
-        print("merged_df")
-        print(merged_df.head())
-        input()
-
+    
         # Filter merged dataset to throw away unwanted or bad measurements
         filtered_df = self.filter_observations(merged_df)
-        print("filtered_df")
-        print(filtered_df.head())
-        input()
 
         # Reduce dataset to specified parameters
         self.df = self.reduce_fields(filtered_df)
