@@ -34,7 +34,6 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
     if ex.data_level == 'l1c':
         # Run OBR from date parameters
         ex.extract_files()
-    
     elif ex.data_level == 'l2':
         logging.info(f"Extracting: IASI L2 Cloud Products")
 
@@ -62,7 +61,6 @@ def preprocess_iasi(ex: Extractor, memory: int, data_level: str):
         if ex.data_level == "l1c":
             # Rename the spectral columns to contain "Spectrum"
             preprocessor.fix_spectrum_columns()
-
         elif ex.data_level == "l2":
             # Isolate geographic region
             preprocessor.select_geographic_region(ex)
