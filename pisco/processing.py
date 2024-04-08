@@ -234,11 +234,7 @@ class Processor:
         integrated_spectrum = np.trapz(radiance, wavenumbers)
         integrated_error = np.sqrt(np.trapz(radiance_errors ** 2, wavenumbers))
 
-        cloud_fraction = row['CloudAmountInSegment1'] / 100  # Convert percentage to fraction
-        weighted_integrated_spectrum = integrated_spectrum * cloud_fraction
-        weighted_integrated_error = integrated_error * cloud_fraction
-
-        return pd.Series((weighted_integrated_spectrum, weighted_integrated_error))
+        return pd.Series((integrated_spectrum, integrated_error))
     
 
     def integrate_spectrum_to_olr(self) -> None:
@@ -260,21 +256,48 @@ class Processor:
         self.df.drop(columns=[col for col in self.df.columns if 'Spectrum' in col], inplace=True)
         return
     
+    
+    def calculate_weighted_olr(self, clear_icy_threshold: float=0.3):
+        self.df['CloudFraction'] = self.df['CloudAmountInSegment'] / 100
+        self.df['Weight_icy'] = self.df['CloudFraction']
+        self.df['Weight_clear'] = self.df['CloudFraction'].apply(lambda x: 1-x if x < clear_icy_threshold else np.nan)
+        self.df['Weight_clear'] = self.df['Weight_clear'].fillna(1)
+        self.df['OLR_icy'] = self.df['OLR'] * self.df['Weight_icy']
+        self.df['OLR_clear'] = self.df['OLR'] * self.df['Weight_clear']
+        return
 
-    def downsample_spatial_grid(self):
+    def aggregate_spatial_grid(self):
+        # Group by binned lat-lon and date
+        grouped = self.df.groupby(['Latitude_binned', 'Longitude_binned', 'Date'])
+        
+        # Calculate mean OLR of all spectra
+        self.df_binned['OLR_mean'] = grouped['OLR'].mean()
+        
+        # Sum weights and weighted OLR values for icy and clear
+        sums = grouped[['OLR_icy_weighted', 'Weight_icy', 'OLR_clear_weighted', 'Weight_clear']].sum()
+        
+        # Calculate weighted averages for icy and clear OLR
+        self.df_binned['OLR_icy'] = sums['OLR_icy_weighted'] / sums['Weight_icy']
+        self.df_binned['OLR_clear'] = sums['OLR_clear_weighted'] / sums['Weight_clear']
+        return
+
+    def downsample_measurements(self):
         """
         Performs spatial binning of measurements onto a 1x1 degree lat-lon grid and averages
         the measurements within each bin. A new Datetime column is added back, containing
         just the date part of the original datetime objects.
         """
-        # Convert 'Datetime' strings to datetime objects
+        # Convert datetimes, extract dates, and round lat-lon for binning
         self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
-        # Extract just the date part from the 'Datetime' column
         self.df['Date'] = self.df['Datetime'].dt.date
-
-        # Round latitude and longitude to nearest whole number to create grid bins
         self.df['Latitude_binned'] = self.df['Latitude'].round().astype(int)
         self.df['Longitude_binned'] = self.df['Longitude'].round().astype(int)
+
+        # Weight the OLR calculation by the cloud fraction and type
+        self.calculate_weighted_olr()
+
+        # Group measurements by location and time
+        self.aggregate_spatial_grid()
 
         # Group by the new lat-lon bins and 'Date', then calculate mean of measurements for each bin
         # Exclude original Latitude, Longitude, and Datetime columns from the mean calculation
@@ -291,8 +314,6 @@ class Processor:
 
         # Ensure the DataFrame is sorted by Latitude and Longitude for readability and consistency
         self.df_binned.sort_values(by=['Latitude', 'Longitude']).reset_index(drop=True)
-
-        print(self.df_binned.info())
         
         return
 
@@ -313,7 +334,7 @@ class Processor:
         self.integrate_spectrum_to_olr()
 
         # Downsample measurements on to 1x1 degree spatial grid
-        self.downsample_spatial_grid()
+        self.downsample_measurements()
         return
     
     @staticmethod
