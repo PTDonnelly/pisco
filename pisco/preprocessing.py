@@ -157,7 +157,10 @@ class Preprocessor:
             # Concatenate 'Date' and 'Time' columns into a single 'Datetime' string
             self.df['Datetime'] = self.df['Date'] + self.df['Time']
             # Convert 'Datetime' string to a datetime object
-            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M')
+            self.df['Datetime'] = pd.to_datetime(self.df['Datetime'], format='%Y%m%d%H%M%S')
+            # Round down to the nearest minute
+            self.df['Datetime'] = self.df['Datetime'].dt.floor('T')
+
 
             # Drop individual Date and Time columns
             self.df.drop(columns=['Date', 'Time'], inplace=True)
