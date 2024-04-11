@@ -36,7 +36,7 @@ def check_pisco_log(output_path):
         except FileNotFoundError:
             # If 'pisco.log' does not exist, processing should proceed
             pass
-        print(output_path)
+        
         # If 'pisco.log' does not contain the completion string or does not exist, return False
         return False
 

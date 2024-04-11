@@ -62,16 +62,17 @@ def main():
                 if not run_exists:
                     # Create SLURM shell script and log file, and place them in the output folder
                     script_name = job.create_job_file(output_path, year, month, day)
-                    # if config.submit_job:
-                    #     # Submit the batch script to SLURM using sbatch and capture the last job ID
-                    #     job_id = job.submit_job_file(output_path, script_name)
-                    #     if job_id:
-                    #         # Update last_job_id with the latest submitted job ID
-                    #         last_job_id = job_id
 
-    # # After all processing jobs are submitted, submit a cleanup job with dependency
-    # if config.submit_job:
-    #     job.cleanup_job_files(config.datapath, last_job_id)
+                    if config.submit_job:
+                        # Submit the batch script to SLURM using sbatch and capture the last job ID
+                        job_id = job.submit_job_file(output_path, script_name)
+                        if job_id:
+                            # Update last_job_id with the latest submitted job ID
+                            last_job_id = job_id
+                            
+    # After all processing jobs are submitted, submit a cleanup job with dependency
+    if config.submit_job:
+        job.cleanup_job_files(config.datapath, last_job_id)
 
 if __name__ == "__main__":
     main()
