@@ -28,10 +28,13 @@ def check_pisco_log(output_path):
                  True otherwise.
         """
         log_file_path = os.path.join(output_path, 'pisco.log')
+        print(log_file_path)
         try:
             with open(log_file_path, 'r') as log_file:
                 for line in log_file:
+                    print(line)
                     if "Pisco processing complete." in line:
+                        input()
                         return False
         except FileNotFoundError:
             # If 'pisco.log' does not exist, processing should proceed
