@@ -16,6 +16,31 @@ def create_output_directory(datapath: str, satellite_identifier: str, year: str,
     return output_path
 
 
+def check_pisco_log(output_path):
+        """
+        Checks if 'pisco.log' exists in the specified output directory and contains
+        the string "Pisco processing complete.". If the condition is met, it means
+        a processing run has been completed, and returns False. Otherwise, returns True
+        indicating that the processing should proceed.
+
+        :param output_path: Path to the output directory where 'pisco.log' is expected.
+        :return: False if 'pisco.log' exists and contains "Pisco processing complete.",
+                 True otherwise.
+        """
+        log_file_path = os.path.join(output_path, 'pisco.log')
+        try:
+            with open(log_file_path, 'r') as log_file:
+                for line in log_file:
+                    if "Pisco processing complete." in line:
+                        return False
+        except FileNotFoundError:
+            # If 'pisco.log' does not exist, processing should proceed
+            pass
+
+        # If 'pisco.log' does not contain the completion string or does not exist, return True
+        return True
+
+
 def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
     year, month, day = format_date_elements(year, month, day)
     

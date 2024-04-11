@@ -372,8 +372,6 @@ class Processor:
             self.df_binned.to_csv(f"{file_root}_binned.csv", sep='\t', index=False)
             
             # Output information on the final DataFrame
-            logger.info(self.df.info())
-            logger.info(self.df.head())
             logger.info(f"Saved merged products to: {output_file}")
 
         except OSError as e:
