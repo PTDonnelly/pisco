@@ -24,8 +24,8 @@ def check_pisco_log(output_path):
         indicating that the processing should proceed.
 
         :param output_path: Path to the output directory where 'pisco.log' is expected.
-        :return: False if 'pisco.log' exists and contains "Pisco processing complete.",
-                 True otherwise.
+        :return: True if 'pisco.log' exists and contains "Pisco processing complete.",
+                 False otherwise.
         """
         log_file_path = os.path.join(output_path, 'pisco.log')
         print(log_file_path)
@@ -35,13 +35,13 @@ def check_pisco_log(output_path):
                     print(line)
                     if "Pisco processing complete." in line:
                         input()
-                        return False
+                        return True
         except FileNotFoundError:
             # If 'pisco.log' does not exist, processing should proceed
             pass
 
-        # If 'pisco.log' does not contain the completion string or does not exist, return True
-        return True
+        # If 'pisco.log' does not contain the completion string or does not exist, return False
+        return False
 
 
 def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
