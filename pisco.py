@@ -62,7 +62,6 @@ def main():
                 if not run_exists:
                     # Create SLURM shell script and log file, and place them in the output folder
                     script_name = job.create_job_file(output_path, year, month, day)
-                    print(output_path)
                     # if config.submit_job:
                     #     # Submit the batch script to SLURM using sbatch and capture the last job ID
                     #     job_id = job.submit_job_file(output_path, script_name)
