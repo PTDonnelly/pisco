@@ -11,6 +11,7 @@ def create_output_directory(datapath: str, satellite_identifier: str, year: str,
     output_path = os.path.join(datapath, satellite_identifier, year, month, day)
     try:
         os.makedirs(output_path, exist_ok=True)
+        subprocess.run(["chmod", "+x", output_path])
     except OSError as e:
         logging.error(f"Error creating directory: {output_path}: {e}")
     return output_path
