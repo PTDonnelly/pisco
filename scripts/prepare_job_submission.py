@@ -33,9 +33,12 @@ def check_pisco_log(output_path):
                 for line in log_file:
                     if "Pisco processing complete." in line:
                         return True
+        except PermissionError:
+            print("Permission denied to access the log file.")
+            return False
         except FileNotFoundError:
-            # If 'pisco.log' does not exist, processing should proceed
-            pass
+            print("Log file not found.")
+            return False
         
         # If 'pisco.log' does not contain the completion string or does not exist, return False
         return False
@@ -56,6 +59,9 @@ def create_job_file(output_path: str, year: str, month: str, day: str) -> str:
 #SBATCH --time=01:00:00
 #SBATCH --ntasks=1
 #SBATCH --mem={allocated_memory}GB
+
+# Set umask to allow full permissions for the created log file
+umask 000
 
 # Purge all modules to prevent conflict with current environnement
 module purge
