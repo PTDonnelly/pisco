@@ -24,7 +24,7 @@ def check_pisco_log(output_path):
         """
         Checks if 'pisco.log' exists in the specified output directory and contains
         the string "Pisco processing complete.". If the condition is met, it means
-        a processing run has been completed, and returns False. Otherwise, returns True
+        a processing run has been completed, and returns True. Otherwise, returns False
         indicating that the processing should proceed.
 
         :param output_path: Path to the output directory where 'pisco.log' is expected.
