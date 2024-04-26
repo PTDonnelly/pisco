@@ -3,6 +3,9 @@ import os
 import subprocess
 from typing import Tuple
 
+# Obtain a logger for this module
+logger = logging.getLogger(__name__)
+
 def format_date_elements(year: int, month: int, day: int) -> Tuple[str, str, str]:
     return (f"{year:04d}", f"{month:02d}", f"{day:02d}")
 
@@ -35,10 +38,10 @@ def check_pisco_log(output_path):
                     if "Pisco processing complete." in line:
                         return True
         except PermissionError:
-            print("Permission denied to access the log file.")
+            logging.error(f"Permission denied: {log_file_path}.")
             return False
         except FileNotFoundError:
-            print("Log file not found.")
+            # logging.error(f"Log file not found: {log_file_path}")
             return False
         
         # If 'pisco.log' does not contain the completion string or does not exist, return False
