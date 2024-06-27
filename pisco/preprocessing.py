@@ -120,18 +120,7 @@ class Preprocessor:
         # Rename the columns using the mapping
         self.df.rename(columns=rename_mapping, inplace=True)
         return
-
-
-    def select_geographic_region(self, ex: Extractor) -> None:
-        # Use ex.config.latitude_range and ex.config.longitude_range to select only the data in that window
-        lat_min, lat_max = ex.config.latitude_range
-        lon_min, lon_max = ex.config.longitude_range
-        
-        # Filter the DataFrame for the specified geographic region
-        self.df = self.df[(self.df['Latitude'] >= lat_min) & (self.df['Latitude'] <= lat_max) &
-                          (self.df['Longitude'] >= lon_min) & (self.df['Longitude'] <= lon_max)]
-        return
-    
+   
 
     def build_datetime(self, ex: Extractor) -> List:
         """
