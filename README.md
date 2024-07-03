@@ -76,6 +76,10 @@ Use your own JSON configuration file to initialize a `Configurer` object.
 config = Configurer("path_to_your_config_file.json")
 ```
 
+### SLURM job sheduler
+
+Currently it is set up to work with my (pdonnelly) user profile and space on SPIRIT, absolutely change this when you use it yourself. You can change this in /pisco/scripts/prepare_job_submission.py
+
 ## Optional Extra: Postprocessor Class
 **This is essentially just plotting code used for this specific analysis. This class can be modified or ignored entirely.**
 
