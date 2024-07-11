@@ -267,12 +267,12 @@ class Processor:
     
 
     def calculate_weighted_olr(self, clear_icy_threshold: float=0.3):
-        self.df['CloudFraction'] = self.df['CloudAmountInSegment1'] / 100
-        self.df['Weight_icy'] = self.df['CloudFraction']
-        self.df['Weight_clear'] = self.df['CloudFraction'].apply(lambda x: 1-x if x < clear_icy_threshold else np.nan)
-        self.df['Weight_clear'] = self.df['Weight_clear'].fillna(1)
-        self.df['OLR_icy_weighted'] = self.df['OLR'] * self.df['Weight_icy']
-        self.df['OLR_clear_weighted'] = self.df['OLR'] * self.df['Weight_clear']
+        # self.df['CloudFraction'] = self.df['CloudAmountInSegment1'] / 100
+        # self.df['Weight_icy'] = self.df['CloudFraction']
+        # self.df['Weight_clear'] = self.df['CloudFraction'].apply(lambda x: 1-x if x < clear_icy_threshold else np.nan)
+        # self.df['Weight_clear'] = self.df['Weight_clear'].fillna(1)
+        # self.df['OLR_icy_weighted'] = self.df['OLR'] * self.df['Weight_icy']
+        # self.df['OLR_clear_weighted'] = self.df['OLR'] * self.df['Weight_clear']
         return
 
 
@@ -283,18 +283,24 @@ class Processor:
         # Directly calculate mean OLR for each group
         mean_OLR = grouped['OLR'].mean().reset_index(name='OLR_mean')
 
-        # Calculate sums for weighted values within each group
-        sums = grouped[['OLR_icy_weighted', 'Weight_icy', 'OLR_clear_weighted', 'Weight_clear']].sum().reset_index()
+        # # Calculate sums for weighted values within each group
+        # sums = grouped[['OLR_icy_weighted', 'Weight_icy', 'OLR_clear_weighted', 'Weight_clear']].sum().reset_index()
 
-        # Calculate weighted averages for icy and clear OLR
-        sums['OLR_icy'] = sums['OLR_icy_weighted'] / sums['Weight_icy']
-        sums['OLR_clear'] = sums['OLR_clear_weighted'] / sums['Weight_clear']
+        # # Calculate weighted averages for icy and clear OLR
+        # sums['OLR_icy'] = sums['OLR_icy_weighted'] / sums['Weight_icy']
+        # sums['OLR_clear'] = sums['OLR_clear_weighted'] / sums['Weight_clear']
+
+        # # Merge the mean OLR DataFrame with the sums DataFrame on their common columns
+        # self.df_binned = pd.merge(mean_OLR, sums, on=['Latitude_binned', 'Longitude_binned', 'Date'])
+
+        # # Select the columns to keep in the final DataFrame
+        # self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean', 'OLR_icy', 'OLR_clear']]
 
         # Merge the mean OLR DataFrame with the sums DataFrame on their common columns
-        self.df_binned = pd.merge(mean_OLR, sums, on=['Latitude_binned', 'Longitude_binned', 'Date'])
+        self.df_binned = pd.merge(mean_OLR, on=['Latitude_binned', 'Longitude_binned', 'Date'])
 
         # Select the columns to keep in the final DataFrame
-        self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean', 'OLR_icy', 'OLR_clear']]
+        self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean']]
         return
     
 
