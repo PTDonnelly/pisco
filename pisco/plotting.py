@@ -1,9 +1,11 @@
+import gzip
 import os
 from collections import defaultdict
 from typing import List, Dict, Tuple, Optional, Union
 import imageio
 import numpy as np
 import pandas as pd
+import pickle
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
@@ -12,98 +14,19 @@ class Plotter:
     """
     Class to contain useful plotting functions for the IASI dataset
     """
-    def __init__(self, datapath: str, target_year: str, target_month: str, target_days: List[str], fontsize: float, dpi: int):
+    def __init__(self, datapath: str, fontsize: float, dpi: int):
         """
-        Initializes the Plotter class with a given data path.
+        Initialises the Plotter class with a given data path.
 
         Args:
             datapath (str): The path to the data directory.
         """
         self.datapath = datapath
-        self.target_year = target_year
-        self.target_month = target_month
-        self.target_days = target_days
         self.fontsize = fontsize
         self.dpi = dpi
-        self.files_by_date: Dict[Tuple[str, str, str], List[str]] = defaultdict(list)
         self.day_night_dictionary = {"night": 0, "day": 1, "twilight": 2}
         self.cloud_phase_dictionary = {"liquid": 1, "icy": 2, "mixed": 3, "clear": 4}
 
-    # IASI-specific methods
-    def _get_iasi_spectral_grid(self):
-        spectral_grid = np.loadtxt("./inputs/iasi_spectral_grid.txt")
-        channels = spectral_grid[:, 0]
-        wavenumber_grid = spectral_grid[:, 1]
-        return wavenumber_grid
-
-    def get_dataframe_spectral_grid(self, df: pd.DataFrame) -> List[float]:
-        # Get the full IASI spectral grid
-        wavenumber_grid = self._get_iasi_spectral_grid()
-        # Extract the numbers from the column names
-        channel_positions = df.columns.str.split().str[-1].astype(int)
-        # Extract the wavenumbers corresponding to the channel positions
-        extracted_wavenumbers = [wavenumber_grid[position] for position in channel_positions]
-        return extracted_wavenumbers
-
-    # File I/O methods
-    def organize_files_by_date(self) -> None:
-        """
-        Organizes .csv files in the data directory by date.
-
-        The date is inferred from the directory structure: year/month/day.
-        The result is stored in self.files_by_date, which is a dictionary
-        mapping from (year, month, day) tuples to lists of file paths.
-
-        This creates a dictionary with keys as dates (year, month, day) and values as lists of files.
-        """
-        for root, dirs, files in os.walk(self.datapath):
-            for file in files:
-                if ".csv" in file:
-                    # Split the root directory path and get year, month and day
-                    dir_structure = os.path.normpath(root).split(os.sep)
-                    year, month, day = dir_structure[-3], dir_structure[-2], dir_structure[-1]
-
-                    # Append the file path to the corresponding date
-                    self.files_by_date[(year, month, day)].append(os.path.join(root, file))
-    
-    def select_files(self) -> List[str]:
-        """
-        Selects files from the dictionary created by organize_files_by_date method
-        based on a target year, month, days and file name part.
-
-        Args:
-            target_year (str): The target year as a string.
-            target_month (str): The target month as a string.
-            target_days (List[str]): The target days as a list of strings.
-            target_file_part (Optional[str]): The target part of the file name to select (defaults to None, the file containing all measurements)
-
-        Returns:
-            List[str]: List of the file paths that matched the conditions.
-        """
-        selected_files = []
-
-        # Iterate through dictionary keys
-        for (year, month, day), files in self.files_by_date.items():
-            # Check if the year, month and day match your conditions
-            if year == self.target_year and month == self.target_month and day in self.target_days:
-                # Iterate through the files for this date
-                for file in files:
-                    # Select file containing all measurements
-                    selected_files.append(file)
-
-        return selected_files
-    
-    # DataFrame manipulation methods
-    @staticmethod
-    def check_df(datafile: str, sub_df: pd.DataFrame, local_time: Optional[str] = None, phase: Optional[str] = None) -> bool:
-        # Ensure the dataframe is not empty
-        if sub_df.empty:
-            print(f"\DataFrame empty: {datafile}")
-            if local_time:
-                print(f"\n    No data available for time: {local_time}")
-            if phase:
-                print(f"\n    No data available for phase: {phase}")
-            return False
 
     def extract_by_cloud_phase_and_day_night(self, df: pd.DataFrame, conditions_dict: dict = None):
         """
@@ -386,12 +309,12 @@ class Spectrum():
         residuals = np.subtract(self.data, self.spectrum_mean)
         normalised_residuals = np.divide(residuals, self.spectrum_mean)
         
-        # Initialize histogram accumulator
+        # Initialise histogram accumulator
         total_histogram = np.zeros((len(self.wavenumber_bins) - 1, len(self.spectrum_bins) - 1))
 
         # Calculate 2D histogram for each spectrum and accumulate
         for i in range(normalised_residuals.shape[0]):
-            histogram, xedges, yedges = np.histogram2d(self.wavenumbers, normalised_residuals.iloc[i], bins=[self.wavenumber_bins, self.spectrum_bins])
+            histogram, xedges, yedges = np.histogram2d(self.wavenumbers, normalised_residuals.iloc[i], density=True, bins=[self.wavenumber_bins, self.spectrum_bins])
             total_histogram += histogram
 
         # Flatten normalised residuals into 1D list
