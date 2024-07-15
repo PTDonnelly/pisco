@@ -297,7 +297,7 @@ class Processor:
         # self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean', 'OLR_icy', 'OLR_clear']]
 
         # Select the columns to keep in the final DataFrame
-        self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean']]
+        self.df_binned = mean_OLR[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean']]
         return
     
 
