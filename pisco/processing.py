@@ -296,9 +296,6 @@ class Processor:
         # # Select the columns to keep in the final DataFrame
         # self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean', 'OLR_icy', 'OLR_clear']]
 
-        # Merge the mean OLR DataFrame with the sums DataFrame on their common columns
-        self.df_binned = pd.merge(mean_OLR, on=['Latitude_binned', 'Longitude_binned', 'Date'])
-
         # Select the columns to keep in the final DataFrame
         self.df_binned = self.df_binned[['Latitude_binned', 'Longitude_binned', 'Date', 'OLR_mean']]
         return
